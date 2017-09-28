@@ -1,46 +1,131 @@
 // "Texture Generator Code"
 // Data-Driven 3D Sampling Project
 // Sayjel Vijay Patel (2017), SUTD Digital Manufacturing & Design Centre
-// Re-factored (2017-09)
+// 3DJ Texture Generator for the Stratasys J-1750 Voxel Print Technology
+// Create multi-material, procedural micro-structures & textures for 3D printing
+
+
+// import libraries
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.ArrayList;
 import controlP5.*;
 import java.util.*;
+import java.io.File;
 
-
-// what is this
 ControlP5 cp5;
 
+// stuff for interface
+Slider abc;
+CheckBox checkbox;
 int myColor = color(0, 0, 0);
 float Amplitude = 0.1;
 float Thickness = 10;
 int  Current = 10;
 int sliderTicks1 = 100;
 int sliderTicks2 = 30;
-Slider abc;
+
 //
+PImage exportDepth;
 
 Controller c;
+
+float th = 10;
+float ll = 50;
+
+// boolean enableOutput = false;
 
 
 void setup() {
   println("starting");
   smooth();
   background(0, 51, 102);
-  //size(1000, 600, P3D);
+  size(300, 300, P3D);
   fullScreen(P3D);
+
   c = new Controller();
+  c.vox.thickness = th;
+  c.vox.layer = ll;
+  c.vox.update();
+  // initSlider();
+  // enableOutput=true;
+  // initFiles();
+
 }
 
 
-void draw() {
-  background(2, 7, 49);
-   c.update();
+// void draw() {
+//   background(2, 7, 49);
+//    c.update();
+// }
+
+void checkBox(float[] a) {
+  println(a); // these are the toggles
+  c.m.points = c.m.resetPC(3,a); // we will have to multi thread this bitch
 }
 
+void initFiles(){
 
+
+  // Using just the path of this sketch to demonstrate,
+  // but you can list any directory you like.
+  String path = sketchPath();
+  println("Listing all filenames in a directory: ");
+  String[] filenames = listFileNames(path + "/images/alpha/");
+  printArray(filenames);
+}
+
+// This function returns all the files in a directory as an array of Strings
+String[] listFileNames(String dir) {
+  File file = new File(dir);
+  if (file.isDirectory()) {
+    String names[] = file.list();
+    return names;
+  } else {
+    // If it's not a directory
+    return null;
+  }
+}
+
+void Export(){
+  // if (enableOutput){
+  // th = c.vox.thickness;
+  // ll = c.vox.layer;
+  // exportDepth = c.vox.depth.texture.get();
+  // thread("export");
+  // }
+}
+
+void export(){
+
+    int layers = 200;
+    PVector dim = new PVector(2000,2000);
+    PImage img = exportDepth;
+    img.resize(int(dim.x),int(dim.y));
+
+
+    for (int l = 0; l < 200; l++){
+
+      println("export layer: " + l);
+
+    PGraphics pg = createGraphics(int(dim.x),int(dim.y));
+    pg.beginDraw();
+    pg.background(0);
+    pg.loadPixels();
+
+    for (int k = 0; k <  img.pixels.length; k++) {    //   color bright = img.pixels[k];
+      float val = brightness(img.pixels[k]);
+    if ((val < (ll+th)) && (val > (ll-th))) {
+        pg.pixels[k] = color(255);
+      }
+    }
+      pg.updatePixels();
+      pg.endDraw();
+      pg.save("exports/layer" + nf(l, 3) + ".png");
+    }
+
+}
 
 void mousePressed() {
   // Mouse Event
@@ -54,101 +139,82 @@ void event(ControlEvent theEvent) {
 
 
 void initSlider() {
+  float x1 = (width*5)/6;
+  float y1 = height/16;
+  float o = 25;
+
   cp5 = new ControlP5(this);
+
+
+  checkbox = cp5.addCheckBox("checkBox")
+                .setPosition(width*5/6+o, height/4)
+                .setSize(40, 40)
+                .setItemsPerRow(3)
+                .setSpacingColumn(40)
+                .setSpacingRow(20)
+                .addItem("xy", 0)
+                .addItem("yz", 0)
+                .addItem("xz", 0)
+                ;
+
+  cp5.addButton("Export")
+     .setValue(0)
+     .setPosition(width*5/6,height-height/16)
+     .setSize(width/6,height/16)
+     ;
 
   // add a horizontal sliders, the value of this slider will be linked
   // to variable 'sliderValue'
   cp5.addSlider("Amplitude")
-    .setPosition(1300, 50)
+    .setPosition(o+x1, y1+ 50)
     .setWidth(200)
     .setRange(0.025, 0.5)
     ;
 
   cp5.addSlider("Thickness")
-    .setPosition(1300, 75)
+    .setPosition(o+x1, y1+75)
     .setWidth(200)
-    .setRange(1, 20)
+    .setRange(1, 100)
+    .setValue(th)
     ;
 
+  // cp5.addSlider("Layers")
+  //   .setPosition(o+x1, y1+100)
+  //   .setWidth(200)
+  //   .setRange(1, 20) // values can range from big to small as well
+  //   .setValue(4)
+  //   .setNumberOfTickMarks(10)
+  //   .setSliderMode(Slider.FLEXIBLE)
+  //   ;
 
   cp5.addSlider("Current")
-    .setPosition(1300, 100)
+    .setPosition(o+x1, y1+100)
     .setWidth(200)
     .setRange(0, 255) // values can range from big to small as well
-    .setValue(100)
-    .setNumberOfTickMarks(255)
+    .setValue(ll)
+    // .setNumberOfTickMarks(255)
     .setSliderMode(Slider.FLEXIBLE)
     ;
 
 
-  cp5.addSlider("Layers")
-    .setPosition(1300, 125)
-    .setWidth(200)
-    .setRange(1, 20) // values can range from big to small as well
-    .setValue(4)
-    .setNumberOfTickMarks(10)
-    .setSliderMode(Slider.FLEXIBLE)
-    ;
 
-  //    List l = Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h");
-  //    /* add a ScrollableList, by default it behaves like a DropdownList */
-  //      cp5.addScrollableList("textures")
-  //     .setPosition(1300, 150)
-  //     .setSize(200, 100)
-  //     .setBarHeight(20)
-  //     .setItemHeight(20)
-  //     .addItems(l)
-  //      .setType(ScrollableList.LIST) // currently supported DROPDOWN and LIST
-  //     ;
-  //
-  //      cp5.addScrollableList("heightfield")
-  //     .setPosition(1300, 300)
-  //     .setSize(200, 100)
-  //     .setBarHeight(20)
-  //     .setItemHeight(20)
-  //     .addItems(l)
-  //      .setType(ScrollableList.LIST) // currently supported DROPDOWN and LIST
-  //     ;
-  //
-  //    cp5.addScrollableList("alpha")
-  //     .setPosition(1300, 450)
-  //     .setSize(200, 100)
-  //     .setBarHeight(20)
-  //     .setItemHeight(20)
-  //     .addItems(l)
-  //      .setType(ScrollableList.LIST) // currently supported DROPDOWN and LIST
-  //     ;
-
-
-  // create another slider with tick marks, now without
-  // default value, the initial value will be set according to
-  // the value of variable sliderTicks2 then.
-  //cp5.addSlider("sliderTicks1")
-  //   .setPosition(100,140)
-  //   .setSize(20,100)
-  //   .setRange(0,255)
-  //   .setNumberOfTickMarks(5)
-  //   ;
-
-
-  // add a vertical slider
-  //cp5.addSlider("slider")
-  //   .setPosition(100,305)
-  //   .setSize(200,20)
-  //   .setRange(0,200)
-  //   .setValue(128)
-  //   ;
-
-  //// reposition the Label for controller 'slider'
-  //cp5.getController("slider").getValueLabel().align(ControlP5.LEFT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
-  //cp5.getController("slider").getCaptionLabel().align(ControlP5.RIGHT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
-
-
-
-  // use Slider.FIX or Slider.FLEXIBLE to change the slider handle
-  // by default it is Slider.FIX
 }
 
+void Current(float value){
+
+  c.vox.layer = value;
+  c.vox.update();
+  c.v.setCurrent(value);
+
+}
+
+
+void Thickness(float value){
+
+  c.vox.thickness = value;
+  c.vox.update();
+
+}
 
 //void setup() {
 
