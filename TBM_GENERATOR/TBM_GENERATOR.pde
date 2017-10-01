@@ -14,6 +14,7 @@ import controlP5.*;
 import java.util.*;
 import java.io.File;
 
+Controller c;
 ControlP5 cp5;
 
 // stuff for interface
@@ -28,109 +29,120 @@ int sliderTicks2 = 30;
 
 //
 PImage exportDepth;
-
-Controller c;
-
 float th = 10;
 float ll = 50;
 
-// boolean enableOutput = false;
+// PUBLIC VARIABLES FOR LAYOUT
+float os;
+float xA,xB,xC,xD,xE,xF,xG;
+float yA,yB,yC,yD,yE,yF,yG;
+float cA,cB,cC,cD;
+float rA,rB,rC,rD,rE;
+
 
 
 void setup() {
+
   println("starting");
   smooth();
   background(0, 51, 102);
-  size(300, 300, P3D);
   fullScreen(P3D);
-
+  initDims();
   c = new Controller();
   c.vox.thickness = th;
   c.vox.layer = ll;
   c.vox.update();
-  // initSlider();
-  // enableOutput=true;
-  // initFiles();
+  initSlider();
 
 }
 
 
-// void draw() {
-//   background(2, 7, 49);
-//    c.update();
-// }
+
+void draw() {
+
+  background(2, 7, 49);
+  c.update();
+
+}
+
+
+
+void initDims(){
+
+  // initialize all of the dimensions
+
+ os = width/64;
+
+ xA = os;
+ xB = width/4 - os;
+ xC = width/4;
+ xD = width*5/6;
+
+ yA = height/16;
+ yB = yA + os;
+ yC = yB + xB-os;
+ yD = yC + os;
+ yE = yD + (xB-os)/3;
+ yF = height;
+ cA = xC/2;
+ cB = xC + (xD-xC)/2;
+ rC = yC + os*2/3;
+ rD = yE + os*2/3;
+//
+}
+
 
 void checkBox(float[] a) {
   println(a); // these are the toggles
-  c.m.points = c.m.resetPC(3,a); // we will have to multi thread this bitch
+  c.m.points = c.m.resetPC(3, a); // we will have to multi thread this bitch
 }
 
-void initFiles(){
 
-
-  // Using just the path of this sketch to demonstrate,
-  // but you can list any directory you like.
-  String path = sketchPath();
-  println("Listing all filenames in a directory: ");
-  String[] filenames = listFileNames(path + "/images/alpha/");
-  printArray(filenames);
+void Export() {
+  th = c.vox.thickness;
+  ll = c.vox.layer;
+  exportDepth = c.vox.depth.texture.get();
+  //thread("export");
 }
 
-// This function returns all the files in a directory as an array of Strings
-String[] listFileNames(String dir) {
-  File file = new File(dir);
-  if (file.isDirectory()) {
-    String names[] = file.list();
-    return names;
-  } else {
-    // If it's not a directory
-    return null;
-  }
-}
+void export() {
 
-void Export(){
-  // if (enableOutput){
-  // th = c.vox.thickness;
-  // ll = c.vox.layer;
-  // exportDepth = c.vox.depth.texture.get();
-  // thread("export");
-  // }
-}
-
-void export(){
-
-    int layers = 200;
-    PVector dim = new PVector(2000,2000);
-    PImage img = exportDepth;
-    img.resize(int(dim.x),int(dim.y));
+  int layers = 200;
+  PVector dim = new PVector(2000, 2000);
+  PImage img = exportDepth;
+  img.resize(int(dim.x), int(dim.y));
 
 
-    for (int l = 0; l < 200; l++){
+  for (int l = 0; l < 200; l++) {
 
-      println("export layer: " + l);
+    println("export layer: " + l);
 
-    PGraphics pg = createGraphics(int(dim.x),int(dim.y));
+    PGraphics pg = createGraphics(int(dim.x), int(dim.y));
     pg.beginDraw();
     pg.background(0);
     pg.loadPixels();
 
     for (int k = 0; k <  img.pixels.length; k++) {    //   color bright = img.pixels[k];
       float val = brightness(img.pixels[k]);
-    if ((val < (ll+th)) && (val > (ll-th))) {
+      if ((val < (ll+th)) && (val > (ll-th))) {
         pg.pixels[k] = color(255);
       }
     }
-      pg.updatePixels();
-      pg.endDraw();
-      pg.save("exports/layer" + nf(l, 3) + ".png");
-    }
-
+    pg.updatePixels();
+    pg.endDraw();
+    pg.save("exports/layer" + nf(l, 3) + ".png");
+  }
 }
 
 void mousePressed() {
   // Mouse Event
   PVector mouseEvent = new PVector(mouseX, mouseY);
   c.mouseDown(mouseEvent); // mouse pressed
+
+  if (c.zoneC.isSelected(mouseEvent)){
+  thread("RESETPOINTCLOUD");
+  }
+
 }
 
 void event(ControlEvent theEvent) {
@@ -147,22 +159,53 @@ void initSlider() {
 
 
   checkbox = cp5.addCheckBox("checkBox")
-                .setPosition(width*5/6+o, height/4)
-                .setSize(40, 40)
-                .setItemsPerRow(3)
-                .setSpacingColumn(40)
-                .setSpacingRow(20)
-                .addItem("xy", 0)
-                .addItem("yz", 0)
-                .addItem("xz", 0)
-                ;
+    .setPosition(width*5/6+o, height/4)
+    .setSize(40, 40)
+    .setItemsPerRow(3)
+    .setSpacingColumn(40)
+    .setSpacingRow(20)
+    .addItem("xy", 0)
+    .addItem("yz", 0)
+    .addItem("xz", 0)
+    ;
+
+
+  //
+  float os = width/64;
+  int bW = int((width/4 - width/32)/4);
+  int bH = int(height/16 - os);
 
   cp5.addButton("Export")
-     .setValue(0)
-     .setPosition(width*5/6,height-height/16)
-     .setSize(width/6,height/16)
-     ;
+    .setValue(0)
+    .setPosition(width*5/6, height-height/16)
+    .setSize(int(width/6-os), int(height/16-os))
+    ;
 
+
+
+  cp5.addButton("ADD")
+    .setValue(0)
+    .setPosition(os, height-height/16)
+    .setSize(bW, bH)
+    ;
+
+  cp5.addButton("SUBTRACT")
+    .setValue(0)
+    .setPosition(os+bW, height-height/16)
+    .setSize(bW, bH)
+    ;
+
+  cp5.addButton("MULTIPLY")
+    .setValue(0)
+    .setPosition(os+2*bW, height-height/16)
+    .setSize(bW, bH)
+    ;
+
+  cp5.addButton("DIVIDE")
+    .setValue(0)
+    .setPosition(os+3*bW, height-height/16)
+    .setSize(bW, bH)
+    ;
   // add a horizontal sliders, the value of this slider will be linked
   // to variable 'sliderValue'
   cp5.addSlider("Amplitude")
@@ -195,25 +238,21 @@ void initSlider() {
     // .setNumberOfTickMarks(255)
     .setSliderMode(Slider.FLEXIBLE)
     ;
-
-
-
 }
 
-void Current(float value){
+void Current(float value) {
 
   c.vox.layer = value;
   c.vox.update();
   c.v.setCurrent(value);
-
 }
 
 
-void Thickness(float value){
+void Thickness(float value) {
 
   c.vox.thickness = value;
+  c.v.thickness = value;
   c.vox.update();
-
 }
 
 //void setup() {
@@ -278,28 +317,33 @@ void dropdown(int n) {
   cp5.get(ScrollableList.class, "dropdown").getItem(n).put("color", c);
 }
 
-//void keyPressed() {
-//  switch(key) {
-//    case('1'):
-//    /* make the ScrollableList behave like a ListBox */
-//    cp5.get(ScrollableList.class, "dropdown").setType(ControlP5.LIST);
-//    break;
-//    case('2'):
-//    /* make the ScrollableList behave like a DropdownList */
-//    cp5.get(ScrollableList.class, "dropdown").setType(ControlP5.DROPDOWN);
-//    break;
-//    case('3'):
-//    /*change content of the ScrollableList */
-//    List l = Arrays.asList("a-1", "b-1", "c-1", "d-1", "e-1", "f-1", "g-1", "h-1", "i-1", "j-1", "k-1");
-//    cp5.get(ScrollableList.class, "dropdown").setItems(l);
-//    break;
-//    case('4'):
-//    /* remove an item from the ScrollableList */
-//    cp5.get(ScrollableList.class, "dropdown").removeItem("k-1");
-//    break;
-//    case('5'):
-//    /* clear the ScrollableList */
-//    cp5.get(ScrollableList.class, "dropdown").clear();
-//    break;
-//  }
-// //}
+
+void RESETPOINTCLOUD() {
+
+    println("reset pointCloud");
+    ArrayList<PVector> temp = new ArrayList<PVector>();
+
+    c.m.depth.map.loadPixels();
+    c.m.alpha.map.loadPixels();
+    c.m.mater.map.loadPixels();
+
+    int res = 1;
+    float range = 255;
+
+    //
+
+    for (int x = 0; x < c.m.depth.map.width; x += res) {
+      for (int y = 0; y < c.m.depth.map.height; y+= res) {
+
+        float alp = brightness((c.m.alpha.map.get(x,y)));
+
+        if (alp > 10) { // check alpha
+
+           float val = brightness(c.m.depth.map.get(x, y));
+           temp.add(new PVector(x, y, val));
+
+          }
+        }
+      }
+      c.m.points = temp;
+}

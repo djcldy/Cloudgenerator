@@ -3,8 +3,8 @@ class Model {
   // this class is all about modelling the 3D Geometry
 
   PImage slice;
-  PGraphics pg;
-  PGraphics texMap, matMap, alphMap;
+  PGraphics pg, texMap, matMap, alphMap;
+  PointCloud pointCloud;
 
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
 
@@ -23,20 +23,11 @@ class Model {
     thumbs = _thumbs;
     depth = thumbs.get(0);
     mater = thumbs.get(1);
-
-    // for (Thumb th : thumbs){
-    //   if (th.name == "depth"){
-    //     depth = th;
-    //   }
-    //   if (th.name == "mater"){
-    //     mater = th;
-    //   }
-    // }
-
+    alpha = thumbs.get(2);
 
     pg = createGraphics(200, 200);
 
-    initPC(3);
+    initPC(10);
 
   }
 
@@ -56,8 +47,6 @@ class Model {
     depth.map.loadPixels();
 
     float range = 255;
-
-
 
     for (int x = 0; x < depth.map.width; x += res) {
       for (int y = 0; y < depth.map.height; y+= res) {
@@ -90,13 +79,8 @@ class Model {
 
     for (int x = 0; x < depth.map.width; x += res) {
       for (int y = 0; y < depth.map.height; y+= res) {
-
         float val = brightness(depth.map.get(x, y));
-
         points.add(new PVector(x, y, val));
-//        points.add(new PVector(x, y, -val));
-//        points.add(new PVector(x, y, 255+val));
-//        points.add(new PVector(x, y, -255-val));
       }
     }
 

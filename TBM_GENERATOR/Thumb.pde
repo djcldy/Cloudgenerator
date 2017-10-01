@@ -5,14 +5,22 @@ class Thumb {
   String path, name;
   PVector loc, size;
   boolean isSelected = false;
+  ArrayList<Thumb> children; // chilrdren
+  ArrayList<Thumb> selectedChildren = new ArrayList<Thumb>();
 
   Thumb(String _path, PVector _loc, PVector _size, String _name) {
-    println("initialize thumb: " + _name) ;
     name = _name;
     size = _size;
-    println("reset");
+    reset(_path, _loc);
+    setChildren();
+  }
+
+  Thumb(String _path, PVector _loc, PVector _size) {
+    size = _size;
     reset(_path, _loc);
   }
+
+
   void reset(String _path, PVector _loc) {
 
     path = _path;
@@ -20,16 +28,15 @@ class Thumb {
     float x = size.x;
     float y = size.y;
 
-    map = createGraphics(int(x),int(y));
+    map = createGraphics(int(x), int(y));
     map.beginDraw();
     map.background(0);
     map.endDraw();
     texture = loadImage(path); // textures 512 px x 512 px
-    // texture = normalize(texture);
+    // texture = normalize(texture);check
     parent = texture.get();
 
     updateMap();
-
   }
 
   void updateMap() {
@@ -38,6 +45,48 @@ class Thumb {
     map.image(texture, 0, 0);
     map.endDraw();
   }
+
+
+  void  setChildren() {
+
+    children = new ArrayList<Thumb>();
+    String localPath = "/images/" + name + "/";                   //
+    String[] filenames = listFileNames(sketchPath() + localPath);   //
+
+    float childWidth = int((xC - 2*os)/3);
+
+    int items = filenames.length;
+    int row = 0;
+    int col = 0;
+
+    if (filenames !=null) {
+      for (int j = 0; j < items; j++){
+        children.add(new Thumb(localPath + filenames[j], new PVector(xA+size.x*col,yE+os+size.x*row), size));
+        col ++;
+        if (col == 3) {
+          col = 0;
+          row++;
+        }
+      }
+    }
+
+         //  for (int i = 0; i < filenames.length; i++) {
+     //    children.add(new Thumb(localPath + filenames[i],   new PVector(xA,yE+os), size));
+     //    children.add(new Thumb(localPath + filenames[i+1],   new PVector(xA+size.x,yE+os), size));
+     //    children.add(new Thumb(localPath + filenames[i+2],   new PVector(xA+2*size.x,yE+os), size));
+     // }
+  }
+
+  void showChildren() {
+
+    if (children != null) {
+      for (Thumb child : children) {
+        child.display();
+      }
+    }
+  }
+
+
 
 
   PImage normalize(PImage img) {
@@ -77,7 +126,27 @@ class Thumb {
     return img;
   }
 
-  boolean checkSelected(PVector ms) {
+
+  void checkSelectedChildren() {
+   for (Thumb child: children){
+      if ((mouseX > child.loc.x) && (mouseX < (child.loc.x + map.width)) && (mouseY > child.loc.y) && (mouseY < (child.loc.y + map.height))) {
+        child.isSelected = true;
+        reset(child.path, loc);
+
+        if (!selectedChildren.contains(child)){
+          selectedChildren.add(child);
+        }
+
+      } else {
+        child.isSelected = false;
+        selectedChildren.remove(child);
+      }
+    }
+  }
+
+
+
+  boolean checkSelected(PVector ms) { // hmm we can  refactor this
 
     if ((mouseX > loc.x) && (mouseX < (loc.x + map.width)) && (mouseY > loc.y) && (mouseY < (loc.y + map.height))) {
       isSelected = !isSelected;
@@ -97,18 +166,18 @@ class Thumb {
 
     //// hover
     if (isSelected) {
-     stroke(163, 149, 41);
-     rect(loc.x, loc.y, map.width, map.height); // Left
+      stroke(163, 149, 41);
+      rect(loc.x, loc.y, map.width, map.height); // Left
+      showChildren();
     } else if  ((mouseX > loc.x) && (mouseX < (loc.x + map.width)) && (mouseY > loc.y) && (mouseY < (loc.y + map.height))) {
-     stroke(255, 100);
-     rect(loc.x, loc.y, map.width, map.height); // Left
+      stroke(255, 100);
+      rect(loc.x, loc.y, map.width, map.height); // Left
     }
 
     // hover
     float x1 = loc.x + size.x/2;
     float y1 = loc.y+size.y+12;
-    textAlign(CENTER);
-    text(name, x1 ,y1 );
-
+    //textAlign(CENTER);
+    //text(name, x1, y1 );
   }
 }
