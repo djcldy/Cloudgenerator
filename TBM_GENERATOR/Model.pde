@@ -3,46 +3,185 @@ class Model {
   // this class is all about modelling the 3D Geometry
 
   PImage slice;
-  PGraphics pg, texMap, matMap, alphMap;
+  PGraphics pg;
   PointCloud pointCloud;
 
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
+  ArrayList<Thumb> thumbsArray = new ArrayList<Thumb>();
+  ArrayList<Thumb> thumbsGlobal = new ArrayList<Thumb>();
+
+  CellArray cArray; // this object controls the array
 
   Thumb alpha, mater, depth, currentThumb;
+  Thumb alphaArray, materArray, depthArray;
+  Thumb alphaGlb, materGlb, depthGlb;
+
+  Thumb currentR1, currentR2, currentR3;
+
+  Voxelator vox;
 
   //  PGraphics matMap;
+  int stepX = 2;
+  int stepY = 2;
+  int stepZ = 4;
 
   int step = 1;
   int thickness = 25; // thickness of each layer
+
   ArrayList<PVector> points = new ArrayList<PVector>();
 
-  Model(ArrayList<Thumb> _thumbs) {
+  Model() {
 
-    println("initialize model") ;
+    initChannelThumbs();
 
-    thumbs = _thumbs;
     depth = thumbs.get(0);
     mater = thumbs.get(1);
     alpha = thumbs.get(2);
 
-    pg = createGraphics(200, 200);
+    depthArray = depth.array(stepX,stepY);
+    alphaArray = alpha.array(stepX,stepY);
+    materArray = mater.array(stepX,stepY);
 
-    initPC(10);
+    thumbsArray.add(depthArray);
+    thumbsArray.add(alphaArray);
+    thumbsArray.add(materArray);
+
+    initGlobalThumbs();
+    initVoxel(thumbs, thumbsArray, thumbsGlobal);
+
+    // pg = createGraphics(200, 200);
 
   }
 
-  void display() {
-    // getLayer(Current, false); // activate voxel map
-    for (Thumb th : thumbs) {
-      th.display();
+  void updateArray(){
+    thumbsArray = new ArrayList<Thumb>();
+    thumbsArray.add(depthArray);
+    thumbsArray.add(alphaArray);
+    thumbsArray.add(materArray);
+    vox.setArrays(thumbsArray);
+  }
+
+
+
+  void resetRows(String mode){
+
+    currentR1 = null;
+    currentR2 = null;
+    currentR3 = null;
+
+
+    if (mode == "UNIT"){
+
+      for (Thumb th: thumbs){ if (th.isSelected){ currentR1 = th;}}
+      if (currentR1 != null){ for (Thumb th: currentR1.children){ if (th.isSelected){ currentR2 = th;}}}
+
+    } else {
+
+     for (Thumb th: thumbsGlobal){ if (th.isSelected){ currentR1 = th;}}
+      if (currentR1 != null){ for (Thumb th: currentR1.children){ if (th.isSelected){ currentR2 = th;}}}
     }
   }
 
 
+  void initChannelThumbs(){
+
+    int bW = int((width/4 - width/32));
+    int tW = int((width/4 - width/32)/3); // width of thumb with row of 3
+    float y4 = height/16+width/64+bW;
+
+    PVector dimThumb = new PVector(tW,tW);
+    PVector dimVox = new PVector(width/6-os,width/6-os);
+    PVector dimThumbView = new PVector(bW,bW);
+
+    depth = new Thumb("/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
+    mater = new Thumb("/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
+    alpha = new Thumb("/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
+
+    thumbs.add(depth);
+    thumbs.add(mater);
+    thumbs.add(alpha);
+
+    mater.isSelected = true;
+    currentR1 = materGlb;
+
+  }
+
+  void initGlobalThumbs(){
+
+    int bW = int((width/4 - width/32));
+    int tW = int((width/4 - width/32)/3); // width of thumb with row of 3
+
+    float y4 = height/16+width/64+bW+os+tW;
+    PVector dimThumb = new PVector(tW,tW);
+    PVector dimVox = new PVector(width/6-os,width/6-os);
+    PVector dimThumbView = new PVector(bW,bW);
+
+     depthGlb = new Thumb("/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
+     materGlb = new Thumb("/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
+     alphaGlb = new Thumb("/textures/global/alpha/blank.png",    new PVector(os+2*tW,y4),  dimThumb, "global/alpha");
+
+    thumbsGlobal.add(depthGlb);
+    thumbsGlobal.add(materGlb);
+    thumbsGlobal.add(alphaGlb);
+
+    materGlb.isSelected = true;
+    // currentR1 = materGlb;
+
+  }
+
+  void initVoxel(ArrayList<Thumb> _units, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
+
+    PVector dimVox = new PVector(width/6-os,width/6-os);
+    initVoxelator(new PVector(width*5/6, height-height/16-dimVox.y), dimVox, _units, _arrays, _globes);
+
+  }
+
+  void initVoxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
+      vox = new Voxelator(_loc, _size,  _thumbs, _arrays, _globes);
+
+  }
+
+  void arrayTexture(){
+
+  }
+
+  void displayCellUnit() {
+    // getLayer(Current, false); // activate voxel map
+
+
+
+    for (Thumb th : thumbs) {
+      th.display();
+    }
+    testSelection();
+  }
+
+
+  void displayCellArray() {
+
+    for (Thumb th : thumbsArray) {
+      th.display();
+    }
+
+    for (Thumb th: thumbsGlobal){
+      th.display();
+    }
+
+  }
+
+
+  void testSelection(){
+
+    // println("test  selection: ");
+      if (currentR1 != null){ currentR1.debug();}
+      if (currentR2 != null){ currentR2.debug();}
+      if (currentR3 != null){ currentR3.debug();}
+  }
+
 
   ArrayList<PVector> resetPC(int res, float []a) {
 
-    println("reset pointCloud");
+    //Println("reset pointCloud");
     ArrayList<PVector> temp = new ArrayList<PVector>();
     depth.map.loadPixels();
 
@@ -56,9 +195,7 @@ class Model {
         if (a[0] == 1) {
           temp.add(new PVector(x, y, -val/2 + range/2));
           temp.add(new PVector(x, y, val/2 + range/2));
-
         } else {
-
           temp.add(new PVector(x, y, val));
         }
       }
@@ -67,74 +204,4 @@ class Model {
   }
 
 
-
-  void initPC(int res) {
-
-    println("inialize points");
-
-
-    points = new ArrayList<PVector>();
-
-    depth.map.loadPixels();
-
-    for (int x = 0; x < depth.map.width; x += res) {
-      for (int y = 0; y < depth.map.height; y+= res) {
-        float val = brightness(depth.map.get(x, y));
-        points.add(new PVector(x, y, val));
-      }
-    }
-
-    println("points length = " + points.size());
-
-    //    pg.updatePixels();
-  }
-
-  void getLayer(float t, boolean save) {
-    //    background(0);
-    //     println("getlayer: " + t);
-
-    //    pg.beginDraw();
-
-        float y1 = (height*2)/3;
-    float y2 = (height/16);
-    float y3 = y2/2;
-
-
-    float x1 = (width*5)/6;
-    float x2 = (width*13)/24;
-    float x3 = x1 + (width-x1)/2;
-    float x4 = (width*(16.5)/24);
-    float x5 = (width*(13.75)/24);
-
-    PImage img = depth.texture;
-
-    depth.map.loadPixels();
-    mater.map.loadPixels();
-
-    pg = createGraphics(depth.map.width, depth.map.height);
-    pg.beginDraw();
-    pg.background(0);
-    pg.loadPixels();
-
-
-    for (int k = 0; k <  depth.map.pixels.length; k++) {
-      color bright = depth.map.pixels[k];
-      color rgb = mater.map.pixels[k];
-
-      float val = brightness(bright);
-
-      if ((val < (t+Thickness)) && (val > (t-Thickness))) {
-        pg.pixels[k] = color(255);
-      }
-
-    }
-
-    pg.updatePixels();
-    pg.endDraw();
-
-    String s = "Image Stack: " + t;
-    image(pg,x5,y1);
-    fill(255);
-
-  }
 }

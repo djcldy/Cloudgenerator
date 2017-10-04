@@ -2,7 +2,8 @@ class View {
 
   // this controls the styles of display
   Model model;
-  Viewport2D vp;
+  Viewport2D vp2D;
+  Viewport3D vp3D;
   Voxelator vox;
 
   float thickness = 2;
@@ -10,122 +11,151 @@ class View {
   // camera variables
   float xRot = 3.14/2;
   float zRot = 3.14/2;
-  int current = 0; //?
+  float current = 0; //?
 
-  View(Model m, Viewport2D _vp, Voxelator _vox) {
-    println("initialize view class") ;
+  View(Model m, Viewport2D _vp) {
+    // println("initialize view class") ;
+
     model = m;
-    vp = _vp;
-    vox  = _vox;
+    vp2D = _vp;
+    vp3D = new Viewport3D(xC, yA, xD, yF-height/16);
+
+
   }
 
-  void setCurrent(float value) {
-    // set the current layer
-    current = int(value);
+  void setCurrent() {
+    println("set current");
+    vox.getCurrentPC();
   }
 
   void display() {
-    display3D();
-    noStroke();
 
-    // fill(2, 7, 49);
-    // rect(0,0,width,height/16);
-    vp.display();
+    String mode = vp3D.mode;
     display2D();
+    display3D();
+
   }
 
   void display2D() {
-    vox.display();
-    displayText();
-    model.display();
-    // vp.display();
+
+    // drawZones();
+    drawFrames();
+    drawLabels();
+    model.vox.display(); // this one ok
+
+
+    if (vp3D.mode == "UNIT"){
+      vp2D.display();   // this is just a screen
+      model.displayCellUnit();  //
+    } else {
+      vp2D.displayCellArray();
+      model.displayCellArray();
+    }
+
+
+
   }
 
-  void displayText() {
+  void display3D() {
+    vp3D.display();
+
+  }
+
+  void drawFrames() {
+
+    // clean this up
 
     stroke(255, 50);
-    float y0 = width/64;
+
     float y1 = (height*2)/3;
     float y2 = (height/16);
     float y3 = y2/2;
     float y4 = height - y2;
     float y5 = height/2;
 
-    float x0 = width/64;
     float x1 = (width*5)/6;
     float x2 = (width*13)/24;
     float x3 = x1 + (width-x1)/2;
     float x4 = (width*(16.5)/24);
     float x5 = (width*(13.75)/24);
-
-
-
     float y6 = height/16+width/64+width/4 - width/32;
 
     ////////////////////////////////////////
     // horizontal lines
-    strokeWeight(1);
-    // these guys below the thumb
-    line(0, yE, width, yE);
-    line(0, yE+os, width, yE+os);
-    /////////////////////////////////////////////
-    line(0, y2, width, y2);
-    line(0, y2+y0, width, y2+y0);
-
-
+    strokeWeight(2);
+    line(0, yA, width, yA);
     line(0, y4, width, y4);
-    line(0, height-y0, width, height-y0);
+    line(0, height-os, width, height-os);
 
     // vertical lines
-    //strokeWeight(2);
-    line(width/4-x0, 0, width/4-x0, height);
-    line(x0, 0, x0, height);
-    line(width-x0, 0, width-x0, height);
-
+    line(width/4-os, 0, width/4-os, height);
+    line(os, 0, os, height);
+    line(width-os, 0, width-os, height);
     line(width/4, 0, width/4, height);
     line(x1, 0, x1, height);
+    int y10 = int(height/16+width/64+ width/4 - width/32);
+    line(0,y10-os, width/4, y10-os);
+    line(0,y10, width/4, y10);
+    line(0,y10 + tWidth + os, width/4, y10 + tWidth + os);
+    line(0,y10 + 2*(tWidth + os), width/4, y10 + 2*(tWidth+os));
+    line(0,y10, width/4, y10);
+    line(0,y10+ tWidth, width/4-os, y10 + tWidth);
+    line(0,y10 + 2*(tWidth)+os, width/4, y10 + 2*(tWidth)+os);
 
 
-    // lables
-    textSize(14);
-    textAlign(CENTER);
-
-
-    String s = "Ouputs";
-    text(s, x2, y3);
-
-    s = "Inputs";
-    text(s, width/8, y3);
-
-
-    //    s = "Rules";
-    //    text(s,width/8, height - 300);
-
-    s = "Parameters";
-    text(s, x3, y3);
-
-    textSize(11);
-
-    //s = "Texture Primitives";
-    //text(s,width/8, y2+18);
-
-    s = "Mirror Plane";
-    text(s, width*11/12, height/4 - 20);
-
-    // drawZones();
-    drawLabels();
   }
 
   void drawLabels() {
 
     // Small Labels
+    // textSize(18);
+    // textAlign(CENTER);
 
-    textSize(10);
+    textSize(11);
     textAlign(CENTER);
+    String s = "PointCloud Generator - Sayjel Vijay Patel - 2017";
+    text(s, width/2, height-os/2);
 
-    text("CHANNELS", cA, rC);
-    text("PRIMITIVES", cA, rD);
-    text("RULE-CHAIN", cB, rD);
+    // textAlign(CENTER);
+
+
+
+    textSize(14);
+    s = "Mode: " + vp3D.mode;
+    text(s, cA, rA);
+
+    textSize(11);
+    // text("CHANNELS", cA, rC);
+
+    //     line(xA, yD-os, xB, yE-os);  // row1
+    // line(xA, yE, xB, yE+tWidth); // row2
+    // line(xA, yE+tWidth+os, xB, yE+2*tWidth+os); // row3
+
+    if (vp3D.mode == "UNIT"){
+
+    text("TEXTURE: CHANNELS", cA, yD-os-os/2); // row1 //
+    text("TEXTURES", cA, yE-os/2); // row2 //
+
+    } else {
+    text("ARRAYS", cA, yD-os-os/2); // row1 //
+    text("SHAPES: CHANNELS", cA, yE-os/2); // row2 //
+    text("SHAPES", cA, yE+tWidth+os-os/2); // row2 //
+
+    }
+    // text("RULE-CHAIN", cB, rD);
+
+
+    // String s = "Ouputs";
+    // text(s, x2, y3);
+
+
+    // s = "Parameters";
+    // text(s, x3, y3);
+
+    // textSize(11);
+
+    // s = "Mirror Plane";
+    // text(s, width*11/12, height/4 - 20);
   }
 
 
@@ -135,71 +165,22 @@ class View {
     strokeWeight(3);
     noFill();
 
-    // Zone 1-1
-    line(xA, 0, xB, yA);
+    // Zone Row 1
+    // line(xA, 0, xB, yA);
 
-    // Zone 2-1
-    line(xA, yB, xB, yC);
+    // Zone Row 1?
+    // line(xA, yB, xB, yC);
 
     // Zone 3-1
-    line(xA, yD, xB, yE);
-
-    // Zone 4-1
-    line(xA, yE, xB, yF);
-
+    line(xA, yD-os, xB, yE-os);  // row1
+    line(xA, yE, xB, yE+tWidth); // row2
+    line(xA, yE+tWidth+os, xB, yE+2*tWidth+os); // row3
     // rect(xA,yD, xB, yE);
+
+
   }
 
 
 
-  void display3D() {
 
-    strokeWeight(1);
-
-
-    for (PVector p : model.points) {
-      pushMatrix();
-      translate(width*13/24, height/3);
-      rotateX(xRot);
-      rotateZ(zRot);
-      scale(4);
-
-      float x = p.x;
-      float y = p.y;
-      float z = p.z*Amplitude; 
-
-      float scrnX = screenX(x, y, z);
-      float scrnY1 = screenY(x, y, z + thickness/20);
-      float scrnY2 = screenY(x, y, z - thickness/20);
-      float scrnZ = screenZ(x, y, z);
-
-
-      if ((scrnX> width/4)&& (scrnX < width*5/6)&&(scrnY1 > yB) && (scrnY1<yE)) {
-        if ((z-thickness/20 > current - 2 ) && (z-thickness/20 < current + 2)) {
-          stroke(255);
-        } else {
-          stroke(255, 25);
-        }     
-        point(x, y, z + thickness/20);
-      }
-
-      if ((scrnX> width/4)&& (scrnX < width*5/6)&&(scrnY2 > yB) && (scrnY2<yE)) {
-        if ((z+thickness/20 > current - 2 ) && (z+thickness/20 < current + 2)) {
-          stroke(255);
-        } else {
-          stroke(255, 25);
-        }     
-        point(x, y, z - thickness/20);
-      }
-
-
-
-
-
-      popMatrix();
-    }
-
-    xRot += 0.005;
-    zRot += 0.005;
-  }
 }

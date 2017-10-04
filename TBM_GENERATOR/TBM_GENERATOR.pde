@@ -20,102 +20,114 @@ ControlP5 cp5;
 // stuff for interface
 Slider abc;
 CheckBox checkbox;
-int myColor = color(0, 0, 0);
-float Amplitude = 0.1;
+
+
+float Amplitude = 10; // cm
 float Thickness = 10;
-int  Current = 10;
-int sliderTicks1 = 100;
-int sliderTicks2 = 30;
+float Current = 0.5;
+
+int LayersY =1;
+int LayersX =1;
+int LayersZ =1;
+
 
 //
 PImage exportDepth;
-float th = 10;
-float ll = 50;
 
 // PUBLIC VARIABLES FOR LAYOUT
-float os;
-float xA,xB,xC,xD,xE,xF,xG;
-float yA,yB,yC,yD,yE,yF,yG;
-float cA,cB,cC,cD;
-float rA,rB,rC,rD,rE;
+boolean isSetup = true;
 
 
 
 void setup() {
-
-  println("starting");
+  ortho();
   smooth();
   background(0, 51, 102);
-  fullScreen(P3D);
-  initDims();
-  c = new Controller();
-  c.vox.thickness = th;
-  c.vox.layer = ll;
-  c.vox.update();
-  initSlider();
+  // fullScreen(P3D);
+  size(1500,800,P3D);
+
+  init();
 
 }
 
+void initControl(){
+  c = new Controller(); // initialize controller
+  c.m.vox.thickness = Thickness;
+  c.m.vox.layer = Current;
+  c.m.vox.update();
+}
 
+void initViewport(){
+  c.v.vp3D.setCellArray(c.m.points); // ?
+}
 
 void draw() {
-
   background(2, 7, 49);
   c.update();
+}
 
+void init(){
+  setConst();
+  initControl();
+  setInterface();
+  initViewport();
+  isSetup = false;
+  initGeo();
+}
+
+void initGeo(){
+  thread("RESETUNITCELL"); // can we make this more efficient
+}
+
+void LayersZ(int value){
+  if (!isSetup){
+  LayersZ = value;
+  thread("RESETUNITCELL");
+  }
+}
+
+void R2() {
+ if (c.v.vp3D.mode == "UNIT"){ c.m.currentThumb.setChildren(1);}
+}
+
+void L2(){
+if (c.v.vp3D.mode == "UNIT"){c.m.currentThumb.setChildren(-1);}
 }
 
 
-
-void initDims(){
-
-  // initialize all of the dimensions
-
- os = width/64;
-
- xA = os;
- xB = width/4 - os;
- xC = width/4;
- xD = width*5/6;
-
- yA = height/16;
- yB = yA + os;
- yC = yB + xB-os;
- yD = yC + os;
- yE = yD + (xB-os)/3;
- yF = height;
- cA = xC/2;
- cB = xC + (xD-xC)/2;
- rC = yC + os*2/3;
- rD = yE + os*2/3;
-//
+void togglecell() {
+  // toggle
+  //println("toggle cell");
+  if (!isSetup){
+    c.toggleMode();
+    thread("RESETPOINTCLOUD");
+  }
 }
 
 
 void checkBox(float[] a) {
-  println(a); // these are the toggles
+  //println(a); // these are the toggles
   c.m.points = c.m.resetPC(3, a); // we will have to multi thread this bitch
 }
 
 
 void Export() {
-  th = c.vox.thickness;
-  ll = c.vox.layer;
-  exportDepth = c.vox.depth.texture.get();
-  //thread("export");
+
+  exportDepth = c.m.vox.depth.texture.get();
+  if (!isSetup){export();}
 }
 
 void export() {
 
   int layers = 200;
-  PVector dim = new PVector(2000, 2000);
+  PVector dim = new PVector(500, 500);
   PImage img = exportDepth;
   img.resize(int(dim.x), int(dim.y));
 
 
-  for (int l = 0; l < 200; l++) {
+  for (int j = 0; j < 255; j++) {
 
-    println("export layer: " + l);
+    //println("export layer: " + l);
 
     PGraphics pg = createGraphics(int(dim.x), int(dim.y));
     pg.beginDraw();
@@ -124,13 +136,13 @@ void export() {
 
     for (int k = 0; k <  img.pixels.length; k++) {    //   color bright = img.pixels[k];
       float val = brightness(img.pixels[k]);
-      if ((val < (ll+th)) && (val > (ll-th))) {
+      if ((val < (j+5)) && (val > (j-5))) {
         pg.pixels[k] = color(255);
       }
     }
     pg.updatePixels();
     pg.endDraw();
-    pg.save("exports/layer" + nf(l, 3) + ".png");
+    pg.save("exports/layer" + nf(j, 3) + ".png");
   }
 }
 
@@ -146,42 +158,28 @@ void mousePressed() {
 }
 
 void event(ControlEvent theEvent) {
-  println(theEvent.getArrayValue());
+  //println(theEvent.getArrayValue());
 }
 
 
-void initSlider() {
-  float x1 = (width*5)/6;
-  float y1 = height/16;
-  float o = 25;
 
-  cp5 = new ControlP5(this);
+void initButtons(){
 
-
-  checkbox = cp5.addCheckBox("checkBox")
-    .setPosition(width*5/6+o, height/4)
-    .setSize(40, 40)
-    .setItemsPerRow(3)
-    .setSpacingColumn(40)
-    .setSpacingRow(20)
-    .addItem("xy", 0)
-    .addItem("yz", 0)
-    .addItem("xz", 0)
-    ;
-
-
-  //
-  float os = width/64;
   int bW = int((width/4 - width/32)/4);
   int bH = int(height/16 - os);
 
+  cp5.addToggle("togglecell")
+     .setPosition(xD,yA)
+     .setSize(int(width/6-os),75)
+     .setValue(true)
+     .setMode(ControlP5.SWITCH)
+     ;
+
   cp5.addButton("Export")
     .setValue(0)
-    .setPosition(width*5/6, height-height/16)
+    .setPosition(xD, height-height/16)
     .setSize(int(width/6-os), int(height/16-os))
     ;
-
-
 
   cp5.addButton("ADD")
     .setValue(0)
@@ -206,111 +204,161 @@ void initSlider() {
     .setPosition(os+3*bW, height-height/16)
     .setSize(bW, bH)
     ;
-  // add a horizontal sliders, the value of this slider will be linked
-  // to variable 'sliderValue'
+
+
+
+  int y4 = int(height/16+width/64+ width/4 - width/32);
+
+  cp5.addButton("R1")
+    .setValue(0)
+    .setPosition(width/4-os, y4)
+    .setSize(int(os), int(tWidth))
+    ;
+
+  cp5.addButton("R2")
+    .setValue(0)
+    .setPosition(width/4-os, y4 + tWidth + os)
+    .setSize(int(os), int(tWidth))
+    ;
+
+  cp5.addButton("R3")
+    .setValue(0)
+    .setPosition(width/4-os, y4 + 2*(tWidth + os))
+    .setSize(int(os), int(tWidth))
+    ;
+
+  cp5.addButton("L1")
+    .setValue(0)
+    .setPosition(0, y4)
+    .setSize(int(os), int(tWidth))
+    ;
+
+  cp5.addButton("L2")
+    .setValue(0)
+    .setPosition(0, y4 + tWidth + os)
+    .setSize(int(os), int(tWidth))
+    ;
+
+  cp5.addButton("L3")
+    .setValue(0)
+    .setPosition(0, y4 + 2*(tWidth + os))
+    .setSize(int(os), int(tWidth))
+    ;
+
+}
+
+
+void setInterface(){
+
+  cp5 = new ControlP5(this);
+
+  initButtons();
+  initSlider();
+
+}
+
+void LayersX(int value){
+    LayersX = value;
+    if (!isSetup && (c.v.vp3D.mode != "UNIT")){thread("adjustGrid");}
+}
+
+void LayersY(int value){
+
+    LayersY = value;
+    if (!isSetup && (c.v.vp3D.mode != "UNIT")){thread("adjustGrid");}
+
+}
+
+
+
+
+void adjustGrid(){
+    println("adjustGrid");
+    c.m.depthArray = c.m.depth.array(LayersX,LayersY);
+    c.m.alphaArray = c.m.alpha.array(LayersX,LayersY);
+    c.m.materArray = c.m.mater.array(LayersX,LayersY);
+    c.m.updateArray();
+}
+void initSlider() {
+
+  int len = 200;
+
   cp5.addSlider("Amplitude")
-    .setPosition(o+x1, y1+ 50)
-    .setWidth(200)
-    .setRange(0.025, 0.5)
+    .setPosition(xD, yG+ 50)
+    .setWidth(len)
+    .setValue(Amplitude)
+    .setRange(1, 500) // cm
     ;
 
   cp5.addSlider("Thickness")
-    .setPosition(o+x1, y1+75)
-    .setWidth(200)
+    .setPosition(xD, yG+75)
+    .setWidth(len)
     .setRange(1, 100)
-    .setValue(th)
+    .setValue(Thickness)
     ;
 
-  // cp5.addSlider("Layers")
-  //   .setPosition(o+x1, y1+100)
-  //   .setWidth(200)
-  //   .setRange(1, 20) // values can range from big to small as well
-  //   .setValue(4)
-  //   .setNumberOfTickMarks(10)
-  //   .setSliderMode(Slider.FLEXIBLE)
-  //   ;
-
   cp5.addSlider("Current")
-    .setPosition(o+x1, y1+100)
-    .setWidth(200)
-    .setRange(0, 255) // values can range from big to small as well
-    .setValue(ll)
+    .setPosition(xD, yG+100)
+    .setWidth(len)
+    .setRange(0, 1) // values can range from big to small as well
+    .setValue(0.5)
     // .setNumberOfTickMarks(255)
     .setSliderMode(Slider.FLEXIBLE)
     ;
+
+
+    cp5.addSlider("LayersX")
+     .setPosition(xD,yG + 125)
+     .setWidth(len)
+     .setRange(1,10) // values can range from big to small as well
+     .setValue(2)
+     .setNumberOfTickMarks(10)
+     .setSliderMode(Slider.FLEXIBLE)
+     ;
+
+
+
+    cp5.addSlider("LayersY")
+     .setPosition(xD,yG + 150)
+     .setWidth(len)
+     .setRange(1,10) // values can range from big to small as well
+     .setValue(2)
+     .setNumberOfTickMarks(10)
+     .setSliderMode(Slider.FLEXIBLE)
+     ;
+
+
+    cp5.addSlider("LayersZ")
+     .setPosition(xD,yG + 175)
+     .setWidth(len)
+     .setRange(1,10) // values can range from big to small as well
+     .setValue(LayersZ)
+     .setNumberOfTickMarks(10)
+     .setSliderMode(Slider.FLEXIBLE)
+     ;
+
 }
 
 void Current(float value) {
+  if (!isSetup){  //
 
-  c.vox.layer = value;
-  c.vox.update();
-  c.v.setCurrent(value);
+    c.m.vox.layer = value*255;    //l: set vox");
+    c.m.vox.update();         //
+    c.v.vp3D.setCurrentLayer(c.m.vox.pcLayer);
+    // c.v.setCurrent();
+  }
 }
 
 
 void Thickness(float value) {
 
-  c.vox.thickness = value;
+  c.m.vox.thickness = value;
   c.v.thickness = value;
-  c.vox.update();
+  c.m.vox.update();
 }
 
-//void setup() {
-
-
-//}
-
-//void draw() {
-//  background(sliderTicks1);
-
-//  fill(sliderValue);
-//  rect(0,0,width,100);
-
-//  fill(myColor);
-//  rect(0,280,width,70);
-
-//  fill(sliderTicks2);
-//  rect(0,350,width,50);
-//}
-
-//void slider(float theColor) {
-//  myColor = color(theColor);
-//  println("a slider event. setting background to "+theColor);
-//}
-
-//
-//void setup() {
-//  size(400, 400);
-//  cp5 = new ControlP5(this);
-//  List l = Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h");
-//  /* add a ScrollableList, by default it behaves like a DropdownList */
-//  cp5.addScrollableList("dropdown")
-//     .setPosition(100, 100)
-//     .setSize(200, 100)
-//     .setBarHeight(20)
-//     .setItemHeight(20)
-//     .addItems(l)
-//     // .setType(ScrollableList.LIST) // currently supported DROPDOWN and LIST
-//     ;
-//
-//
-//}
-//
-//void draw() {
-//  background(240);
-//}
 
 void dropdown(int n) {
-  /* request the selected item based on index n */
-  println(n, cp5.get(ScrollableList.class, "dropdown").getItem(n));
-
-  /* here an item is stored as a Map  with the following key-value pairs:
-   * name, the given name of the item
-   * text, the given text of the item by default the same as name
-   * value, the given value of the item, can be changed by using .getItem(n).put("value", "abc"); a value here is of type Object therefore can be anything
-   * color, the given color of the item, how to change, see below
-   * view, a customizable view, is of type CDrawable
-   */
 
   CColor c = new CColor();
   c.setBackground(color(255, 0, 0));
@@ -318,32 +366,170 @@ void dropdown(int n) {
 }
 
 
-void RESETPOINTCLOUD() {
 
-    println("reset pointCloud");
+void RESETUNITCELL() {
+
+
+  PShape boxCloud = createShape();
+  boxCloud.beginShape(POINTS);
+  boxCloud.stroke(255);
+
     ArrayList<PVector> temp = new ArrayList<PVector>();
+    Thumb depth,alpha, mater; // place holder variables
 
-    c.m.depth.map.loadPixels();
-    c.m.alpha.map.loadPixels();
-    c.m.mater.map.loadPixels();
+    depth = c.m.depth;
+    alpha = c.m.alpha;
+    mater = c.m.mater;
+
+    depth.map.loadPixels();
+    alpha.map.loadPixels();
+    mater.map.loadPixels();
+
+    println("depth map size = " + depth.map.width + "," + depth.map.height);
 
     int res = 1;
     float range = 255;
 
-    //
 
-    for (int x = 0; x < c.m.depth.map.width; x += res) {
-      for (int y = 0; y < c.m.depth.map.height; y+= res) {
+    int levels = LayersZ;
+    float amp = Amplitude/levels; // this is the total height
+    boolean invert = false;
 
-        float alp = brightness((c.m.alpha.map.get(x,y)));
 
-        if (alp > 10) { // check alpha
+  println("resetting unit-cell");
+  println("layers = " + levels);
+  println("amp = " + amp);
+  println("total height = " + levels*amp);
 
-           float val = brightness(c.m.depth.map.get(x, y));
+
+  for (int z = 0; z < levels; z++){
+    for (int x = 0; x < depth.map.width; x += res) {
+      for (int y = 0; y < depth.map.height; y+= res) {
+        float alp = brightness((alpha.map.get(x,y)));
+
+        // if (alp > 10) { // check alpha
+
+           float val = brightness(depth.map.get(x, y));
+           if (invert){val = 255-val;}
+            // temp.add(new PVector(x, y, val + z*255));
+            boxCloud.vertex(x, y, amp*z + val/255*amp);
+
+          // }
+        }
+      }
+
+      invert = !invert; // need to do something hear to invert
+    }
+
+ boxCloud.endShape();
+    // c.m.points = temp;
+    c.v.vp3D.setCellUnit(boxCloud);
+
+}
+
+
+
+
+
+
+
+void RESETARRAY() {
+
+
+    println("resetting array");
+
+
+    ArrayList<PVector> temp = new ArrayList<PVector>();
+    Thumb depth,alpha, mater, alphaGlobe; // place holder variables
+
+    depth = c.m.depthArray;
+    alpha = c.m.alphaArray;
+    mater = c.m.materArray;
+
+    alphaGlobe = c.m.alphaGlb;
+
+    depth.map.loadPixels();
+    alpha.map.loadPixels();
+    mater.map.loadPixels();
+    alphaGlobe.map.loadPixels();
+
+
+    int res = 5;
+    float range = 255;
+
+
+    for (int x = 0; x < depth.map.width; x += res) {
+      for (int y = 0; y < depth.map.height; y+= res) {
+
+        float alp = brightness((alpha.map.get(x,y)));
+        float alp2 = brightness((alphaGlobe.map.get(x,y)));
+        if (random(0,1)>0.99){println("alph: " + alp2);}
+
+        if ((alp2 > 25)) { // check alpha (both of them)
+           float val = brightness(depth.map.get(x, y));
            temp.add(new PVector(x, y, val));
-
           }
         }
       }
-      c.m.points = temp;
+
+    // c.m.points = temp; // does this mater?
+    c.v.vp3D.setCellArray(temp);
+}
+
+void RESETPOINTCLOUD() {
+
+    //pritnln("reset pointCloud: " + c.v.vp3D.mode);
+
+    // ArrayList<PVector> temp = new ArrayList<PVector>();
+    // Thumb depth,alpha, mater; // place holder variables
+
+    // int stepZ;
+
+    // if (c.v.vp3D.mode == "UNIT") {
+
+    //   depth = c.m.depth;
+    //   alpha = c.m.alpha;
+    //   mater = c.m.mater;
+    //   stepZ = 1;
+
+    // } else {
+
+    //   //println("generate micro-structures");
+
+    //   depth = c.m.depthArray;
+    //   alpha = c.m.alpha;
+    //   mater = c.m.mater;
+    //   stepZ = 2;
+
+    // }
+
+    // depth.map.loadPixels();
+    // alpha.map.loadPixels();
+    // mater.map.loadPixels();
+
+    // int res = 1;
+    // float range = 255;
+
+    // //
+
+    // for (int x = 0; x < depth.map.width; x += res) {
+    //   for (int y = 0; y < depth.map.height; y+= res) {
+
+    //     float alp = brightness((alpha.map.get(x,y)));
+
+    //     if (alp > 10) { // check alpha
+
+    //        float val = brightness(depth.map.get(x, y));
+    //        temp.add(new PVector(x, y, val));
+
+    //       }
+    //     }
+    //   }
+    // c.m.points = temp;
+
+    // if (c.v.vp3D.mode == "UNIT"){
+    //   c.v.vp3D.setCellUnit(c.m.points);
+    //   } else {
+    //   c.v.vp3D.setCellArray(c.m.points);
+    // }
 }
