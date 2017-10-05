@@ -81,7 +81,6 @@ public void initControl(){
 }
 
 public void initViewport(){
-  c.v.vp3D.setCellArray(c.m.points); // ?
 }
 
 public void draw() {
@@ -99,7 +98,8 @@ public void init(){
 }
 
 public void initGeo(){
-  thread("RESETUNITCELL"); // can we make this more efficient
+  thread("RESETUNITCELL"); //
+  thread("RESETARRAY"); //
 }
 
 public void LayersZ(int value){
@@ -293,8 +293,6 @@ public void LayersY(int value){
 }
 
 
-
-
 public void adjustGrid(){
     println("adjustGrid");
     c.m.depthArray = c.m.depth.array(LayersX,LayersY);
@@ -339,8 +337,6 @@ public void initSlider() {
      .setSliderMode(Slider.FLEXIBLE)
      ;
 
-
-
     cp5.addSlider("LayersY")
      .setPosition(xD,yG + 150)
      .setWidth(len)
@@ -349,7 +345,6 @@ public void initSlider() {
      .setNumberOfTickMarks(10)
      .setSliderMode(Slider.FLEXIBLE)
      ;
-
 
     cp5.addSlider("LayersZ")
      .setPosition(xD,yG + 175)
@@ -404,6 +399,11 @@ public void RESETUNITCELL() {
     alpha = c.m.alpha;
     mater = c.m.mater;
 
+
+  depth = c.m.depthArray;
+    alpha = c.m.alphaArray;
+    mater = c.m.materArray;
+
     depth.map.loadPixels();
     alpha.map.loadPixels();
     mater.map.loadPixels();
@@ -430,7 +430,7 @@ public void RESETUNITCELL() {
       for (int y = 0; y < depth.map.height; y+= res) {
         float alp = brightness((alpha.map.get(x,y)));
 
-        // if (alp > 10) { // check alpha
+        // if (alp > 10) { // check alpha ??
 
            float val = brightness(depth.map.get(x, y));
            if (invert){val = 255-val;}
@@ -450,53 +450,117 @@ public void RESETUNITCELL() {
 
 }
 
-
-
-
-
-
-
 public void RESETARRAY() {
 
 
-    println("resetting array");
-
+  PShape boxCloud = createShape();
+  boxCloud.beginShape(POINTS);
+  boxCloud.stroke(255);
 
     ArrayList<PVector> temp = new ArrayList<PVector>();
-    Thumb depth,alpha, mater, alphaGlobe; // place holder variables
+    Thumb depth,alpha, mater; // place holder variables
 
-    depth = c.m.depthArray;
+    depth = c.m.depth;
+    alpha = c.m.alpha;
+    mater = c.m.mater;
+
+
+  depth = c.m.depthArray;
     alpha = c.m.alphaArray;
     mater = c.m.materArray;
-
-    alphaGlobe = c.m.alphaGlb;
 
     depth.map.loadPixels();
     alpha.map.loadPixels();
     mater.map.loadPixels();
-    alphaGlobe.map.loadPixels();
 
+    println("depth map size = " + depth.map.width + "," + depth.map.height);
 
-    int res = 5;
+    int res = 1;
     float range = 255;
 
 
+    int levels = LayersZ;
+    float amp = Amplitude/levels; // this is the total height
+    boolean invert = false;
+
+
+  println("resetting unit-cell");
+  println("layers = " + levels);
+  println("amp = " + amp);
+  println("total height = " + levels*amp);
+
+
+  for (int z = 0; z < levels; z++){
     for (int x = 0; x < depth.map.width; x += res) {
       for (int y = 0; y < depth.map.height; y+= res) {
-
         float alp = brightness((alpha.map.get(x,y)));
-        float alp2 = brightness((alphaGlobe.map.get(x,y)));
-        if (random(0,1)>0.99f){println("alph: " + alp2);}
 
-        if ((alp2 > 25)) { // check alpha (both of them)
+        // if (alp > 10) { // check alpha ??
+
            float val = brightness(depth.map.get(x, y));
-           temp.add(new PVector(x, y, val));
-          }
+           if (invert){val = 255-val;}
+            // temp.add(new PVector(x, y, val + z*255));
+            boxCloud.vertex(x, y, amp*z + val/255*amp);
+
+          // }
         }
       }
 
+      invert = !invert; // need to do something hear to invert
+    }
+
+    boxCloud.endShape();
+    // c.m.points = temp;
+    c.v.vp3D.setCellArray(boxCloud);
+
+}
+
+
+
+
+
+
+public void RESETARRAYOLD() {
+
+
+    // println("resetting array");
+
+
+    // ArrayList<PVector> temp = new ArrayList<PVector>();
+    // Thumb depth,alpha, mater, alphaGlobe; // place holder variables
+
+    // depth = c.m.depthArray;
+    // alpha = c.m.alphaArray;
+    // mater = c.m.materArray;
+
+    // alphaGlobe = c.m.alphaGlb;
+
+    // depth.map.loadPixels();
+    // alpha.map.loadPixels();
+    // mater.map.loadPixels();
+    // alphaGlobe.map.loadPixels();
+
+
+    // int res = 5;
+    // float range = 255;
+
+
+    // for (int x = 0; x < depth.map.width; x += res) {
+    //   for (int y = 0; y < depth.map.height; y+= res) {
+
+    //     float alp = brightness((alpha.map.get(x,y)));
+    //     float alp2 = brightness((alphaGlobe.map.get(x,y)));
+    //     if (random(0,1)>0.99){println("alph: " + alp2);}
+
+    //     if ((alp2 > 25)) { // check alpha (both of them)
+    //        float val = brightness(depth.map.get(x, y));
+    //        temp.add(new PVector(x, y, val));
+    //       }
+    //     }
+    //   }
+
     // c.m.points = temp; // does this mater?
-    c.v.vp3D.setCellArray(temp);
+    // c.v.vp3D.setCellArray(temp);
 }
 
 public void RESETPOINTCLOUD() {
@@ -1159,76 +1223,36 @@ public void updateView(){
 
   public void display(boolean showLayer){
 
-      PVector pos = position.get(); // println(position)
-      PVector scl = scale.get();
-      PVector rot = rotation.get();
 
-      strokeWeight(1);
-      stroke(255);
 
       pushMatrix();
-      // translate(-bbox.boxWidth/2, -bbox.boxHeight/2,-bbox.boxDepth/2);
-      translate(pos.x, pos.y); //??
+      setView();
 
-      rotateX(rot.x);
-      rotateZ(rot.y);
-
-      scale(scl.x);
-
-
-      drawPoints();
-
+      if (boxCloud != null){shape(boxCloud);}
       if (showLayer){displayLayer();}
       if (bbox != null ){ bbox.display();}
-
 
       popMatrix();
       updateCamera();
 
    }
 
-  public void drawCurrent(){
+   public void setView(){
+
+      PVector pos = position.get(); // println(position)
+      PVector scl = scale.get();
+      PVector rot = rotation.get();
+
+      strokeWeight(1);
+      stroke(255,100);
+      translate(pos.x, pos.y); //??
+      rotateX(rot.x);
+      rotateZ(rot.y);
+      scale(scl.x);
+
+   }
 
 
-  }
-
-   public void drawPoints(){
-
-      strokeWeight(2);
-      stroke(255,50);
-
-      // int res = 2;
-
-      // if (mode){
-      //   res = 16;
-      // }
-        if (boxCloud != null){shape(boxCloud);}
-
-      // for (int i = 0; i < pc.size(); i += res) {
-
-      // PVector p = pc.get(i);
-
-      // float x = p.x;
-      // float y = p.y;
-      // float z1 = p.z*Amplitude + 1;
-      // float z2 = p.z*Amplitude - 1;
-
-      // float scrnX1 = screenX(x, y, z1);
-      // float scrnX2 = screenX(x, y, z2);
-      // float scrnY1 = screenY(x, y, z1); // top layer
-      // float scrnY2 = screenY(x, y, z2); // bottom layer
-
-
-
-
-
-
-      // if (isDisplay(scrnX1,scrnY1)) { point(x, y, z1); }
-      // if (isDisplay(scrnX2,scrnY2)) { point(x, y, z2); }
-
-      // }
-
-    }
 
   public void setCurrent(ArrayList<PVector> _pc){ //
     currentLayerPC = _pc; // as percentage of a layer
@@ -1743,7 +1767,7 @@ class View {
     text("TEXTURES", cA, yE-os/2); // row2 //
 
     } else {
-    text("ARRAYS", cA, yD-os-os/2); // row1 //
+    text("UNITCELLS", cA, yD-os-os/2); // row1 //
     text("SHAPES: CHANNELS", cA, yE-os/2); // row2 //
     text("SHAPES", cA, yE+tWidth+os-os/2); // row2 //
 
@@ -1887,15 +1911,11 @@ class Viewport3D{
   }
 
   public void setCellUnit(PShape _pc){
-    // println("set cell unit = " + _pc.size());
-
     cellUnit.setCloud(_pc);
-    // cellUnit.set(_pc);
   }
 
-  public void setCellArray(ArrayList<PVector> _pc){
-     println("set cell array = " + _pc.size());
-    cellArray.set(_pc);
+  public void setCellArray(PShape _pc){
+    cellArray.setCloud(_pc);
   }
 
   public void toggleMode(){

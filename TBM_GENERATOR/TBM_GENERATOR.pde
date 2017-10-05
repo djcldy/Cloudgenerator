@@ -58,7 +58,6 @@ void initControl(){
 }
 
 void initViewport(){
-  c.v.vp3D.setCellArray(c.m.points); // ?
 }
 
 void draw() {
@@ -76,7 +75,8 @@ void init(){
 }
 
 void initGeo(){
-  thread("RESETUNITCELL"); // can we make this more efficient
+  thread("RESETUNITCELL"); //
+  thread("RESETARRAY"); //
 }
 
 void LayersZ(int value){
@@ -270,8 +270,6 @@ void LayersY(int value){
 }
 
 
-
-
 void adjustGrid(){
     println("adjustGrid");
     c.m.depthArray = c.m.depth.array(LayersX,LayersY);
@@ -316,8 +314,6 @@ void initSlider() {
      .setSliderMode(Slider.FLEXIBLE)
      ;
 
-
-
     cp5.addSlider("LayersY")
      .setPosition(xD,yG + 150)
      .setWidth(len)
@@ -326,7 +322,6 @@ void initSlider() {
      .setNumberOfTickMarks(10)
      .setSliderMode(Slider.FLEXIBLE)
      ;
-
 
     cp5.addSlider("LayersZ")
      .setPosition(xD,yG + 175)
@@ -381,6 +376,11 @@ void RESETUNITCELL() {
     alpha = c.m.alpha;
     mater = c.m.mater;
 
+
+  depth = c.m.depthArray;
+    alpha = c.m.alphaArray;
+    mater = c.m.materArray;
+
     depth.map.loadPixels();
     alpha.map.loadPixels();
     mater.map.loadPixels();
@@ -407,7 +407,7 @@ void RESETUNITCELL() {
       for (int y = 0; y < depth.map.height; y+= res) {
         float alp = brightness((alpha.map.get(x,y)));
 
-        // if (alp > 10) { // check alpha
+        // if (alp > 10) { // check alpha ??
 
            float val = brightness(depth.map.get(x, y));
            if (invert){val = 255-val;}
@@ -427,53 +427,117 @@ void RESETUNITCELL() {
 
 }
 
-
-
-
-
-
-
 void RESETARRAY() {
 
 
-    println("resetting array");
-
+  PShape boxCloud = createShape();
+  boxCloud.beginShape(POINTS);
+  boxCloud.stroke(255);
 
     ArrayList<PVector> temp = new ArrayList<PVector>();
-    Thumb depth,alpha, mater, alphaGlobe; // place holder variables
+    Thumb depth,alpha, mater; // place holder variables
 
-    depth = c.m.depthArray;
+    depth = c.m.depth;
+    alpha = c.m.alpha;
+    mater = c.m.mater;
+
+
+  depth = c.m.depthArray;
     alpha = c.m.alphaArray;
     mater = c.m.materArray;
-
-    alphaGlobe = c.m.alphaGlb;
 
     depth.map.loadPixels();
     alpha.map.loadPixels();
     mater.map.loadPixels();
-    alphaGlobe.map.loadPixels();
 
+    println("depth map size = " + depth.map.width + "," + depth.map.height);
 
-    int res = 5;
+    int res = 1;
     float range = 255;
 
 
+    int levels = LayersZ;
+    float amp = Amplitude/levels; // this is the total height
+    boolean invert = false;
+
+
+  println("resetting unit-cell");
+  println("layers = " + levels);
+  println("amp = " + amp);
+  println("total height = " + levels*amp);
+
+
+  for (int z = 0; z < levels; z++){
     for (int x = 0; x < depth.map.width; x += res) {
       for (int y = 0; y < depth.map.height; y+= res) {
-
         float alp = brightness((alpha.map.get(x,y)));
-        float alp2 = brightness((alphaGlobe.map.get(x,y)));
-        if (random(0,1)>0.99){println("alph: " + alp2);}
 
-        if ((alp2 > 25)) { // check alpha (both of them)
+        // if (alp > 10) { // check alpha ??
+
            float val = brightness(depth.map.get(x, y));
-           temp.add(new PVector(x, y, val));
-          }
+           if (invert){val = 255-val;}
+            // temp.add(new PVector(x, y, val + z*255));
+            boxCloud.vertex(x, y, amp*z + val/255*amp);
+
+          // }
         }
       }
 
+      invert = !invert; // need to do something hear to invert
+    }
+
+    boxCloud.endShape();
+    // c.m.points = temp;
+    c.v.vp3D.setCellArray(boxCloud);
+
+}
+
+
+
+
+
+
+void RESETARRAYOLD() {
+
+
+    // println("resetting array");
+
+
+    // ArrayList<PVector> temp = new ArrayList<PVector>();
+    // Thumb depth,alpha, mater, alphaGlobe; // place holder variables
+
+    // depth = c.m.depthArray;
+    // alpha = c.m.alphaArray;
+    // mater = c.m.materArray;
+
+    // alphaGlobe = c.m.alphaGlb;
+
+    // depth.map.loadPixels();
+    // alpha.map.loadPixels();
+    // mater.map.loadPixels();
+    // alphaGlobe.map.loadPixels();
+
+
+    // int res = 5;
+    // float range = 255;
+
+
+    // for (int x = 0; x < depth.map.width; x += res) {
+    //   for (int y = 0; y < depth.map.height; y+= res) {
+
+    //     float alp = brightness((alpha.map.get(x,y)));
+    //     float alp2 = brightness((alphaGlobe.map.get(x,y)));
+    //     if (random(0,1)>0.99){println("alph: " + alp2);}
+
+    //     if ((alp2 > 25)) { // check alpha (both of them)
+    //        float val = brightness(depth.map.get(x, y));
+    //        temp.add(new PVector(x, y, val));
+    //       }
+    //     }
+    //   }
+
     // c.m.points = temp; // does this mater?
-    c.v.vp3D.setCellArray(temp);
+    // c.v.vp3D.setCellArray(temp);
 }
 
 void RESETPOINTCLOUD() {

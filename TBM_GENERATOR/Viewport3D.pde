@@ -24,15 +24,11 @@ class Viewport3D{
   }
 
   void setCellUnit(PShape _pc){
-    // println("set cell unit = " + _pc.size());
-
     cellUnit.setCloud(_pc);
-    // cellUnit.set(_pc);
   }
 
-  void setCellArray(ArrayList<PVector> _pc){
-     println("set cell array = " + _pc.size());
-    cellArray.set(_pc);
+  void setCellArray(PShape _pc){
+    cellArray.setCloud(_pc);
   }
 
   void toggleMode(){

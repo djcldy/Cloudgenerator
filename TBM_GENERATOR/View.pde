@@ -137,7 +137,7 @@ class View {
     text("TEXTURES", cA, yE-os/2); // row2 //
 
     } else {
-    text("ARRAYS", cA, yD-os-os/2); // row1 //
+    text("UNITCELLS", cA, yD-os-os/2); // row1 //
     text("SHAPES: CHANNELS", cA, yE-os/2); // row2 //
     text("SHAPES", cA, yE+tWidth+os-os/2); // row2 //
 

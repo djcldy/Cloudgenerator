@@ -141,76 +141,36 @@ void updateView(){
 
   void display(boolean showLayer){
 
-      PVector pos = position.get(); // println(position)
-      PVector scl = scale.get();
-      PVector rot = rotation.get();
 
-      strokeWeight(1);
-      stroke(255);
 
       pushMatrix();
-      // translate(-bbox.boxWidth/2, -bbox.boxHeight/2,-bbox.boxDepth/2);
-      translate(pos.x, pos.y); //??
+      setView();
 
-      rotateX(rot.x);
-      rotateZ(rot.y);
-
-      scale(scl.x);
-
-
-      drawPoints();
-
+      if (boxCloud != null){shape(boxCloud);}
       if (showLayer){displayLayer();}
       if (bbox != null ){ bbox.display();}
-
 
       popMatrix();
       updateCamera();
 
    }
 
-  void drawCurrent(){
+   void setView(){
+
+      PVector pos = position.get(); // println(position)
+      PVector scl = scale.get();
+      PVector rot = rotation.get();
+
+      strokeWeight(1);
+      stroke(255,100);
+      translate(pos.x, pos.y); //??
+      rotateX(rot.x);
+      rotateZ(rot.y);
+      scale(scl.x);
+
+   }
 
 
-  }
-
-   void drawPoints(){
-
-      strokeWeight(2);
-      stroke(255,50);
-
-      // int res = 2;
-
-      // if (mode){
-      //   res = 16;
-      // }
-        if (boxCloud != null){shape(boxCloud);}
-
-      // for (int i = 0; i < pc.size(); i += res) {
-
-      // PVector p = pc.get(i);
-
-      // float x = p.x;
-      // float y = p.y;
-      // float z1 = p.z*Amplitude + 1;
-      // float z2 = p.z*Amplitude - 1;
-
-      // float scrnX1 = screenX(x, y, z1);
-      // float scrnX2 = screenX(x, y, z2);
-      // float scrnY1 = screenY(x, y, z1); // top layer
-      // float scrnY2 = screenY(x, y, z2); // bottom layer
-
-
-
-
-
-
-      // if (isDisplay(scrnX1,scrnY1)) { point(x, y, z1); }
-      // if (isDisplay(scrnX2,scrnY2)) { point(x, y, z2); }
-
-      // }
-
-    }
 
   void setCurrent(ArrayList<PVector> _pc){ //
     currentLayerPC = _pc; // as percentage of a layer
