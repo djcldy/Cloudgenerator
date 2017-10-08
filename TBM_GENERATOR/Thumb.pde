@@ -1,52 +1,71 @@
 class Thumb {
-
+  boolean loaded = false;
   PGraphics map;
   PImage texture, parent;
   String path, name;
   PVector loc, size;
   boolean isSelected = false;
   ArrayList<Thumb> children; // chilrdren
-  ArrayList<Thumb> selectedChildren = new ArrayList<Thumb>();
-
+  ArrayList<Thumb> selecteren = new ArrayList<Thumb>();
+  ImageThread it;
+  PApplet app;
   int scroll = 0;
 
-  Thumb(String _path, PVector _loc, PVector _size, String _name) {
-    name = _name;
-    size = _size;
+
+
+
+  Thumb(PApplet _app, String _path, PVector _loc, PVector _size, String _name) {
+    app   =   _app;
+    name  =   _name;
+    size  =  _size;
+    loc = _loc;
+    path = _path;
+    // println("thumb path = " + _path);
     reset(_path, _loc);
     setChildren(0); // start on step 1
   }
 
-  Thumb(String _path, PVector _loc, PVector _size) {
+
+  Thumb(PApplet _app,String _path, PVector _loc, PVector _size) {
+    // println("add child");
+    path = _path;
     size = _size;
+    loc = _loc;
     reset(_path, _loc);
+
   }
 
   Thumb(PImage _texture, PVector _loc, PVector _size){
     size = _size;
-    resetArray(_texture,_loc);
+       loc = _loc;
+     resetArray(_texture,_loc);
   }
 
 
   Thumb array(int stepX, int stepY){
 
-    PGraphics arrayTexture = createGraphics(int(size.x), int(size.y));
-    PImage clone = parent.get();
-    clone.resize(int(size.x/stepX), int(size.y/stepY));
+    Thumb copy = new Thumb(app,path,loc,size,name);
 
-    arrayTexture.beginDraw();
 
-    for (int x =0; x < size.x; x += size.x/stepX){
-      for (int y = 0; y < size.y; y += size.y/stepY){
-        arrayTexture.image(clone,x,y);
-      }
-    }
-    arrayTexture.endDraw();
+  // Thumb(PApplet _app, String _path, PVector _loc, PVector _size, String _name) {
 
-    PImage result = arrayTexture.get();
-    Thumb arrayThumb = new Thumb(result, loc, size);
+    // PGraphics arrayTexture = createGraphics(int(size.x), int(size.y));
+    // PImage clone = parent.get();
+    // clone.resize(int(size.x/stepX), int(size.y/stepY));
 
-    return arrayThumb;
+    // arrayTexture.beginDraw();
+
+    // for (int x =0; x < size.x; x += size.x/stepX){
+    //   for (int y = 0; y < size.y; y += size.y/stepY){
+    //     arrayTexture.image(clone,x,y);
+    //   }
+    // }
+    // arrayTexture.endDraw();
+
+    // PImage result = arrayTexture.get();
+    // Thumb arrayThumb = new Thumb(result, loc, size);
+
+   return copy;
   }
 
 
@@ -68,34 +87,50 @@ class Thumb {
   }
 
 
-  void reset(String _path, PVector _loc) {
 
-    path = _path;
-    loc = _loc;
-    float x = size.x;
-    float y = size.y;
-
-    map = createGraphics(int(x), int(y));
-    map.beginDraw();
-    map.background(0);
-    map.endDraw();
-
-    PImage xx = loadImage(path); // textures 512 px x 512 px
-
-    texture = normalize(xx);
-
-    println(" normalize");
-
-    println(" size = " + texture.width + "," + texture.height);
-    println(" size = " + size.x + "," + size.y);
-
-    if (texture == null) { println("texture is null");}
-    if (texture == null) { println("parent is null");}
-
-    parent = texture.get();
-
-    updateMap();
+  void reset(String _path, PVector _loc){
+    println("reset: " + _path + "," + size);
+    it = new ImageThread(app, _path,size);
+    it.start();
   }
+
+
+  void resetChild(Thumb _child){
+
+    parent = _child.parent.get();
+    texture = _child.texture.get();
+    map = _child.map;
+  }
+
+
+  // void reset(String _path, PVector _loc) {
+
+  //   path = _path;
+  //   loc = _loc;
+  //   float x = size.x;
+  //   float y = size.y;
+
+  //   map = createGraphics(int(x), int(y));
+  //   map.beginDraw();
+  //   map.background(0);
+  //   map.endDraw();
+
+  //   PImage xx = loadImage(path); // textures 512 px x 512 px
+
+  //   texture = normalize(xx);
+
+  //   println(" normalize");
+
+  //   println(" size = " + texture.width + "," + texture.height);
+  //   println(" size = " + size.x + "," + size.y);
+
+  //   if (texture == null) { println("texture is null");}
+  //   if (texture == null) { println("parent is null");}
+
+  //   parent = texture.get();
+
+  //   updateMap();
+  // }
 
   void updateMap() {
     texture.resize(0, int(size.x));
@@ -108,7 +143,7 @@ class Thumb {
 
 
   void  setChildren(int step) {
-
+    println("set children");
     scroll += step;
 
     children = new ArrayList<Thumb>();
@@ -127,11 +162,17 @@ class Thumb {
 
     }
 
-
+//     for  (int j = 0 ; j< items; j++){
+//     println("children filenames = " + filenames[j]);
+// }
     if (filenames !=null) {
       for (int j = 0; j < b2; j++){
+
         // children.add(new Thumb(localPath + filenames[j], new PVector(xA+size.x*col,yE+size.x*row), size));
-        children.add(new Thumb(localPath + filenames[j], new PVector(os+size.x*col,loc.y+size.x+os), size));
+
+        println("add child: " + localPath + filenames[j]);
+        children.add(new Thumb(app, localPath + filenames[j], new PVector(os+size.x*col,loc.y+size.x+os), size));
+
         col ++;
         if (col == 3) {
           col = 0;
@@ -142,11 +183,13 @@ class Thumb {
   }
 
   void showChildren() {
+
     if (children != null) {
       for (Thumb child : children) {
         child.display();
       }
     }
+
   }
 
 
@@ -154,7 +197,6 @@ class Thumb {
 
   PImage normalize(PImage img) {
 
-    println("normalize image xxxxxxxxx");
     PGraphics temp = createGraphics(img.width, img.height);
 
     temp.beginDraw();
@@ -200,15 +242,16 @@ class Thumb {
       if ((mouseX > child.loc.x) && (mouseX < (child.loc.x + map.width)) && (mouseY > child.loc.y) && (mouseY < (child.loc.y + map.height))) {
         child.isSelected = true;
         chi = child;
-        reset(child.path, loc);
 
-        if (!selectedChildren.contains(child)){
-          selectedChildren.add(child);
-        }
+        resetChild(child); // reset Channel with  currennt child...
+
+        // if (selectedChildren.contains(child)){
+        //   selectedChildren.add(child);
+        // }
 
       } else {
         child.isSelected = false;
-        selectedChildren.remove(child);
+        // selectedChildren.remove(child);
       }
     }
 
@@ -219,11 +262,20 @@ class Thumb {
 
   boolean checkSelected(PVector ms) { // hmm we can  refactor this
 
-    if ((mouseX > loc.x) && (mouseX < (loc.x + map.width)) && (mouseY > loc.y) && (mouseY < (loc.y + map.height))) {
+    isSelected = false;
+
+    // if (map != null){
+
+      // println("checked selected: " + map);
+
+      // println("check selected");
+    if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mouseY < (loc.y + size.y))) {
       isSelected = !isSelected;
     } else {
       isSelected = false;
     }
+    println("selected completed");
+    // }
 
     return isSelected;
   }
@@ -239,22 +291,55 @@ class Thumb {
   }
   void display() {
 
-    strokeWeight(2);
-    noFill();
 
-    image(map, loc.x, loc.y);
+
+    if (loaded == false){
+      if (it.isReady){
+        // println("it is ready");
+        parent = normalize(it.parent);//
+        texture = normalize(it.texture);//
+        map = it.map;
+        it.stop();
+        loaded = true;
+      }
+    }
+
+    pushMatrix();
+    translate(loc.x,loc.y);
+
+
+    fill(34,155,215);
+    if (loaded){
+      image(texture,0,0);
+    }else{
+    rect(0,0,rA,rA);
+    }
+    popMatrix();
+
+
+    noFill();
+    if (isSelected) {
+
+      stroke(163, 149, 41);
+      rect(loc.x, loc.y, size.x, size.y); // Left
+      showChildren();
+    } else if  ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mouseY < (loc.y + size.y))) {
+      stroke(255, 100);
+      rect(loc.x, loc.y, size.x, size.y); // Left
+    }
+
 
     // showChildren();
 
     //// hover
-    if (isSelected) {
-      stroke(163, 149, 41);
-      rect(loc.x, loc.y, map.width, map.height); // Left
-      showChildren();
-    } else if  ((mouseX > loc.x) && (mouseX < (loc.x + map.width)) && (mouseY > loc.y) && (mouseY < (loc.y + map.height))) {
-      stroke(255, 100);
-      rect(loc.x, loc.y, map.width, map.height); // Left
-    }
+    // if (isSelected) {
+    //   stroke(163, 149, 41);
+    //   rect(loc.x, loc.y, map.width, map.height); // Left
+    //   showChildren();
+    // } else if  ((mouseX > loc.x) && (mouseX < (loc.x + map.width)) && (mouseY > loc.y) && (mouseY < (loc.y + map.height))) {
+    //   stroke(255, 100);
+    //   rect(loc.x, loc.y, map.width, map.height); // Left
+    // }
 
     // hover
     float x1 = loc.x + size.x/2;

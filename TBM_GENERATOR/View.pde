@@ -5,6 +5,7 @@ class View {
   Viewport2D vp2D;
   Viewport3D vp3D;
   Voxelator vox;
+  // Control control;
 
   float thickness = 2;
 
@@ -13,14 +14,12 @@ class View {
   float zRot = 3.14/2;
   float current = 0; //?
 
-  View(Model m, Viewport2D _vp) {
+  View(Model _m, Viewport2D _vp) {
     // println("initialize view class") ;
-
-    model = m;
+    model = _m;
+    // control = _C;
     vp2D = _vp;
     vp3D = new Viewport3D(xC, yA, xD, yF-height/16);
-
-
   }
 
   void setCurrent() {
@@ -41,18 +40,21 @@ class View {
     // drawZones();
     drawFrames();
     drawLabels();
-    model.vox.display(); // this one ok
+
+    for (UnitCell cell : c.unitCells){
+      cell.display();
+    }
 
 
     if (vp3D.mode == "UNIT"){
       vp2D.display();   // this is just a screen
       model.displayCellUnit();  //
     } else {
-      vp2D.displayCellArray();
-      model.displayCellArray();
+      // vp2D.displayCellArray();
+      // model.displayCellArray();
     }
 
-
+    model.vox.display(); // this one ok
 
   }
 
@@ -63,47 +65,72 @@ class View {
 
   void drawFrames() {
 
-    // clean this up
 
     stroke(255, 50);
 
-    float y1 = (height*2)/3;
-    float y2 = (height/16);
-    float y3 = y2/2;
-    float y4 = height - y2;
-    float y5 = height/2;
 
-    float x1 = (width*5)/6;
-    float x2 = (width*13)/24;
-    float x3 = x1 + (width-x1)/2;
-    float x4 = (width*(16.5)/24);
-    float x5 = (width*(13.75)/24);
-    float y6 = height/16+width/64+width/4 - width/32;
+    drawColumns();
+    drawRows();
 
-    ////////////////////////////////////////
-    // horizontal lines
-    strokeWeight(2);
-    line(0, yA, width, yA);
-    line(0, y4, width, y4);
-    line(0, height-os, width, height-os);
-
-    // vertical lines
-    line(width/4-os, 0, width/4-os, height);
-    line(os, 0, os, height);
-    line(width-os, 0, width-os, height);
-    line(width/4, 0, width/4, height);
-    line(x1, 0, x1, height);
-    int y10 = int(height/16+width/64+ width/4 - width/32);
-    line(0,y10-os, width/4, y10-os);
-    line(0,y10, width/4, y10);
-    line(0,y10 + tWidth + os, width/4, y10 + tWidth + os);
-    line(0,y10 + 2*(tWidth + os), width/4, y10 + 2*(tWidth+os));
-    line(0,y10, width/4, y10);
-    line(0,y10+ tWidth, width/4-os, y10 + tWidth);
-    line(0,y10 + 2*(tWidth)+os, width/4, y10 + 2*(tWidth)+os);
 
 
   }
+
+  void drawRows(){
+    // ROWS
+
+
+    // ROW 1-2
+
+    line(0, yA, width, yA);
+
+    // ROW 3-4
+
+
+    // ROW 5-6
+    // line(0,y10+ tWidth, width/2, y10 + tWidth);
+    line(0,y10+tWidth, width, y10+tWidth);
+    line(0,y10+ tWidth+os, width, y10 + tWidth+os);
+
+    // ROW 7-8
+    line(0,y10 + 2*(tWidth)+os, width/2, y10 + 2*(tWidth)+os);
+    line(0,y10 + 2*(tWidth)+2*os, width/2, y10 + 2*(tWidth)+2*os);
+
+
+  }
+  void drawColumns(){
+
+    //  COLUMNS
+
+  // colum 1-2
+    line(os, 0, os, height);
+
+    // column 3-4
+    line(width/4-os, 0, width/4-os, height/2);
+    line(width/4, 0, width/4, height/2);
+
+    // column 5-6
+    line(width/2 - os/2,0, width/2 - os/2, height);
+    line(width/2+os/2,0, width/2+os/2, height);
+
+    // column 7-8
+
+    line(width/2+  width/6 +os/2,row5,width/2 +  width/6+os/2, height);
+    line(width/2+  width/6-os/2,row5,width/2 +  width/6-os/2, height);
+
+    // column 9-10
+
+
+    line(width/2+  width/3+os/2,row5,width/2 +  width/3+os/2, height);
+    line(width/2+  width/3-os/2,row5,width/2 +  width/3-os/2, height);
+
+    //
+    // colum 11-12
+    line(width-os, 0, width-os, height);
+
+
+  }
+
 
   void drawLabels() {
 
@@ -111,18 +138,18 @@ class View {
     // textSize(18);
     // textAlign(CENTER);
 
+    fill(255);
+
     textSize(11);
     textAlign(CENTER);
-    String s = "PointCloud Generator - Sayjel Vijay Patel - 2017";
-    text(s, width/2, height-os/2);
+    // String s = "PointCloud Generator - Sayjel Vijay Patel - 2017";
+    // text(s, width/2, height-os/2);
 
     // textAlign(CENTER);
 
-
-
     textSize(14);
-    s = "Mode: " + vp3D.mode;
-    text(s, cA, rA);
+    // String s = "Mode: " + vp3D.mode;
+    // text(s, cA, rA);
 
     textSize(11);
     // text("CHANNELS", cA, rC);
@@ -134,10 +161,10 @@ class View {
     if (vp3D.mode == "UNIT"){
 
     text("TEXTURE: CHANNELS", cA, yD-os-os/2); // row1 //
-    text("TEXTURES", cA, yE-os/2); // row2 //
+    // text("TEXTURES", cA, yE-os/2); // row2 //
 
     } else {
-    text("UNITCELLS", cA, yD-os-os/2); // row1 //
+    // text("UNITCELLS", cA, yD-os-os/2); // row1 //
     text("SHAPES: CHANNELS", cA, yE-os/2); // row2 //
     text("SHAPES", cA, yE+tWidth+os-os/2); // row2 //
 

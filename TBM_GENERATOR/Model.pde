@@ -6,6 +6,8 @@ class Model {
   PGraphics pg;
   PointCloud pointCloud;
 
+  PApplet app;
+
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
   ArrayList<Thumb> thumbsArray = new ArrayList<Thumb>();
   ArrayList<Thumb> thumbsGlobal = new ArrayList<Thumb>();
@@ -30,7 +32,9 @@ class Model {
 
   ArrayList<PVector> points = new ArrayList<PVector>();
 
-  Model() {
+  Model(PApplet _app) {
+
+    app = _app;
 
     initChannelThumbs();
 
@@ -93,9 +97,9 @@ class Model {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-    depth = new Thumb("/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
-    mater = new Thumb("/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
-    alpha = new Thumb("/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
+    depth = new Thumb(app, "/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
+    mater = new Thumb(app, "/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
+    alpha = new Thumb(app, "/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
 
     thumbs.add(depth);
     thumbs.add(mater);
@@ -116,9 +120,9 @@ class Model {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-     depthGlb = new Thumb("/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
-     materGlb = new Thumb("/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
-     alphaGlb = new Thumb("/textures/global/alpha/blank.png",    new PVector(os+2*tW,y4),  dimThumb, "global/alpha");
+     depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
+     materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
+     alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",    new PVector(os+2*tW,y4),  dimThumb, "global/alpha");
 
     thumbsGlobal.add(depthGlb);
     thumbsGlobal.add(materGlb);
@@ -153,7 +157,7 @@ class Model {
     for (Thumb th : thumbs) {
       th.display();
     }
-    testSelection();
+    // testSelection();
   }
 
 

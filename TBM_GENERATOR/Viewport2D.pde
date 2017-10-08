@@ -18,24 +18,29 @@ class Viewport2D {
   }
 
   void displayCellUnit(){
+    // println("displayCell");
+    pushMatrix();
+    fill(34,155,215);
+    translate(loc.x,loc.y);
+    if (image != null){
+      image(image, 0, 0);
+    } else {
+      update();
+      rect(0,0,size.x,size.y);
+    }
 
-    image(image, loc.x, loc.y);
-
+    popMatrix();
   }
 
   void displayCellArray(){
-
-    image(image, loc.x, loc.y);
-
-
-
+    if (image != null ){ image(image, loc.x, loc.y);}
   }
 
   void update(){
-
-    if (thumb.parent != null){
-    image = thumb.parent.get();
-    image.resize(int(size.x), int(size.y));
+    // println("update 2d: " + thumb.name + "," + thumb.parent);
+    if (thumb.texture != null){
+      image = thumb.texture.get();
+      image.resize(int(size.x), int(size.y));
     }
   }
 
@@ -59,9 +64,9 @@ class Viewport2D {
   void display(){
 
     if (mode == "UNIT"){
-      displayCellArray();
-    } else {
       displayCellUnit();
+    } else {
+      displayCellArray();
     }
   }
 

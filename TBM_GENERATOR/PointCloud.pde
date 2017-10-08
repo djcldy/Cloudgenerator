@@ -57,19 +57,30 @@ PShape boxCloud;
 
     PVector start,scl,rot;
 
-    if (mode){
-      // setMode1();
-      start = new PVector(width/4 + vWidth/8, yB + vHeight/8 - os, 0);
-      scl = new PVector(1,1,1);
-      rot = new PVector(-atan(sin(radians(45))), radians(45),0);
+    // if (mode){  // unitCell
+    //   // setMode1();
+    //   start = new PVector(width/4 + vWidth/8, yB + vHeight/8 - os, 0);
+    //   scl = new PVector(1,1,1);
+    //   rot = new PVector(-atan(sin(radians(-45))), radians(45),0);
 
-    }else{
-      // setMode2();
-      start = new PVector(width/4 + vWidth/2, vHeight/2-2*os);
-      scl = new PVector(3,3,3);
-      rot = new PVector(-atan(sin(radians(45))), radians(45),0);
+    // }else{
+    //   // setMode2();
+    //   start = new PVector(width/4 + vWidth/2, vHeight/2-2*os);
+    //   scl = new PVector(3,3,3);
+    //   rot = new PVector(-atan(sin(radians(45))), radians(45),0);
 
-    }
+    // }
+
+
+      // start = new PVector(width/4 + vWidth/8, yB + vHeight/8 - os, 0);
+
+
+      float w = 3*width/8;
+
+      start = new PVector(w, yB + vHeight/8+height/8, -10);
+      scl = new PVector(0.75,0.75,0.75);
+      rot = new PVector(-atan(sin(radians(-30))), radians(-30),0);
+
 
     float val = 0.1;
 
@@ -115,7 +126,9 @@ void updateView(){
    void updateCamera(){
 
     if (!mode){
-      rotation.addIncrement(new PVector(0.005,0,0.005));
+      rotation.addIncrement(new PVector(0.0005,0.0001,0.0001));
+
+      // rotation.addIncrement(new PVector(0,-0.005,0));
       // yRot += 0.005;
       //  zRot += 0.005;
     }
@@ -141,14 +154,18 @@ void updateView(){
 
   void display(boolean showLayer){
 
-
-
       pushMatrix();
       setView();
 
-      if (boxCloud != null){shape(boxCloud);}
-      if (showLayer){displayLayer();}
-      if (bbox != null ){ bbox.display();}
+      stroke(255,100);
+      fill(255,100);
+
+      if (boxCloud != null){
+
+        shape(boxCloud);
+      }
+      // if (showLayer){displayLayer();}
+      // if (bbox != null ){ bbox.display();}
 
       popMatrix();
       updateCamera();
@@ -163,10 +180,22 @@ void updateView(){
 
       strokeWeight(1);
       stroke(255,100);
-      translate(pos.x, pos.y); //??
+      // translate(-5,-5,-5);
+      // rotateY(rot.y);
+      // rotateZ(rot.z);
+
+      // scale(scl.x);
+
+
+      // translate(width/2,height/2);
+
+      // translate(-5,-5,-.25);
+      translate(pos.x, pos.y,pos.z); //
       rotateX(rot.x);
-      rotateZ(rot.y);
-      scale(scl.x);
+      rotateY(rot.y);
+      rotateZ(rot.z);
+
+      scale(.75);
 
    }
 

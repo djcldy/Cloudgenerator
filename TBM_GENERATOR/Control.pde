@@ -5,23 +5,27 @@ class Controller {
   Model m;
   View v;
 
+  PApplet app;
+
   // can get rid of this ?
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
+  ArrayList<UnitCell> unitCells = new ArrayList<UnitCell>();
+
   Viewport2D vp;
 
   Zone zoneA, zoneB, zoneC;  // select zones
   ArrayList<Zone> zones = new ArrayList<Zone>();
 
-  Controller() {
+  Controller(PApplet _app) {
 
-    //Println("initialize controller");
     initSelector();
     init();
 
-     m = new Model();
+    app = _app;
+     m = new Model(app);
      m.currentThumb = thumbs.get(1);
-     v = new View(m,vp);
-     vp.set(m.depthArray);
+     v = new View(m, vp);
+     vp.set(m.depth);
      vp.m = m; // clean this up later
 
   }
@@ -46,13 +50,23 @@ class Controller {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-    Thumb depth = new Thumb("/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
-    Thumb mater = new Thumb("/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
-    Thumb alpha = new Thumb("/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
+    Thumb depth = new Thumb(app,"/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
+    Thumb mater = new Thumb(app,"/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
+    Thumb alpha = new Thumb(app,"/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
 
     thumbs.add(depth);
     thumbs.add(mater);
     thumbs.add(alpha);
+
+
+
+    PShape shape = null;
+
+    float cellWidth = (width/2 - os-os/2)/6;
+
+    for (float x = os; x < width/2 - dimThumb.x; x += cellWidth){
+      unitCells.add(new UnitCell(new PVector(x,row8), new PVector(cellWidth,cellWidth), shape ));
+    }
 
     mater.isSelected = true;
 
@@ -75,7 +89,6 @@ class Controller {
 
 
   void zoneC(PVector ms){
-  //Println("current thumb = " + m.currentThumb.name);
   Thumb current = m.currentThumb; // current thumb that is selected
   current.checkSelectedChildren();
 
@@ -98,8 +111,6 @@ class Controller {
   }
 
   void zoneB(PVector ms, ArrayList<Thumb> _thumbs){
-
-  // toggle zoneB
   boolean toggle = false;
 
   for (Thumb th : _thumbs) {
@@ -109,26 +120,29 @@ class Controller {
         toggle = true;
       }
     }
-
-    // if (toggle) {
-    //   for (Thumb th : _thumbs) {
-    //    if (th != m.currentThumb){
-    //     th.isSelected = false;
-    //    }
-
-    //   }
-    // }
   }
 
 
-void checkR1(ArrayList<Thumb> _thumbs,  PVector ms){
+boolean checkR1(ArrayList<Thumb> _thumbs,  PVector ms){
+
+  boolean regen = true;   // R1 is the channel level of thumbs
 
   for (Thumb th : _thumbs) {
+
+     boolean b1 = th.isSelected;
+
       if (th.checkSelected(ms)) {
-        m.currentR1 = th;
-        vp.set(th);
+        if (!b1){
+          m.currentR1 = th;
+          vp.set(th);
+        } else {
+          regen = false;
+        }
       }
+
   }
+
+  return regen;
 }
 
 void checkR2(Thumb th,  PVector ms){
@@ -148,30 +162,36 @@ void checkR3(ArrayList<Thumb> _thumbs,  PVector ms){
 }
 
 
-void unitSelect(PVector ms){
+boolean unitSelect(PVector ms){
+
+  boolean regen = true;
+
     if (zoneA.isSelected(ms)){
-        checkR1(m.thumbs, ms);
+        regen = checkR1(m.thumbs, ms);
       } else if (zoneB.isSelected(ms)){
         if (m.currentR1 != null){
           checkR2(m.currentR1, ms);
         }
     }
+
+
+    return regen;
 }
 
 
 
 void arraySelect(PVector ms){
-      println("array select");
+      // println("array select");
       if (zoneB.isSelected(ms)){
         checkR1(m.thumbsGlobal, ms);
-      println("zoneB: ");
+      // println("zoneB: ");
       } else if (zoneC.isSelected(ms)){
-        println("checkZone");
+        // println("checkZone");
         if (m.currentR1 != null){
-          println("zoneC");
+          // println("zoneC");
           checkR2(m.currentR1, ms);
         } else {
-          println("zoneC = null");
+          // println("zoneC = null");
         }
       }
 }
@@ -179,11 +199,13 @@ void arraySelect(PVector ms){
   void mouseDown(PVector ms) {
 
     if (v.vp3D.mode == "UNIT"){
-      unitSelect(ms);
-      thread("RESETUNITCELL");
+      if (unitSelect(ms)){
+        thread("RESETUNITCELL");
+      }
+      // thread("RESETUNITCELL");
     } else {
-      arraySelect(ms);
-      thread("RESETARRAY");
+      // arraySelect(ms);
+      // thread("RESETARRAY");
     }
 }
 }

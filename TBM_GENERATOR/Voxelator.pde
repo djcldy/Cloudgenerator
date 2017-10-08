@@ -15,6 +15,8 @@ class Voxelator {
   Thumb depthArray, alphaArray, materArray;
   Thumb depthGlobe, alphaGlobe, materGlobe;
 
+  boolean loaded = false;
+
   String mode = "UNIT";
 
   Voxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
@@ -29,10 +31,10 @@ class Voxelator {
     mater = thumbs.get(1);
     alpha = thumbs.get(2);
 
-    dimX = depth.map.width;
-    dimY = depth.map.height;
+    dimX = size.x;
+    dimY = size.z;
 
-    setArrays(arrays);
+    // setArrays(arrays);
 
     depthGlobe = globes.get(0);
     materGlobe = globes.get(1);
@@ -40,7 +42,7 @@ class Voxelator {
 
     layer = Current;
     thickness = Thickness;
-    update();
+    // update();
 
   }
 
@@ -51,8 +53,6 @@ class Voxelator {
   // }
   ArrayList<PVector> getCurrentPC(){  // returns pointcloud of the current list
 
-    println("get current pc");
-
     ArrayList<PVector> _pc = new ArrayList<PVector>();
     int res = 1;
     PImage img = pg.get();
@@ -62,7 +62,7 @@ class Voxelator {
       for (int y =  0; y < img.height; y+= res ){
           color c = img.get(x, y);
           if (brightness(c) > 100){
-            _pc.add(new PVector(x,y,layer*Amplitude));
+            _pc.add(new PVector(x,y,layer*255*Amplitude));
           }
       }
     }
@@ -83,17 +83,11 @@ class Voxelator {
   // ArrayList getPC(){
 
    void toggleMode(){
-
-
-
     if (mode == "UNIT"){
       mode = "ARRAY";
     } else {
       mode = "UNIT";
     }
-
-
-    // println("toggle Voxelator: " + mode);
     update();
    }
 
@@ -105,8 +99,6 @@ class Voxelator {
 
    void export(){
 
-    // println("exportStack");
-
     int layers = 0;
     PVector dim = new PVector(400,400);
 
@@ -114,7 +106,6 @@ class Voxelator {
     for (int l = 0; l < 255; l++){
 
     PImage img = depth.texture.get();
-
     img.resize(int(dim.x),int(dim.y));
 
     pg = createGraphics(int(dim.x),int(dim.y));
@@ -144,7 +135,7 @@ class Voxelator {
 
   void update(){
 
-    println("update Vox");
+    // println("update Vox");
 
     if (mode == "ARRAY"){
       updateArray();
@@ -154,12 +145,38 @@ class Voxelator {
 
   }
 
+
+
   void updateUnit(){
 
-    // println("GETTING LAYER : " + t);
-    PImage img = depth.texture.get();
+    if (depth.texture != null){
 
+    PImage img = depth.texture.get();
     img.resize(int(size.x),int(size.y));
+
+    boolean invertLayer;
+
+    int res = 1;
+    float range = 255;
+    int numLevels = LayersZ;
+
+    float domain = range;
+    // float amp = Amplitude/levels; // this is the total height
+    float totalSlices = 255;
+    float subDomain = totalSlices/numLevels;
+
+    int currentSlice = int(totalSlices*layer); // current slice
+    int currentStep = floor(currentSlice/subDomain);
+    float currentLayer = (currentSlice%subDomain)/subDomain*255;
+
+    // println("Update Vox, currentLayer = " + currentLayer);
+
+    if (currentStep%2 == 0){
+      invertLayer = false;
+    } else {
+      invertLayer = true;
+    }
+
 
     pg = createGraphics(int(size.x),int(size.y));
     pg.beginDraw();
@@ -167,24 +184,20 @@ class Voxelator {
     pg.loadPixels();
 
     for (int k = 0; k <  img.pixels.length; k++) {
-      color bright = img.pixels[k];
-      float val = brightness(bright);
-    if ((val < (layer+thickness)) && (val > (layer-thickness))) {
-        pg.pixels[k] = color(255);
-      }
+      float val = brightness(img.pixels[k]);
+    if ((val < (currentLayer+thickness)) && (val > (currentLayer-thickness))) { pg.pixels[k] = color(255);}
     }
 
     pg.updatePixels();
     pg.endDraw();
-
-    pcLayer = getCurrentPC();
-
+    pcLayer = getCurrentPC(); // this displays the current cut layer in 3D
+  }
   }
 
 
   void updateArray(){
 
-    // println("get depth texture");
+    println("get depth texture");
     PImage img = depthArray.parent.get();
     PImage shape = alphaGlobe.parent.get();
 
@@ -220,7 +233,14 @@ class Voxelator {
   }
 
   void display(){
-    image(pg, int(loc.x) , int(loc.y) );
+
+    if (loaded){
+      image(pg, int(loc.x) , int(loc.y) );
+
+    } else if (depth.texture != null){
+      updateUnit();
+      loaded = true;
+    }
   }
 
 

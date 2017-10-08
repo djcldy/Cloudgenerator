@@ -45,7 +45,6 @@ class Viewport3D{
   }
 
   void setCurrentLayer(ArrayList<PVector> _pc){
-    println("vp3d: setCurrentLayer");
     if (mode == "UNIT"){
     cellUnit.setCurrent(_pc);
     } else {
@@ -59,11 +58,11 @@ class Viewport3D{
 
     if (mode == "UNIT"){
         cellUnit.display(true);
-        cellArray.display(false);
+        // cellArray.display(false);
       } else {
 
         cellUnit.display(false);
-        cellArray.display(true);
+        // cellArray.display(true);
     }
 
   }

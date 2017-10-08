@@ -37,8 +37,17 @@ public class TBM_GENERATOR extends PApplet {
 
 
 
-Controller c;
 ControlP5 cp5;
+
+public Controller c;
+
+
+// variables for 3D printer
+public float layerHeight = .030f; // cm
+public float voxW = 0.040f; // cm
+public float voxH = 0.040f; // cm
+
+
 
 // stuff for interface
 Slider abc;
@@ -48,6 +57,7 @@ CheckBox checkbox;
 float Amplitude = 10; // cm
 float Thickness = 10;
 float Current = 0.5f;
+
 
 int LayersY =1;
 int LayersX =1;
@@ -63,18 +73,55 @@ boolean isSetup = true;
 
 
 public void setup() {
-  ortho();
-  
-  background(0, 51, 102);
-  // fullScreen(P3D);
-  
 
-  init();
+  println("setup started");
+  float time01 = PApplet.parseFloat(millis());
+
+
+   init();
+
+  float time02 = PApplet.parseFloat(millis());
+  float elapsedTime = time02 - time01;
+  println("setup completed after " + elapsedTime/1000 + " s.");
 
 }
 
+
+public void draw() {
+  background(2, 7, 49);
+  c.update(
+    );
+}
+
+
+public void settings(){
+  // size(1600,900,P3D);
+
+   fullScreen(P3D);
+}
+public void setStyle(){
+  smooth();
+  // background(0, 51, 102);
+  // ortho();
+
+
+}
+
+public void init(){
+
+  setStyle();
+  setConst();
+  initControl();
+  setInterface(); // these are all of the buttons ect.
+  initViewport();
+  isSetup = false;
+  initGeo();
+}
+
+
+
 public void initControl(){
-  c = new Controller(); // initialize controller
+  c = new Controller(this); // initialize controller
   c.m.vox.thickness = Thickness;
   c.m.vox.layer = Current;
   c.m.vox.update();
@@ -83,23 +130,10 @@ public void initControl(){
 public void initViewport(){
 }
 
-public void draw() {
-  background(2, 7, 49);
-  c.update();
-}
-
-public void init(){
-  setConst();
-  initControl();
-  setInterface();
-  initViewport();
-  isSetup = false;
-  initGeo();
-}
 
 public void initGeo(){
-  thread("RESETUNITCELL"); //
-  thread("RESETARRAY"); //
+  // thread("RESETUNITCELL"); //
+  // thread("RESETARRAY"); //
 }
 
 public void LayersZ(int value){
@@ -119,8 +153,6 @@ if (c.v.vp3D.mode == "UNIT"){c.m.currentThumb.setChildren(-1);}
 
 
 public void togglecell() {
-  // toggle
-  //println("toggle cell");
   if (!isSetup){
     c.toggleMode();
     thread("RESETPOINTCLOUD");
@@ -129,15 +161,17 @@ public void togglecell() {
 
 
 public void checkBox(float[] a) {
-  //println(a); // these are the toggles
+  println(a); // these are the toggles
   c.m.points = c.m.resetPC(3, a); // we will have to multi thread this bitch
 }
 
 
 public void Export() {
 
-  exportDepth = c.m.vox.depth.texture.get();
-  if (!isSetup){export();}
+  if (!isSetup){
+    exportDepth = c.m.vox.depth.texture.get();
+    export();
+  }
 }
 
 public void export() {
@@ -150,7 +184,7 @@ public void export() {
 
   for (int j = 0; j < 255; j++) {
 
-    //println("export layer: " + l);
+    // println("export layer: " + l);
 
     PGraphics pg = createGraphics(PApplet.parseInt(dim.x), PApplet.parseInt(dim.y));
     pg.beginDraw();
@@ -181,7 +215,7 @@ public void mousePressed() {
 }
 
 public void event(ControlEvent theEvent) {
-  //println(theEvent.getArrayValue());
+  println(theEvent.getArrayValue());
 }
 
 
@@ -200,33 +234,33 @@ public void initButtons(){
 
   cp5.addButton("Export")
     .setValue(0)
-    .setPosition(xD, height-height/16)
+    .setPosition(xG, height-height/16)
     .setSize(PApplet.parseInt(width/6-os), PApplet.parseInt(height/16-os))
     ;
 
-  cp5.addButton("ADD")
-    .setValue(0)
-    .setPosition(os, height-height/16)
-    .setSize(bW, bH)
-    ;
+  // cp5.addButton("ADD")
+  //   .setValue(0)
+  //   .setPosition(os, height-height/16)
+  //   .setSize(bW, bH)
+  //   ;
 
-  cp5.addButton("SUBTRACT")
-    .setValue(0)
-    .setPosition(os+bW, height-height/16)
-    .setSize(bW, bH)
-    ;
+  // cp5.addButton("SUBTRACT")
+  //   .setValue(0)
+  //   .setPosition(os+bW, height-height/16)
+  //   .setSize(bW, bH)
+  //   ;
 
-  cp5.addButton("MULTIPLY")
-    .setValue(0)
-    .setPosition(os+2*bW, height-height/16)
-    .setSize(bW, bH)
-    ;
+  // cp5.addButton("MULTIPLY")
+  //   .setValue(0)
+  //   .setPosition(os+2*bW, height-height/16)
+  //   .setSize(bW, bH)
+  //   ;
 
-  cp5.addButton("DIVIDE")
-    .setValue(0)
-    .setPosition(os+3*bW, height-height/16)
-    .setSize(bW, bH)
-    ;
+  // cp5.addButton("DIVIDE")
+  //   .setValue(0)
+  //   .setPosition(os+3*bW, height-height/16)
+  //   .setSize(bW, bH)
+  //   ;
 
 
 
@@ -238,17 +272,17 @@ public void initButtons(){
     .setSize(PApplet.parseInt(os), PApplet.parseInt(tWidth))
     ;
 
-  cp5.addButton("R2")
-    .setValue(0)
-    .setPosition(width/4-os, y4 + tWidth + os)
-    .setSize(PApplet.parseInt(os), PApplet.parseInt(tWidth))
-    ;
+  // cp5.addButton("R2")
+  //   .setValue(0)
+  //   .setPosition(width/4-os, y4 + tWidth + os)
+  //   .setSize(int(os), int(tWidth))
+  //   ;
 
-  cp5.addButton("R3")
-    .setValue(0)
-    .setPosition(width/4-os, y4 + 2*(tWidth + os))
-    .setSize(PApplet.parseInt(os), PApplet.parseInt(tWidth))
-    ;
+  // cp5.addButton("R3")
+  //   .setValue(0)
+  //   .setPosition(width/4-os, y4 + 2*(tWidth + os))
+  //   .setSize(int(os), int(tWidth))
+  //   ;
 
   cp5.addButton("L1")
     .setValue(0)
@@ -256,17 +290,17 @@ public void initButtons(){
     .setSize(PApplet.parseInt(os), PApplet.parseInt(tWidth))
     ;
 
-  cp5.addButton("L2")
-    .setValue(0)
-    .setPosition(0, y4 + tWidth + os)
-    .setSize(PApplet.parseInt(os), PApplet.parseInt(tWidth))
-    ;
+  // cp5.addButton("L2")
+  //   .setValue(0)
+  //   .setPosition(0, y4 + tWidth + os)
+  //   .setSize(int(os), int(tWidth))
+  //   ;
 
-  cp5.addButton("L3")
-    .setValue(0)
-    .setPosition(0, y4 + 2*(tWidth + os))
-    .setSize(PApplet.parseInt(os), PApplet.parseInt(tWidth))
-    ;
+  // cp5.addButton("L3")
+  //   .setValue(0)
+  //   .setPosition(0, y4 + 2*(tWidth + os))
+  //   .setSize(int(os), int(tWidth))
+  //   ;
 
 }
 
@@ -294,7 +328,7 @@ public void LayersY(int value){
 
 
 public void adjustGrid(){
-    println("adjustGrid");
+    // println("adjustGrid");
     c.m.depthArray = c.m.depth.array(LayersX,LayersY);
     c.m.alphaArray = c.m.alpha.array(LayersX,LayersY);
     c.m.materArray = c.m.mater.array(LayersX,LayersY);
@@ -302,24 +336,60 @@ public void adjustGrid(){
 }
 public void initSlider() {
 
-  int len = 200;
+  int len = width/9;
 
-  cp5.addSlider("Amplitude")
-    .setPosition(xD, yG+ 50)
+  cp5.addSlider("DimX")
+    .setPosition(xE, row5+ 25)
     .setWidth(len)
-    .setValue(Amplitude)
-    .setRange(1, 500) // cm
+    .setValue(10)
+    .setRange(1, 50) // mm
     ;
 
+  cp5.addSlider("DimY")
+    .setPosition(xE, row5+ 50)
+    .setWidth(len)
+    .setValue(10)
+    .setRange(1, 50) // mm
+    ;
+
+  cp5.addSlider("DimZ")
+    .setPosition(xE, row5+ 75)
+    .setWidth(len)
+    .setValue(10)
+    .setRange(1, 50) // mm
+    ;
+
+
   cp5.addSlider("Thickness")
-    .setPosition(xD, yG+75)
+    .setPosition(xE, row5+125)
     .setWidth(len)
     .setRange(1, 100)
     .setValue(Thickness)
     ;
 
+
+
+  cp5.addSlider("Intersection")
+    .setPosition(xE, row5+ 150)
+    .setWidth(len)
+    .setValue(0)
+    .setRange(0, 1) // mm
+    ;
+
+
+    cp5.addSlider("LayersZ")
+     .setPosition(xE,row5 + 175)
+     .setWidth(len)
+     .setRange(1,10) // values can range from big to small as well
+     .setValue(LayersZ)
+     .setNumberOfTickMarks(10)
+     .setSliderMode(Slider.FLEXIBLE)
+     ;
+
+///////////////// SLICER
+
   cp5.addSlider("Current")
-    .setPosition(xD, yG+100)
+    .setPosition(xG, row5+50)
     .setWidth(len)
     .setRange(0, 1) // values can range from big to small as well
     .setValue(0.5f)
@@ -328,39 +398,12 @@ public void initSlider() {
     ;
 
 
-    cp5.addSlider("LayersX")
-     .setPosition(xD,yG + 125)
-     .setWidth(len)
-     .setRange(1,10) // values can range from big to small as well
-     .setValue(2)
-     .setNumberOfTickMarks(10)
-     .setSliderMode(Slider.FLEXIBLE)
-     ;
-
-    cp5.addSlider("LayersY")
-     .setPosition(xD,yG + 150)
-     .setWidth(len)
-     .setRange(1,10) // values can range from big to small as well
-     .setValue(2)
-     .setNumberOfTickMarks(10)
-     .setSliderMode(Slider.FLEXIBLE)
-     ;
-
-    cp5.addSlider("LayersZ")
-     .setPosition(xD,yG + 175)
-     .setWidth(len)
-     .setRange(1,10) // values can range from big to small as well
-     .setValue(LayersZ)
-     .setNumberOfTickMarks(10)
-     .setSliderMode(Slider.FLEXIBLE)
-     ;
-
 }
 
 public void Current(float value) {
   if (!isSetup){  //
 
-    c.m.vox.layer = value*255;    //l: set vox");
+    c.m.vox.layer = value;    //l: set vox");
     c.m.vox.update();         //
     c.v.vp3D.setCurrentLayer(c.m.vox.pcLayer);
     // c.v.setCurrent();
@@ -388,9 +431,27 @@ public void dropdown(int n) {
 public void RESETUNITCELL() {
 
 
+  // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
+
+  int voxX = PApplet.parseInt(10/0.040f); //  num voxels in X
+  int voxY = PApplet.parseInt(10/0.040f); //  num voxels in Y
+  int voxZ = PApplet.parseInt(5/0.030f); //  num voxels in Z
+
+  println("reset unit cell" + voxX + "," + voxY + "," + voxZ);
+  //////////////////////////////////////////////
+
+
+    PImage depthChannel = c.m.depth.texture.get();
+    PImage alphaChannel = c.m.alpha.texture.get();
+    PImage materChannel = c.m.mater.texture.get();
+
+    depthChannel.resize(voxX,voxY);
+    alphaChannel.resize(voxX,voxY);
+    materChannel.resize(voxX,voxY);
+
   PShape boxCloud = createShape();
   boxCloud.beginShape(POINTS);
-  boxCloud.stroke(255);
+  boxCloud.stroke(255,150);
 
     ArrayList<PVector> temp = new ArrayList<PVector>();
     Thumb depth,alpha, mater; // place holder variables
@@ -400,53 +461,66 @@ public void RESETUNITCELL() {
     mater = c.m.mater;
 
 
-  depth = c.m.depthArray;
-    alpha = c.m.alphaArray;
-    mater = c.m.materArray;
+    depth = c.m.depth;
+    alpha = c.m.alpha;
+    mater = c.m.mater;
 
-    depth.map.loadPixels();
-    alpha.map.loadPixels();
-    mater.map.loadPixels();
+    depth.texture.loadPixels();
+    alpha.texture.loadPixels();
+    mater.texture.loadPixels();
 
-    println("depth map size = " + depth.map.width + "," + depth.map.height);
+    depthChannel.loadPixels();
+    alphaChannel.loadPixels();
+    materChannel.loadPixels();
+
 
     int res = 1;
     float range = 255;
-
-
     int levels = LayersZ;
     float amp = Amplitude/levels; // this is the total height
+    float layerVoxels = voxZ/levels;
     boolean invert = false;
 
 
-  println("resetting unit-cell");
-  println("layers = " + levels);
-  println("amp = " + amp);
-  println("total height = " + levels*amp);
-
-
   for (int z = 0; z < levels; z++){
-    for (int x = 0; x < depth.map.width; x += res) {
-      for (int y = 0; y < depth.map.height; y+= res) {
-        float alp = brightness((alpha.map.get(x,y)));
+    for (int x = 0; x < depthChannel.width; x += res) {
+      for (int y = 0; y < depthChannel.height; y+= res) {
+        float alp = brightness((alphaChannel.get(x,y)));
 
-        // if (alp > 10) { // check alpha ??
-
-           float val = brightness(depth.map.get(x, y));
+           float val = brightness(depthChannel.get(x, y));
            if (invert){val = 255-val;}
-            // temp.add(new PVector(x, y, val + z*255));
-            boxCloud.vertex(x, y, amp*z + val/255*amp);
-
-          // }
+           float voxLevel = val/255*layerVoxels; // height of voxel within this level
+           boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
         }
       }
 
       invert = !invert; // need to do something hear to invert
     }
 
- boxCloud.endShape();
-    // c.m.points = temp;
-    c.v.vp3D.setCellUnit(boxCloud);
+
+
+
+/*
+  for (int z = 0; z < levels; z++){
+    for (int x = 0; x < depth.map.width; x += res) {
+      for (int y = 0; y < depth.map.height; y+= res) {
+        float alp = brightness((alpha.map.get(x,y)));
+        // if (alp > 10) { // check alpha ??
+           float val = brightness(depth.map.get(x, y));
+           if (invert){val = 255-val;}
+            // temp.add(new PVector(x, y, val + z*255));
+            boxCloud.vertex(x, y, (amp*z + val/255*amp)/voxH);
+
+          // }
+        }
+      }
+      invert = !invert; // need to do something hear to invert
+    }
+*/
+
+
+  boxCloud.endShape();
+  c.v.vp3D.setCellUnit(boxCloud);
 
 }
 
@@ -473,7 +547,7 @@ public void RESETARRAY() {
     alpha.map.loadPixels();
     mater.map.loadPixels();
 
-    println("depth map size = " + depth.map.width + "," + depth.map.height);
+    // println("depth map size = " + depth.map.width + "," + depth.map.height);
 
     int res = 1;
     float range = 255;
@@ -482,12 +556,6 @@ public void RESETARRAY() {
     int levels = LayersZ;
     float amp = Amplitude/levels; // this is the total height
     boolean invert = false;
-
-
-  println("resetting unit-cell");
-  println("layers = " + levels);
-  println("amp = " + amp);
-  println("total height = " + levels*amp);
 
 
   for (int z = 0; z < levels; z++){
@@ -519,48 +587,17 @@ public void RESETARRAY() {
 
 
 
+public void RESETCELL(){
+
+
+}
+
+
+
 
 public void RESETARRAYOLD() {
 
 
-    // println("resetting array");
-
-
-    // ArrayList<PVector> temp = new ArrayList<PVector>();
-    // Thumb depth,alpha, mater, alphaGlobe; // place holder variables
-
-    // depth = c.m.depthArray;
-    // alpha = c.m.alphaArray;
-    // mater = c.m.materArray;
-
-    // alphaGlobe = c.m.alphaGlb;
-
-    // depth.map.loadPixels();
-    // alpha.map.loadPixels();
-    // mater.map.loadPixels();
-    // alphaGlobe.map.loadPixels();
-
-
-    // int res = 5;
-    // float range = 255;
-
-
-    // for (int x = 0; x < depth.map.width; x += res) {
-    //   for (int y = 0; y < depth.map.height; y+= res) {
-
-    //     float alp = brightness((alpha.map.get(x,y)));
-    //     float alp2 = brightness((alphaGlobe.map.get(x,y)));
-    //     if (random(0,1)>0.99){println("alph: " + alp2);}
-
-    //     if ((alp2 > 25)) { // check alpha (both of them)
-    //        float val = brightness(depth.map.get(x, y));
-    //        temp.add(new PVector(x, y, val));
-    //       }
-    //     }
-    //   }
-
-    // c.m.points = temp; // does this mater?
-    // c.v.vp3D.setCellArray(temp);
 }
 
 public void RESETPOINTCLOUD() {
@@ -581,7 +618,7 @@ public void RESETPOINTCLOUD() {
 
     // } else {
 
-    //   //println("generate micro-structures");
+      //println("generate micro-structures");
 
     //   depth = c.m.depthArray;
     //   alpha = c.m.alpha;
@@ -691,23 +728,27 @@ class Controller {
   Model m;
   View v;
 
+  PApplet app;
+
   // can get rid of this ?
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
+  ArrayList<UnitCell> unitCells = new ArrayList<UnitCell>();
+
   Viewport2D vp;
 
   Zone zoneA, zoneB, zoneC;  // select zones
   ArrayList<Zone> zones = new ArrayList<Zone>();
 
-  Controller() {
+  Controller(PApplet _app) {
 
-    //Println("initialize controller");
     initSelector();
     init();
 
-     m = new Model();
+    app = _app;
+     m = new Model(app);
      m.currentThumb = thumbs.get(1);
-     v = new View(m,vp);
-     vp.set(m.depthArray);
+     v = new View(m, vp);
+     vp.set(m.depth);
      vp.m = m; // clean this up later
 
   }
@@ -732,13 +773,23 @@ class Controller {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-    Thumb depth = new Thumb("/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
-    Thumb mater = new Thumb("/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
-    Thumb alpha = new Thumb("/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
+    Thumb depth = new Thumb(app,"/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
+    Thumb mater = new Thumb(app,"/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
+    Thumb alpha = new Thumb(app,"/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
 
     thumbs.add(depth);
     thumbs.add(mater);
     thumbs.add(alpha);
+
+
+
+    PShape shape = null;
+
+    float cellWidth = (width/2 - os-os/2)/6;
+
+    for (float x = os; x < width/2 - dimThumb.x; x += cellWidth){
+      unitCells.add(new UnitCell(new PVector(x,row8), new PVector(cellWidth,cellWidth), shape ));
+    }
 
     mater.isSelected = true;
 
@@ -761,7 +812,6 @@ class Controller {
 
 
   public void zoneC(PVector ms){
-  //Println("current thumb = " + m.currentThumb.name);
   Thumb current = m.currentThumb; // current thumb that is selected
   current.checkSelectedChildren();
 
@@ -784,8 +834,6 @@ class Controller {
   }
 
   public void zoneB(PVector ms, ArrayList<Thumb> _thumbs){
-
-  // toggle zoneB
   boolean toggle = false;
 
   for (Thumb th : _thumbs) {
@@ -795,26 +843,29 @@ class Controller {
         toggle = true;
       }
     }
-
-    // if (toggle) {
-    //   for (Thumb th : _thumbs) {
-    //    if (th != m.currentThumb){
-    //     th.isSelected = false;
-    //    }
-
-    //   }
-    // }
   }
 
 
-public void checkR1(ArrayList<Thumb> _thumbs,  PVector ms){
+public boolean checkR1(ArrayList<Thumb> _thumbs,  PVector ms){
+
+  boolean regen = true;   // R1 is the channel level of thumbs
 
   for (Thumb th : _thumbs) {
+
+     boolean b1 = th.isSelected;
+
       if (th.checkSelected(ms)) {
-        m.currentR1 = th;
-        vp.set(th);
+        if (!b1){
+          m.currentR1 = th;
+          vp.set(th);
+        } else {
+          regen = false;
+        }
       }
+
   }
+
+  return regen;
 }
 
 public void checkR2(Thumb th,  PVector ms){
@@ -834,30 +885,36 @@ public void checkR3(ArrayList<Thumb> _thumbs,  PVector ms){
 }
 
 
-public void unitSelect(PVector ms){
+public boolean unitSelect(PVector ms){
+
+  boolean regen = true;
+
     if (zoneA.isSelected(ms)){
-        checkR1(m.thumbs, ms);
+        regen = checkR1(m.thumbs, ms);
       } else if (zoneB.isSelected(ms)){
         if (m.currentR1 != null){
           checkR2(m.currentR1, ms);
         }
     }
+
+
+    return regen;
 }
 
 
 
 public void arraySelect(PVector ms){
-      println("array select");
+      // println("array select");
       if (zoneB.isSelected(ms)){
         checkR1(m.thumbsGlobal, ms);
-      println("zoneB: ");
+      // println("zoneB: ");
       } else if (zoneC.isSelected(ms)){
-        println("checkZone");
+        // println("checkZone");
         if (m.currentR1 != null){
-          println("zoneC");
+          // println("zoneC");
           checkR2(m.currentR1, ms);
         } else {
-          println("zoneC = null");
+          // println("zoneC = null");
         }
       }
 }
@@ -865,13 +922,121 @@ public void arraySelect(PVector ms){
   public void mouseDown(PVector ms) {
 
     if (v.vp3D.mode == "UNIT"){
-      unitSelect(ms);
-      thread("RESETUNITCELL");
+      if (unitSelect(ms)){
+        thread("RESETUNITCELL");
+      }
+      // thread("RESETUNITCELL");
     } else {
-      arraySelect(ms);
-      thread("RESETARRAY");
+      // arraySelect(ms);
+      // thread("RESETARRAY");
     }
 }
+}
+
+
+class ImageThread implements Runnable {
+
+
+  Thread thread;
+  boolean drawNew = false;
+  boolean isReady = false;
+  // Specimen specimenNew;
+  int pauseTime;
+  String filepath;
+  PImage parent, texture;
+  PGraphics map;
+  PVector size;
+  int x, y;
+
+  // Databaser dbsr;
+  // Generator gnrtr;
+
+  ImageThread (PApplet parent, String _filepath, PVector _size) {
+
+    x = PApplet.parseInt(_size.x);
+    y = PApplet.parseInt(_size.y);
+    filepath = _filepath;
+
+  }
+
+  public void start() {
+    thread = new Thread(this);
+    thread.start();
+  }
+
+  public void stop()
+  {
+    thread = null;
+  }
+
+  // this will magically be called by the parent once the user hits stop
+  // this functionality hasn't been tested heavily so if it doesn't work, file a bug
+  public void dispose() {
+    stop();
+  }
+  public void run() {
+    while (!isReady) { //
+      // println("filepath:" + filepath);
+
+      parent = loadImage(filepath);
+      // parent = normalize(parent);
+      texture = parent.get();
+       texture.resize(x,y);
+      map = createGraphics(x,y);
+      map.beginDraw();
+      map.image(texture, 0, 0);
+      map.endDraw();
+
+
+      try {
+        Thread.sleep(200);
+        isReady = true;
+      }
+      catch(InterruptedException e) {
+      }
+    }
+  }
+
+
+  public PImage normalize(PImage img) {
+
+    PGraphics temp = createGraphics(img.width, img.height);
+
+    temp.beginDraw();
+    temp.image(img, 0, 0);
+    temp.loadPixels();
+
+    float min = 255;
+    float max = 0;
+    float brightness = 0;
+    float sum = 0;
+
+    for (int i = 0; i < temp.pixels.length; i++) {
+      float val = brightness(temp.pixels[i]);
+      brightness +=  val;
+      if (val < min) min = val;
+      if (val >max) max = val ;
+    }
+
+    float constant = 255.0f/(max-min);
+    float newMin  = 255.0f;
+    float tempRange = max-min;
+    float newMax = 0;
+
+    for (int i = 0; i <    temp.pixels.length; i++) {
+      float val = brightness(temp.pixels[i]);
+      float newVal = (val-min)*constant;
+      temp.pixels[i] =  color(newVal,255);
+    }
+    temp.updatePixels();
+    temp.endDraw();
+
+    img = temp.get(); // normalized image
+
+    return img;
+  }
+
+
 }
 class Model {
 
@@ -880,6 +1045,8 @@ class Model {
   PImage slice;
   PGraphics pg;
   PointCloud pointCloud;
+
+  PApplet app;
 
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
   ArrayList<Thumb> thumbsArray = new ArrayList<Thumb>();
@@ -905,7 +1072,9 @@ class Model {
 
   ArrayList<PVector> points = new ArrayList<PVector>();
 
-  Model() {
+  Model(PApplet _app) {
+
+    app = _app;
 
     initChannelThumbs();
 
@@ -968,9 +1137,9 @@ class Model {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-    depth = new Thumb("/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
-    mater = new Thumb("/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
-    alpha = new Thumb("/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
+    depth = new Thumb(app, "/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
+    mater = new Thumb(app, "/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
+    alpha = new Thumb(app, "/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
 
     thumbs.add(depth);
     thumbs.add(mater);
@@ -991,9 +1160,9 @@ class Model {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-     depthGlb = new Thumb("/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
-     materGlb = new Thumb("/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
-     alphaGlb = new Thumb("/textures/global/alpha/blank.png",    new PVector(os+2*tW,y4),  dimThumb, "global/alpha");
+     depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
+     materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
+     alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",    new PVector(os+2*tW,y4),  dimThumb, "global/alpha");
 
     thumbsGlobal.add(depthGlb);
     thumbsGlobal.add(materGlb);
@@ -1028,7 +1197,7 @@ class Model {
     for (Thumb th : thumbs) {
       th.display();
     }
-    testSelection();
+    // testSelection();
   }
 
 
@@ -1139,19 +1308,30 @@ PShape boxCloud;
 
     PVector start,scl,rot;
 
-    if (mode){
-      // setMode1();
-      start = new PVector(width/4 + vWidth/8, yB + vHeight/8 - os, 0);
-      scl = new PVector(1,1,1);
-      rot = new PVector(-atan(sin(radians(45))), radians(45),0);
+    // if (mode){  // unitCell
+    //   // setMode1();
+    //   start = new PVector(width/4 + vWidth/8, yB + vHeight/8 - os, 0);
+    //   scl = new PVector(1,1,1);
+    //   rot = new PVector(-atan(sin(radians(-45))), radians(45),0);
 
-    }else{
-      // setMode2();
-      start = new PVector(width/4 + vWidth/2, vHeight/2-2*os);
-      scl = new PVector(3,3,3);
-      rot = new PVector(-atan(sin(radians(45))), radians(45),0);
+    // }else{
+    //   // setMode2();
+    //   start = new PVector(width/4 + vWidth/2, vHeight/2-2*os);
+    //   scl = new PVector(3,3,3);
+    //   rot = new PVector(-atan(sin(radians(45))), radians(45),0);
 
-    }
+    // }
+
+
+      // start = new PVector(width/4 + vWidth/8, yB + vHeight/8 - os, 0);
+
+
+      float w = 3*width/8;
+
+      start = new PVector(w, yB + vHeight/8+height/8, -10);
+      scl = new PVector(0.75f,0.75f,0.75f);
+      rot = new PVector(-atan(sin(radians(-30))), radians(-30),0);
+
 
     float val = 0.1f;
 
@@ -1197,7 +1377,9 @@ public void updateView(){
    public void updateCamera(){
 
     if (!mode){
-      rotation.addIncrement(new PVector(0.005f,0,0.005f));
+      rotation.addIncrement(new PVector(0.0005f,0.0001f,0.0001f));
+
+      // rotation.addIncrement(new PVector(0,-0.005,0));
       // yRot += 0.005;
       //  zRot += 0.005;
     }
@@ -1223,14 +1405,18 @@ public void updateView(){
 
   public void display(boolean showLayer){
 
-
-
       pushMatrix();
       setView();
 
-      if (boxCloud != null){shape(boxCloud);}
-      if (showLayer){displayLayer();}
-      if (bbox != null ){ bbox.display();}
+      stroke(255,100);
+      fill(255,100);
+
+      if (boxCloud != null){
+
+        shape(boxCloud);
+      }
+      // if (showLayer){displayLayer();}
+      // if (bbox != null ){ bbox.display();}
 
       popMatrix();
       updateCamera();
@@ -1245,10 +1431,22 @@ public void updateView(){
 
       strokeWeight(1);
       stroke(255,100);
-      translate(pos.x, pos.y); //??
+      // translate(-5,-5,-5);
+      // rotateY(rot.y);
+      // rotateZ(rot.z);
+
+      // scale(scl.x);
+
+
+      // translate(width/2,height/2);
+
+      // translate(-5,-5,-.25);
+      translate(pos.x, pos.y,pos.z); //
       rotateX(rot.x);
-      rotateZ(rot.y);
-      scale(scl.x);
+      rotateY(rot.y);
+      rotateZ(rot.z);
+
+      scale(.75f);
 
    }
 
@@ -1319,54 +1517,73 @@ class Shape {
   }
 }
 class Thumb {
-
+  boolean loaded = false;
   PGraphics map;
   PImage texture, parent;
   String path, name;
   PVector loc, size;
   boolean isSelected = false;
   ArrayList<Thumb> children; // chilrdren
-  ArrayList<Thumb> selectedChildren = new ArrayList<Thumb>();
-
+  ArrayList<Thumb> selecteren = new ArrayList<Thumb>();
+  ImageThread it;
+  PApplet app;
   int scroll = 0;
 
-  Thumb(String _path, PVector _loc, PVector _size, String _name) {
-    name = _name;
-    size = _size;
+
+
+
+  Thumb(PApplet _app, String _path, PVector _loc, PVector _size, String _name) {
+    app   =   _app;
+    name  =   _name;
+    size  =  _size;
+    loc = _loc;
+    path = _path;
+    // println("thumb path = " + _path);
     reset(_path, _loc);
     setChildren(0); // start on step 1
   }
 
-  Thumb(String _path, PVector _loc, PVector _size) {
+
+  Thumb(PApplet _app,String _path, PVector _loc, PVector _size) {
+    // println("add child");
+    path = _path;
     size = _size;
+    loc = _loc;
     reset(_path, _loc);
+
   }
 
   Thumb(PImage _texture, PVector _loc, PVector _size){
     size = _size;
-    resetArray(_texture,_loc);
+       loc = _loc;
+     resetArray(_texture,_loc);
   }
 
 
   public Thumb array(int stepX, int stepY){
 
-    PGraphics arrayTexture = createGraphics(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
-    PImage clone = parent.get();
-    clone.resize(PApplet.parseInt(size.x/stepX), PApplet.parseInt(size.y/stepY));
+    Thumb copy = new Thumb(app,path,loc,size,name);
 
-    arrayTexture.beginDraw();
 
-    for (int x =0; x < size.x; x += size.x/stepX){
-      for (int y = 0; y < size.y; y += size.y/stepY){
-        arrayTexture.image(clone,x,y);
-      }
-    }
-    arrayTexture.endDraw();
+  // Thumb(PApplet _app, String _path, PVector _loc, PVector _size, String _name) {
 
-    PImage result = arrayTexture.get();
-    Thumb arrayThumb = new Thumb(result, loc, size);
+    // PGraphics arrayTexture = createGraphics(int(size.x), int(size.y));
+    // PImage clone = parent.get();
+    // clone.resize(int(size.x/stepX), int(size.y/stepY));
 
-    return arrayThumb;
+    // arrayTexture.beginDraw();
+
+    // for (int x =0; x < size.x; x += size.x/stepX){
+    //   for (int y = 0; y < size.y; y += size.y/stepY){
+    //     arrayTexture.image(clone,x,y);
+    //   }
+    // }
+    // arrayTexture.endDraw();
+
+    // PImage result = arrayTexture.get();
+    // Thumb arrayThumb = new Thumb(result, loc, size);
+
+   return copy;
   }
 
 
@@ -1388,34 +1605,50 @@ class Thumb {
   }
 
 
-  public void reset(String _path, PVector _loc) {
 
-    path = _path;
-    loc = _loc;
-    float x = size.x;
-    float y = size.y;
-
-    map = createGraphics(PApplet.parseInt(x), PApplet.parseInt(y));
-    map.beginDraw();
-    map.background(0);
-    map.endDraw();
-
-    PImage xx = loadImage(path); // textures 512 px x 512 px
-
-    texture = normalize(xx);
-
-    println(" normalize");
-
-    println(" size = " + texture.width + "," + texture.height);
-    println(" size = " + size.x + "," + size.y);
-
-    if (texture == null) { println("texture is null");}
-    if (texture == null) { println("parent is null");}
-
-    parent = texture.get();
-
-    updateMap();
+  public void reset(String _path, PVector _loc){
+    println("reset: " + _path + "," + size);
+    it = new ImageThread(app, _path,size);
+    it.start();
   }
+
+
+  public void resetChild(Thumb _child){
+
+    parent = _child.parent.get();
+    texture = _child.texture.get();
+    map = _child.map;
+  }
+
+
+  // void reset(String _path, PVector _loc) {
+
+  //   path = _path;
+  //   loc = _loc;
+  //   float x = size.x;
+  //   float y = size.y;
+
+  //   map = createGraphics(int(x), int(y));
+  //   map.beginDraw();
+  //   map.background(0);
+  //   map.endDraw();
+
+  //   PImage xx = loadImage(path); // textures 512 px x 512 px
+
+  //   texture = normalize(xx);
+
+  //   println(" normalize");
+
+  //   println(" size = " + texture.width + "," + texture.height);
+  //   println(" size = " + size.x + "," + size.y);
+
+  //   if (texture == null) { println("texture is null");}
+  //   if (texture == null) { println("parent is null");}
+
+  //   parent = texture.get();
+
+  //   updateMap();
+  // }
 
   public void updateMap() {
     texture.resize(0, PApplet.parseInt(size.x));
@@ -1428,7 +1661,7 @@ class Thumb {
 
 
   public void  setChildren(int step) {
-
+    println("set children");
     scroll += step;
 
     children = new ArrayList<Thumb>();
@@ -1447,11 +1680,17 @@ class Thumb {
 
     }
 
-
+//     for  (int j = 0 ; j< items; j++){
+//     println("children filenames = " + filenames[j]);
+// }
     if (filenames !=null) {
       for (int j = 0; j < b2; j++){
+
         // children.add(new Thumb(localPath + filenames[j], new PVector(xA+size.x*col,yE+size.x*row), size));
-        children.add(new Thumb(localPath + filenames[j], new PVector(os+size.x*col,loc.y+size.x+os), size));
+
+        println("add child: " + localPath + filenames[j]);
+        children.add(new Thumb(app, localPath + filenames[j], new PVector(os+size.x*col,loc.y+size.x+os), size));
+
         col ++;
         if (col == 3) {
           col = 0;
@@ -1462,11 +1701,13 @@ class Thumb {
   }
 
   public void showChildren() {
+
     if (children != null) {
       for (Thumb child : children) {
         child.display();
       }
     }
+
   }
 
 
@@ -1474,7 +1715,6 @@ class Thumb {
 
   public PImage normalize(PImage img) {
 
-    println("normalize image xxxxxxxxx");
     PGraphics temp = createGraphics(img.width, img.height);
 
     temp.beginDraw();
@@ -1520,15 +1760,16 @@ class Thumb {
       if ((mouseX > child.loc.x) && (mouseX < (child.loc.x + map.width)) && (mouseY > child.loc.y) && (mouseY < (child.loc.y + map.height))) {
         child.isSelected = true;
         chi = child;
-        reset(child.path, loc);
 
-        if (!selectedChildren.contains(child)){
-          selectedChildren.add(child);
-        }
+        resetChild(child); // reset Channel with  currennt child...
+
+        // if (selectedChildren.contains(child)){
+        //   selectedChildren.add(child);
+        // }
 
       } else {
         child.isSelected = false;
-        selectedChildren.remove(child);
+        // selectedChildren.remove(child);
       }
     }
 
@@ -1539,11 +1780,20 @@ class Thumb {
 
   public boolean checkSelected(PVector ms) { // hmm we can  refactor this
 
-    if ((mouseX > loc.x) && (mouseX < (loc.x + map.width)) && (mouseY > loc.y) && (mouseY < (loc.y + map.height))) {
+    isSelected = false;
+
+    // if (map != null){
+
+      // println("checked selected: " + map);
+
+      // println("check selected");
+    if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mouseY < (loc.y + size.y))) {
       isSelected = !isSelected;
     } else {
       isSelected = false;
     }
+    println("selected completed");
+    // }
 
     return isSelected;
   }
@@ -1559,22 +1809,55 @@ class Thumb {
   }
   public void display() {
 
-    strokeWeight(2);
-    noFill();
 
-    image(map, loc.x, loc.y);
+
+    if (loaded == false){
+      if (it.isReady){
+        // println("it is ready");
+        parent = normalize(it.parent);//
+        texture = normalize(it.texture);//
+        map = it.map;
+        it.stop();
+        loaded = true;
+      }
+    }
+
+    pushMatrix();
+    translate(loc.x,loc.y);
+
+
+    fill(34,155,215);
+    if (loaded){
+      image(texture,0,0);
+    }else{
+    rect(0,0,rA,rA);
+    }
+    popMatrix();
+
+
+    noFill();
+    if (isSelected) {
+
+      stroke(163, 149, 41);
+      rect(loc.x, loc.y, size.x, size.y); // Left
+      showChildren();
+    } else if  ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mouseY < (loc.y + size.y))) {
+      stroke(255, 100);
+      rect(loc.x, loc.y, size.x, size.y); // Left
+    }
+
 
     // showChildren();
 
     //// hover
-    if (isSelected) {
-      stroke(163, 149, 41);
-      rect(loc.x, loc.y, map.width, map.height); // Left
-      showChildren();
-    } else if  ((mouseX > loc.x) && (mouseX < (loc.x + map.width)) && (mouseY > loc.y) && (mouseY < (loc.y + map.height))) {
-      stroke(255, 100);
-      rect(loc.x, loc.y, map.width, map.height); // Left
-    }
+    // if (isSelected) {
+    //   stroke(163, 149, 41);
+    //   rect(loc.x, loc.y, map.width, map.height); // Left
+    //   showChildren();
+    // } else if  ((mouseX > loc.x) && (mouseX < (loc.x + map.width)) && (mouseY > loc.y) && (mouseY < (loc.y + map.height))) {
+    //   stroke(255, 100);
+    //   rect(loc.x, loc.y, map.width, map.height); // Left
+    // }
 
     // hover
     float x1 = loc.x + size.x/2;
@@ -1628,6 +1911,53 @@ PVector start,end;
  }
 
 }
+class UnitCell {
+
+  // Thumb depth, alpha, mater;
+  PShape pc;
+  PVector loc, size;
+
+  UnitCell(PVector _loc, PVector _size, PShape _pc){
+    loc = _loc;
+    size = _size;
+    pc = _pc;
+
+  }
+
+
+  public void display(){
+
+    strokeWeight(1);
+    stroke(34,155,215);
+    noFill();
+
+    pushMatrix();
+    translate(loc.x,loc.y);
+    rect(0,0,size.x,size.y);
+    popMatrix();
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
 class View {
 
   // this controls the styles of display
@@ -1635,6 +1965,7 @@ class View {
   Viewport2D vp2D;
   Viewport3D vp3D;
   Voxelator vox;
+  // Control control;
 
   float thickness = 2;
 
@@ -1643,14 +1974,12 @@ class View {
   float zRot = 3.14f/2;
   float current = 0; //?
 
-  View(Model m, Viewport2D _vp) {
+  View(Model _m, Viewport2D _vp) {
     // println("initialize view class") ;
-
-    model = m;
+    model = _m;
+    // control = _C;
     vp2D = _vp;
     vp3D = new Viewport3D(xC, yA, xD, yF-height/16);
-
-
   }
 
   public void setCurrent() {
@@ -1671,18 +2000,21 @@ class View {
     // drawZones();
     drawFrames();
     drawLabels();
-    model.vox.display(); // this one ok
+
+    for (UnitCell cell : c.unitCells){
+      cell.display();
+    }
 
 
     if (vp3D.mode == "UNIT"){
       vp2D.display();   // this is just a screen
       model.displayCellUnit();  //
     } else {
-      vp2D.displayCellArray();
-      model.displayCellArray();
+      // vp2D.displayCellArray();
+      // model.displayCellArray();
     }
 
-
+    model.vox.display(); // this one ok
 
   }
 
@@ -1693,47 +2025,72 @@ class View {
 
   public void drawFrames() {
 
-    // clean this up
 
     stroke(255, 50);
 
-    float y1 = (height*2)/3;
-    float y2 = (height/16);
-    float y3 = y2/2;
-    float y4 = height - y2;
-    float y5 = height/2;
 
-    float x1 = (width*5)/6;
-    float x2 = (width*13)/24;
-    float x3 = x1 + (width-x1)/2;
-    float x4 = (width*(16.5f)/24);
-    float x5 = (width*(13.75f)/24);
-    float y6 = height/16+width/64+width/4 - width/32;
+    drawColumns();
+    drawRows();
 
-    ////////////////////////////////////////
-    // horizontal lines
-    strokeWeight(2);
-    line(0, yA, width, yA);
-    line(0, y4, width, y4);
-    line(0, height-os, width, height-os);
-
-    // vertical lines
-    line(width/4-os, 0, width/4-os, height);
-    line(os, 0, os, height);
-    line(width-os, 0, width-os, height);
-    line(width/4, 0, width/4, height);
-    line(x1, 0, x1, height);
-    int y10 = PApplet.parseInt(height/16+width/64+ width/4 - width/32);
-    line(0,y10-os, width/4, y10-os);
-    line(0,y10, width/4, y10);
-    line(0,y10 + tWidth + os, width/4, y10 + tWidth + os);
-    line(0,y10 + 2*(tWidth + os), width/4, y10 + 2*(tWidth+os));
-    line(0,y10, width/4, y10);
-    line(0,y10+ tWidth, width/4-os, y10 + tWidth);
-    line(0,y10 + 2*(tWidth)+os, width/4, y10 + 2*(tWidth)+os);
 
 
   }
+
+  public void drawRows(){
+    // ROWS
+
+
+    // ROW 1-2
+
+    line(0, yA, width, yA);
+
+    // ROW 3-4
+
+
+    // ROW 5-6
+    // line(0,y10+ tWidth, width/2, y10 + tWidth);
+    line(0,y10+tWidth, width, y10+tWidth);
+    line(0,y10+ tWidth+os, width, y10 + tWidth+os);
+
+    // ROW 7-8
+    line(0,y10 + 2*(tWidth)+os, width/2, y10 + 2*(tWidth)+os);
+    line(0,y10 + 2*(tWidth)+2*os, width/2, y10 + 2*(tWidth)+2*os);
+
+
+  }
+  public void drawColumns(){
+
+    //  COLUMNS
+
+  // colum 1-2
+    line(os, 0, os, height);
+
+    // column 3-4
+    line(width/4-os, 0, width/4-os, height/2);
+    line(width/4, 0, width/4, height/2);
+
+    // column 5-6
+    line(width/2 - os/2,0, width/2 - os/2, height);
+    line(width/2+os/2,0, width/2+os/2, height);
+
+    // column 7-8
+
+    line(width/2+  width/6 +os/2,row5,width/2 +  width/6+os/2, height);
+    line(width/2+  width/6-os/2,row5,width/2 +  width/6-os/2, height);
+
+    // column 9-10
+
+
+    line(width/2+  width/3+os/2,row5,width/2 +  width/3+os/2, height);
+    line(width/2+  width/3-os/2,row5,width/2 +  width/3-os/2, height);
+
+    //
+    // colum 11-12
+    line(width-os, 0, width-os, height);
+
+
+  }
+
 
   public void drawLabels() {
 
@@ -1741,18 +2098,18 @@ class View {
     // textSize(18);
     // textAlign(CENTER);
 
+    fill(255);
+
     textSize(11);
     textAlign(CENTER);
-    String s = "PointCloud Generator - Sayjel Vijay Patel - 2017";
-    text(s, width/2, height-os/2);
+    // String s = "PointCloud Generator - Sayjel Vijay Patel - 2017";
+    // text(s, width/2, height-os/2);
 
     // textAlign(CENTER);
 
-
-
     textSize(14);
-    s = "Mode: " + vp3D.mode;
-    text(s, cA, rA);
+    // String s = "Mode: " + vp3D.mode;
+    // text(s, cA, rA);
 
     textSize(11);
     // text("CHANNELS", cA, rC);
@@ -1764,10 +2121,10 @@ class View {
     if (vp3D.mode == "UNIT"){
 
     text("TEXTURE: CHANNELS", cA, yD-os-os/2); // row1 //
-    text("TEXTURES", cA, yE-os/2); // row2 //
+    // text("TEXTURES", cA, yE-os/2); // row2 //
 
     } else {
-    text("UNITCELLS", cA, yD-os-os/2); // row1 //
+    // text("UNITCELLS", cA, yD-os-os/2); // row1 //
     text("SHAPES: CHANNELS", cA, yE-os/2); // row2 //
     text("SHAPES", cA, yE+tWidth+os-os/2); // row2 //
 
@@ -1834,24 +2191,29 @@ class Viewport2D {
   }
 
   public void displayCellUnit(){
+    // println("displayCell");
+    pushMatrix();
+    fill(34,155,215);
+    translate(loc.x,loc.y);
+    if (image != null){
+      image(image, 0, 0);
+    } else {
+      update();
+      rect(0,0,size.x,size.y);
+    }
 
-    image(image, loc.x, loc.y);
-
+    popMatrix();
   }
 
   public void displayCellArray(){
-
-    image(image, loc.x, loc.y);
-
-
-
+    if (image != null ){ image(image, loc.x, loc.y);}
   }
 
   public void update(){
-
-    if (thumb.parent != null){
-    image = thumb.parent.get();
-    image.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
+    // println("update 2d: " + thumb.name + "," + thumb.parent);
+    if (thumb.texture != null){
+      image = thumb.texture.get();
+      image.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
     }
   }
 
@@ -1875,9 +2237,9 @@ class Viewport2D {
   public void display(){
 
     if (mode == "UNIT"){
-      displayCellArray();
-    } else {
       displayCellUnit();
+    } else {
+      displayCellArray();
     }
   }
 
@@ -1932,7 +2294,6 @@ class Viewport3D{
   }
 
   public void setCurrentLayer(ArrayList<PVector> _pc){
-    println("vp3d: setCurrentLayer");
     if (mode == "UNIT"){
     cellUnit.setCurrent(_pc);
     } else {
@@ -1946,11 +2307,11 @@ class Viewport3D{
 
     if (mode == "UNIT"){
         cellUnit.display(true);
-        cellArray.display(false);
+        // cellArray.display(false);
       } else {
 
         cellUnit.display(false);
-        cellArray.display(true);
+        // cellArray.display(true);
     }
 
   }
@@ -1976,6 +2337,8 @@ class Voxelator {
   Thumb depthArray, alphaArray, materArray;
   Thumb depthGlobe, alphaGlobe, materGlobe;
 
+  boolean loaded = false;
+
   String mode = "UNIT";
 
   Voxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
@@ -1990,10 +2353,10 @@ class Voxelator {
     mater = thumbs.get(1);
     alpha = thumbs.get(2);
 
-    dimX = depth.map.width;
-    dimY = depth.map.height;
+    dimX = size.x;
+    dimY = size.z;
 
-    setArrays(arrays);
+    // setArrays(arrays);
 
     depthGlobe = globes.get(0);
     materGlobe = globes.get(1);
@@ -2001,7 +2364,7 @@ class Voxelator {
 
     layer = Current;
     thickness = Thickness;
-    update();
+    // update();
 
   }
 
@@ -2012,8 +2375,6 @@ class Voxelator {
   // }
   public ArrayList<PVector> getCurrentPC(){  // returns pointcloud of the current list
 
-    println("get current pc");
-
     ArrayList<PVector> _pc = new ArrayList<PVector>();
     int res = 1;
     PImage img = pg.get();
@@ -2023,7 +2384,7 @@ class Voxelator {
       for (int y =  0; y < img.height; y+= res ){
           int c = img.get(x, y);
           if (brightness(c) > 100){
-            _pc.add(new PVector(x,y,layer*Amplitude));
+            _pc.add(new PVector(x,y,layer*255*Amplitude));
           }
       }
     }
@@ -2044,17 +2405,11 @@ class Voxelator {
   // ArrayList getPC(){
 
    public void toggleMode(){
-
-
-
     if (mode == "UNIT"){
       mode = "ARRAY";
     } else {
       mode = "UNIT";
     }
-
-
-    // println("toggle Voxelator: " + mode);
     update();
    }
 
@@ -2066,8 +2421,6 @@ class Voxelator {
 
    public void export(){
 
-    // println("exportStack");
-
     int layers = 0;
     PVector dim = new PVector(400,400);
 
@@ -2075,7 +2428,6 @@ class Voxelator {
     for (int l = 0; l < 255; l++){
 
     PImage img = depth.texture.get();
-
     img.resize(PApplet.parseInt(dim.x),PApplet.parseInt(dim.y));
 
     pg = createGraphics(PApplet.parseInt(dim.x),PApplet.parseInt(dim.y));
@@ -2105,7 +2457,7 @@ class Voxelator {
 
   public void update(){
 
-    println("update Vox");
+    // println("update Vox");
 
     if (mode == "ARRAY"){
       updateArray();
@@ -2115,12 +2467,38 @@ class Voxelator {
 
   }
 
+
+
   public void updateUnit(){
 
-    // println("GETTING LAYER : " + t);
-    PImage img = depth.texture.get();
+    if (depth.texture != null){
 
+    PImage img = depth.texture.get();
     img.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+
+    boolean invertLayer;
+
+    int res = 1;
+    float range = 255;
+    int numLevels = LayersZ;
+
+    float domain = range;
+    // float amp = Amplitude/levels; // this is the total height
+    float totalSlices = 255;
+    float subDomain = totalSlices/numLevels;
+
+    int currentSlice = PApplet.parseInt(totalSlices*layer); // current slice
+    int currentStep = floor(currentSlice/subDomain);
+    float currentLayer = (currentSlice%subDomain)/subDomain*255;
+
+    // println("Update Vox, currentLayer = " + currentLayer);
+
+    if (currentStep%2 == 0){
+      invertLayer = false;
+    } else {
+      invertLayer = true;
+    }
+
 
     pg = createGraphics(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
     pg.beginDraw();
@@ -2128,24 +2506,20 @@ class Voxelator {
     pg.loadPixels();
 
     for (int k = 0; k <  img.pixels.length; k++) {
-      int bright = img.pixels[k];
-      float val = brightness(bright);
-    if ((val < (layer+thickness)) && (val > (layer-thickness))) {
-        pg.pixels[k] = color(255);
-      }
+      float val = brightness(img.pixels[k]);
+    if ((val < (currentLayer+thickness)) && (val > (currentLayer-thickness))) { pg.pixels[k] = color(255);}
     }
 
     pg.updatePixels();
     pg.endDraw();
-
-    pcLayer = getCurrentPC();
-
+    pcLayer = getCurrentPC(); // this displays the current cut layer in 3D
+  }
   }
 
 
   public void updateArray(){
 
-    // println("get depth texture");
+    println("get depth texture");
     PImage img = depthArray.parent.get();
     PImage shape = alphaGlobe.parent.get();
 
@@ -2181,7 +2555,14 @@ class Voxelator {
   }
 
   public void display(){
-    image(pg, PApplet.parseInt(loc.x) , PApplet.parseInt(loc.y) );
+
+    if (loaded){
+      image(pg, PApplet.parseInt(loc.x) , PApplet.parseInt(loc.y) );
+
+    } else if (depth.texture != null){
+      updateUnit();
+      loaded = true;
+    }
   }
 
 
@@ -2528,6 +2909,8 @@ float yA,yB,yC,yD,yE,yF,yG;
 float cA,cB,cC,cD;
 float rA,rB,rC,rD,rE;
 int tWidth;
+int y10;
+float row5, row6, row7, row8;
 
 public void setConst(){
 os = width/64;
@@ -2535,7 +2918,15 @@ os = width/64;
  xA = os;
  xB = width/4 - os;
  xC = width/4;
- xD = width*5/6;
+ xD = width/2;
+ xE = width/2 + os;
+
+ xG = width*5/6;
+
+
+
+
+ y10 = PApplet.parseInt(height/16+width/64+ width/4 - width/32); // revisit this value .
 
  yA = height/16;
  yB = yA + os;
@@ -2551,8 +2942,9 @@ os = width/64;
  rA = yA/2;
 
  tWidth = PApplet.parseInt((width/4 - width/32)/3); // width of a thumb
+ row5 = y10+tWidth+os;
+ row8 = y10 + 2*(tWidth + os);
 }
-  public void settings() {  size(1500,800,P3D);  smooth(); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "--present", "--window-color=#666666", "--stop-color=#CCCCCC", "TBM_GENERATOR" };
     if (passedArgs != null) {
