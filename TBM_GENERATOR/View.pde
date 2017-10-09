@@ -106,21 +106,18 @@ class View {
     line(os, 0, os, height);
 
     // column 3-4
-    line(width/4-os, 0, width/4-os, height/2);
-    line(width/4, 0, width/4, height/2);
+    line(width/4-os, 0, width/4-os, row5);
+    line(width/4, 0, width/4, row5);
 
     // column 5-6
     line(width/2 - os/2,0, width/2 - os/2, height);
     line(width/2+os/2,0, width/2+os/2, height);
 
     // column 7-8
-
-    line(width/2+  width/6 +os/2,row5,width/2 +  width/6+os/2, height);
-    line(width/2+  width/6-os/2,row5,width/2 +  width/6-os/2, height);
+    line(width/2+  width/6 +os,row5,width/2 +  width/6+os, height);
+    line(width/2+  width/6,row5,width/2 +  width/6, height);
 
     // column 9-10
-
-
     line(width/2+  width/3+os/2,row5,width/2 +  width/3+os/2, height);
     line(width/2+  width/3-os/2,row5,width/2 +  width/3-os/2, height);
 

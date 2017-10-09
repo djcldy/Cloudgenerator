@@ -5,6 +5,7 @@ class Thumb {
   String path, name;
   PVector loc, size;
   boolean isSelected = false;
+  boolean isMater = false;
   ArrayList<Thumb> children; // chilrdren
   ArrayList<Thumb> selecteren = new ArrayList<Thumb>();
   ImageThread it;
@@ -15,19 +16,35 @@ class Thumb {
 
 
   Thumb(PApplet _app, String _path, PVector _loc, PVector _size, String _name) {
+    // isMater = false;
     app   =   _app;
     name  =   _name;
     size  =  _size;
     loc = _loc;
     path = _path;
-    // println("thumb path = " + _path);
     reset(_path, _loc);
     setChildren(0); // start on step 1
   }
 
 
-  Thumb(PApplet _app,String _path, PVector _loc, PVector _size) {
-    // println("add child");
+
+  Thumb(PApplet _app, String _path, PVector _loc, PVector _size, String _name, boolean _isMultiMaterial) {
+    app   =   _app;
+    name  =   _name;
+    size  =  _size;
+    isMater = _isMultiMaterial;
+    println("name = " + name + " " + isMater);
+    loc = _loc;
+    path = _path;
+    reset(_path, _loc);
+    setChildren(0); // start on step 1
+  }
+
+
+  Thumb(PApplet _app,String _path, PVector _loc, PVector _size, boolean _isMultiMaterial) {
+    isMater = _isMultiMaterial;
+    println("child multi-material = " + name + " " +  isMater);
+
     path = _path;
     size = _size;
     loc = _loc;
@@ -89,7 +106,7 @@ class Thumb {
 
 
   void reset(String _path, PVector _loc){
-    println("reset: " + _path + "," + size);
+    // /("reset: " + _path + "," + size);
     it = new ImageThread(app, _path,size);
     it.start();
   }
@@ -103,34 +120,6 @@ class Thumb {
   }
 
 
-  // void reset(String _path, PVector _loc) {
-
-  //   path = _path;
-  //   loc = _loc;
-  //   float x = size.x;
-  //   float y = size.y;
-
-  //   map = createGraphics(int(x), int(y));
-  //   map.beginDraw();
-  //   map.background(0);
-  //   map.endDraw();
-
-  //   PImage xx = loadImage(path); // textures 512 px x 512 px
-
-  //   texture = normalize(xx);
-
-  //   println(" normalize");
-
-  //   println(" size = " + texture.width + "," + texture.height);
-  //   println(" size = " + size.x + "," + size.y);
-
-  //   if (texture == null) { println("texture is null");}
-  //   if (texture == null) { println("parent is null");}
-
-  //   parent = texture.get();
-
-  //   updateMap();
-  // }
 
   void updateMap() {
     texture.resize(0, int(size.x));
@@ -142,10 +131,8 @@ class Thumb {
 
 
 
-  void  setChildren(int step) {
-    println("set children");
+  void setChildren(int step) {
     scroll += step;
-
     children = new ArrayList<Thumb>();
     String localPath = "/textures/" + name + "/";                   //
     String[] filenames = listFileNames(sketchPath() + localPath);   //
@@ -168,10 +155,7 @@ class Thumb {
     if (filenames !=null) {
       for (int j = 0; j < b2; j++){
 
-        // children.add(new Thumb(localPath + filenames[j], new PVector(xA+size.x*col,yE+size.x*row), size));
-
-        println("add child: " + localPath + filenames[j]);
-        children.add(new Thumb(app, localPath + filenames[j], new PVector(os+size.x*col,loc.y+size.x+os), size));
+        children.add(new Thumb(app, localPath + filenames[j], new PVector(os+size.x*col,loc.y+size.x+os), size, isMater));
 
         col ++;
         if (col == 3) {
@@ -261,22 +245,12 @@ class Thumb {
 
 
   boolean checkSelected(PVector ms) { // hmm we can  refactor this
-
     isSelected = false;
-
-    // if (map != null){
-
-      // println("checked selected: " + map);
-
-      // println("check selected");
-    if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mouseY < (loc.y + size.y))) {
+if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mouseY < (loc.y + size.y))) {
       isSelected = !isSelected;
     } else {
       isSelected = false;
     }
-    println("selected completed");
-    // }
-
     return isSelected;
   }
 
@@ -292,13 +266,23 @@ class Thumb {
   void display() {
 
 
-
+        println("isnt ready:" + isMater + " " + name);
     if (loaded == false){
       if (it.isReady){
         // println("it is ready");
-        parent = normalize(it.parent);//
-        texture = normalize(it.texture);//
-        map = it.map;
+        println("isready:" + isMater + " " + name);
+        if (isMater == true){
+          println("multi-material");
+          parent = it.parent;    //
+          texture = it.texture;  // We will make another function for multi material
+          map = it.map;
+
+        }else{
+          println("normalize");
+          parent = normalize(it.parent);//
+          texture = normalize(it.texture);//
+          map = it.map;
+        }
         it.stop();
         loaded = true;
       }
@@ -341,9 +325,9 @@ class Thumb {
     //   rect(loc.x, loc.y, map.width, map.height); // Left
     // }
 
-    // hover
-    float x1 = loc.x + size.x/2;
-    float y1 = loc.y+size.y+12;
+    // // hover
+    // float x1 = loc.x + size.x/2;
+    // float y1 = loc.y+size.y+12;
     //textAlign(CENTER);
     //text(name, x1, y1 );
   }

@@ -65,9 +65,22 @@ class Viewport2D {
 
     if (mode == "UNIT"){
       displayCellUnit();
+      displayTool();
     } else {
       displayCellArray();
     }
+  }
+
+  void displayTool(){
+
+    noFill();
+    strokeWeight(2);
+    stroke(255,0,255);
+    pushMatrix();
+    translate(loc.x+size.x/3, loc.y+size.y/2);
+    rect(0,0,150,150);
+    popMatrix();
+
   }
 
 

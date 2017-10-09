@@ -14,6 +14,7 @@ class PointCloud {
   float vWidth, vHeight, currentLayer;
   boolean mode; // mode 0 = max , mode 1 = min
 
+  boolean spin;
 
 PShape boxCloud;
 
@@ -126,8 +127,10 @@ void updateView(){
    void updateCamera(){
 
     if (!mode){
-      rotation.addIncrement(new PVector(0.0005,0.0001,0.0001));
 
+      if (SpinX){   rotation.addIncrement(new PVector(0.005,0,0));  }
+      if (SpinY){   rotation.addIncrement(new PVector(0,0.005,0));  }
+      if (SpinZ){   rotation.addIncrement(new PVector(0,0,0.005));  }
       // rotation.addIncrement(new PVector(0,-0.005,0));
       // yRot += 0.005;
       //  zRot += 0.005;

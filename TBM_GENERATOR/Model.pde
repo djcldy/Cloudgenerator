@@ -5,7 +5,7 @@ class Model {
   PImage slice;
   PGraphics pg;
   PointCloud pointCloud;
-
+  Shape shaper;
   PApplet app;
 
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
@@ -120,23 +120,29 @@ class Model {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-     depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
-     materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
-     alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",    new PVector(os+2*tW,y4),  dimThumb, "global/alpha");
+    PVector dimGlobe = new PVector(width/6-os-os/2, width/6-os-os/2);
 
-    thumbsGlobal.add(depthGlb);
-    thumbsGlobal.add(materGlb);
+     // depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
+     // materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
+     alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe, "global/alpha");
+     shaper = new Shape(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe);
+    // thumbsGlobal.add(depthGlb);
+    // thumbsGlobal.add(materGlb);
     thumbsGlobal.add(alphaGlb);
 
-    materGlb.isSelected = true;
+    // materGlb.isSelected = true;
     // currentR1 = materGlb;
 
   }
 
   void initVoxel(ArrayList<Thumb> _units, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
 
-    PVector dimVox = new PVector(width/6-os,width/6-os);
-    initVoxelator(new PVector(width*5/6, height-height/16-dimVox.y), dimVox, _units, _arrays, _globes);
+    //
+    PVector dimVox = new PVector(width/6-os-os/2, width/6-os-os/2);
+
+
+    // location , size
+    initVoxelator(new PVector(width/2+ width/3+os/2, row5), dimVox, _units, _arrays, _globes);
 
   }
 
@@ -158,6 +164,11 @@ class Model {
       th.display();
     }
     // testSelection();
+    // for (Thumb th: thumbsGlobal){
+    //   th.display();
+    // }
+    shaper.display();
+
   }
 
 

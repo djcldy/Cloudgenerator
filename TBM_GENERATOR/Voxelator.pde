@@ -36,9 +36,9 @@ class Voxelator {
 
     // setArrays(arrays);
 
-    depthGlobe = globes.get(0);
-    materGlobe = globes.get(1);
-    alphaGlobe = globes.get(2);
+    // depthGlobe = globes.get(0);
+    // materGlobe = globes.get(1);
+    // alphaGlobe = globes.get(2);
 
     layer = Current;
     thickness = Thickness;

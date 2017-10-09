@@ -23,6 +23,11 @@ class Viewport3D{
 
   }
 
+  void toggleSpin(){
+    cellUnit.spin = !cellUnit.spin;
+
+  }
+
   void setCellUnit(PShape _pc){
     cellUnit.setCloud(_pc);
   }

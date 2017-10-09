@@ -26,11 +26,19 @@ public float voxH = 0.040; // cm
 
 
 
+boolean SpinX = true;
+boolean SpinY = true;
+boolean SpinZ = true;
+
 // stuff for interface
 Slider abc;
 CheckBox checkbox;
 
+///////////
+float Intersection = 0;
 
+
+/////////////////// these may be obsolete
 float Amplitude = 10; // cm
 float Thickness = 10;
 float Current = 0.5;
@@ -55,7 +63,7 @@ void setup() {
   float time01 = float(millis());
 
 
-   init();
+  init();
 
   float time02 = float(millis());
   float elapsedTime = time02 - time01;
@@ -72,9 +80,9 @@ void draw() {
 
 
 void settings(){
-  // size(1600,900,P3D);
+  size(1800,1000,P3D);
 
-   fullScreen(P3D);
+   // fullScreen(P3D);
 }
 void setStyle(){
   smooth();
@@ -116,6 +124,16 @@ void initGeo(){
 void LayersZ(int value){
   if (!isSetup){
   LayersZ = value;
+  thread("RESETUNITCELL");
+  }
+}
+
+
+
+void Intersection(float value){
+  if (!isSetup){
+  // println("set intersection = " + value);
+  Intersection = value;
   thread("RESETUNITCELL");
   }
 }
@@ -195,6 +213,9 @@ void event(ControlEvent theEvent) {
   println(theEvent.getArrayValue());
 }
 
+void SPIN(){
+  c.v.vp3D.toggleSpin();
+}
 
 
 void initButtons(){
@@ -202,24 +223,58 @@ void initButtons(){
   int bW = int((width/4 - width/32)/4);
   int bH = int(height/16 - os);
 
-  cp5.addToggle("togglecell")
-     .setPosition(xD,yA)
-     .setSize(int(width/6-os),75)
+
+
+  // cp5.addButton("Export")
+  //   .setValue(0)
+  //   .setPosition(xG, height-height/16)
+  //   .setSize(int(width/6-os), int(height/16-os))
+  //   ;
+
+  // cp5.addButton("LEFT")
+  //   .setValue(0)
+  //   .setPosition(width/4, row5-2*os)
+  //   .setSize(int(os), int(os))
+  //   ;
+
+  // cp5.addButton("TOP")
+  //   .setValue(0)
+  //   .setPosition(width/4 + os, row5-2*os)
+  //   .setSize(int(os), int(os))
+  //   ;
+
+    // cp5.addButton("SPIN")
+    // .setValue(0)
+    // .setPosition(width/4 + os, row5-2*os)
+    // .setSize(int(os), int(os))
+    // ;
+
+  cp5.addToggle("SpinX")
+     .setPosition(width/4+os, row5-2*os)
+     .setSize(int(os), int(os/4))
      .setValue(true)
-     .setMode(ControlP5.SWITCH)
+     // .setMode(ControlP5.SWITCH)
      ;
 
-  cp5.addButton("Export")
-    .setValue(0)
-    .setPosition(xG, height-height/16)
-    .setSize(int(width/6-os), int(height/16-os))
-    ;
+  cp5.addToggle("SpinY")
+     .setPosition(width/4 + 3*os, row5-2*os)
+     .setSize(int(os), int(os/4))
+     .setValue(true)
+     // .setMode(ControlP5.SWITCH)
+     ;
 
-  // cp5.addButton("ADD")
+  cp5.addToggle("SpinZ")
+     .setPosition(width/4 + 5*os, row5-2*os)
+     .setSize(int(os), int(os/4))
+     .setValue(true)
+     // .setMode(ControlP5.SWITCH)
+     ;
+  // cp5.addButton("TOP")
   //   .setValue(0)
-  //   .setPosition(os, height-height/16)
+  //   .setPosition(width/4, row5-2*os)
   //   .setSize(bW, bH)
   //   ;
+
 
   // cp5.addButton("SUBTRACT")
   //   .setValue(0)
@@ -243,11 +298,11 @@ void initButtons(){
 
   int y4 = int(height/16+width/64+ width/4 - width/32);
 
-  cp5.addButton("R1")
-    .setValue(0)
-    .setPosition(width/4-os, y4)
-    .setSize(int(os), int(tWidth))
-    ;
+  // cp5.addButton("R1")
+  //   .setValue(0)
+  //   .setPosition(width/4-os, y4)
+  //   .setSize(int(os), int(tWidth))
+  //   ;
 
   // cp5.addButton("R2")
   //   .setValue(0)
@@ -261,11 +316,11 @@ void initButtons(){
   //   .setSize(int(os), int(tWidth))
   //   ;
 
-  cp5.addButton("L1")
-    .setValue(0)
-    .setPosition(0, y4)
-    .setSize(int(os), int(tWidth))
-    ;
+  // cp5.addButton("L1")
+  //   .setValue(0)
+  //   .setPosition(0, y4)
+  //   .setSize(int(os), int(tWidth))
+  //   ;
 
   // cp5.addButton("L2")
   //   .setValue(0)
@@ -350,14 +405,14 @@ void initSlider() {
     .setPosition(xE, row5+ 150)
     .setWidth(len)
     .setValue(0)
-    .setRange(0, 1) // mm
+    .setRange(0, 0.5) // mm
     ;
 
 
     cp5.addSlider("LayersZ")
      .setPosition(xE,row5 + 175)
      .setWidth(len)
-     .setRange(1,10) // values can range from big to small as well
+     .setRange(1,6) // values can range from big to small as well
      .setValue(LayersZ)
      .setNumberOfTickMarks(10)
      .setSliderMode(Slider.FLEXIBLE)
@@ -366,7 +421,7 @@ void initSlider() {
 ///////////////// SLICER
 
   cp5.addSlider("Current")
-    .setPosition(xG, row5+50)
+    .setPosition(xE, row5+225)
     .setWidth(len)
     .setRange(0, 1) // values can range from big to small as well
     .setValue(0.5)
@@ -410,11 +465,18 @@ void RESETUNITCELL() {
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
 
+
   int voxX = int(10/0.040); //  num voxels in X
   int voxY = int(10/0.040); //  num voxels in Y
   int voxZ = int(5/0.030); //  num voxels in Z
 
+  float inter = Intersection;
+
+
+
   println("reset unit cell" + voxX + "," + voxY + "," + voxZ);
+  println("intersection = " + inter);
+
   //////////////////////////////////////////////
 
 
@@ -451,8 +513,11 @@ void RESETUNITCELL() {
     materChannel.loadPixels();
 
 
-    int res = 1;
-    float range = 255;
+    int res = LayersZ;
+
+    float rangeLo = 255*inter;
+    float rangeHi = 255 - rangeLo;
+
     int levels = LayersZ;
     float amp = Amplitude/levels; // this is the total height
     float layerVoxels = voxZ/levels;
@@ -465,9 +530,17 @@ void RESETUNITCELL() {
         float alp = brightness((alphaChannel.get(x,y)));
 
            float val = brightness(depthChannel.get(x, y));
+
+           if (val > rangeHi )  { val = rangeHi;    }
+           if (val < rangeLo) { val = rangeLo;  }
+
            if (invert){val = 255-val;}
-           float voxLevel = val/255*layerVoxels; // height of voxel within this level
+
+           float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
+
+          boxCloud.stroke(random(255), random(255), random(255),200);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
+
         }
       }
 
@@ -564,73 +637,3 @@ void RESETARRAY() {
 
 
 
-void RESETCELL(){
-
-
-}
-
-
-
-
-void RESETARRAYOLD() {
-
-
-}
-
-void RESETPOINTCLOUD() {
-
-    //pritnln("reset pointCloud: " + c.v.vp3D.mode);
-
-    // ArrayList<PVector> temp = new ArrayList<PVector>();
-    // Thumb depth,alpha, mater; // place holder variables
-
-    // int stepZ;
-
-    // if (c.v.vp3D.mode == "UNIT") {
-
-    //   depth = c.m.depth;
-    //   alpha = c.m.alpha;
-    //   mater = c.m.mater;
-    //   stepZ = 1;
-
-    // } else {
-
-      //println("generate micro-structures");
-
-    //   depth = c.m.depthArray;
-    //   alpha = c.m.alpha;
-    //   mater = c.m.mater;
-    //   stepZ = 2;
-
-    // }
-
-    // depth.map.loadPixels();
-    // alpha.map.loadPixels();
-    // mater.map.loadPixels();
-
-    // int res = 1;
-    // float range = 255;
-
-    // //
-
-    // for (int x = 0; x < depth.map.width; x += res) {
-    //   for (int y = 0; y < depth.map.height; y+= res) {
-
-    //     float alp = brightness((alpha.map.get(x,y)));
-
-    //     if (alp > 10) { // check alpha
-
-    //        float val = brightness(depth.map.get(x, y));
-    //        temp.add(new PVector(x, y, val));
-
-    //       }
-    //     }
-    //   }
-    // c.m.points = temp;
-
-    // if (c.v.vp3D.mode == "UNIT"){
-    //   c.v.vp3D.setCellUnit(c.m.points);
-    //   } else {
-    //   c.v.vp3D.setCellArray(c.m.points);
-    // }
-}
