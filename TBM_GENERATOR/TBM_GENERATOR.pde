@@ -24,7 +24,9 @@ public float layerHeight = .030; // cm
 public float voxW = 0.040; // cm
 public float voxH = 0.040; // cm
 
-
+public float DimXY = 10;
+// public float DimY = 10;
+public float DimZ = 3;
 
 boolean SpinX = true;
 boolean SpinY = true;
@@ -87,7 +89,7 @@ void settings(){
 void setStyle(){
   smooth();
   // background(0, 51, 102);
-  // ortho();
+  ortho();
 
 
 }
@@ -128,6 +130,29 @@ void LayersZ(int value){
   }
 }
 
+
+void DimXY(float value){
+  if (!isSetup){
+  DimXY = value;
+  thread("RESETUNITCELL");
+  }
+}
+
+
+// void DimY(float value){
+//   if (!isSetup){
+//   DimY = value;
+//   thread("RESETUNITCELL");
+//   }
+// }
+
+
+void DimZ(float value){
+  if (!isSetup){
+  DimZ = value;
+  thread("RESETUNITCELL");
+  }
+}
 
 
 void Intersection(float value){
@@ -223,32 +248,6 @@ void initButtons(){
   int bW = int((width/4 - width/32)/4);
   int bH = int(height/16 - os);
 
-
-
-  // cp5.addButton("Export")
-  //   .setValue(0)
-  //   .setPosition(xG, height-height/16)
-  //   .setSize(int(width/6-os), int(height/16-os))
-  //   ;
-
-  // cp5.addButton("LEFT")
-  //   .setValue(0)
-  //   .setPosition(width/4, row5-2*os)
-  //   .setSize(int(os), int(os))
-  //   ;
-
-  // cp5.addButton("TOP")
-  //   .setValue(0)
-  //   .setPosition(width/4 + os, row5-2*os)
-  //   .setSize(int(os), int(os))
-  //   ;
-
-    // cp5.addButton("SPIN")
-    // .setValue(0)
-    // .setPosition(width/4 + os, row5-2*os)
-    // .setSize(int(os), int(os))
-    // ;
-
   cp5.addToggle("SpinX")
      .setPosition(width/4+os, row5-2*os)
      .setSize(int(os), int(os/4))
@@ -269,30 +268,16 @@ void initButtons(){
      .setValue(true)
      // .setMode(ControlP5.SWITCH)
      ;
+
+
+       cp5.addToggle("toggleCell")
+     .setPosition(width/2 + os, yA+os/2)
+     .setSize(int(os), int(os/4))
+     .setValue(true)
+     .setMode(ControlP5.SWITCH)
+     ;
   // cp5.addButton("TOP")
   //   .setValue(0)
-  //   .setPosition(width/4, row5-2*os)
-  //   .setSize(bW, bH)
-  //   ;
-
-
-  // cp5.addButton("SUBTRACT")
-  //   .setValue(0)
-  //   .setPosition(os+bW, height-height/16)
-  //   .setSize(bW, bH)
-  //   ;
-
-  // cp5.addButton("MULTIPLY")
-  //   .setValue(0)
-  //   .setPosition(os+2*bW, height-height/16)
-  //   .setSize(bW, bH)
-  //   ;
-
-  // cp5.addButton("DIVIDE")
-  //   .setValue(0)
-  //   .setPosition(os+3*bW, height-height/16)
-  //   .setSize(bW, bH)
-  //   ;
 
 
 
@@ -360,29 +345,29 @@ void LayersY(int value){
 
 
 void adjustGrid(){
-    // println("adjustGrid");
-    c.m.depthArray = c.m.depth.array(LayersX,LayersY);
-    c.m.alphaArray = c.m.alpha.array(LayersX,LayersY);
-    c.m.materArray = c.m.mater.array(LayersX,LayersY);
-    c.m.updateArray();
+    // // println("adjustGrid");
+    // c.m.depthArray = c.m.depth.array(LayersX,LayersY);
+    // c.m.alphaArray = c.m.alpha.array(LayersX,LayersY);
+    // c.m.materArray = c.m.mater.array(LayersX,LayersY);
+    // c.m.updateArray();
 }
 void initSlider() {
 
   int len = width/9;
 
-  cp5.addSlider("DimX")
+  cp5.addSlider("DimXY")
     .setPosition(xE, row5+ 25)
     .setWidth(len)
     .setValue(10)
-    .setRange(1, 50) // mm
+    .setRange(1, 50) // mm?
     ;
 
-  cp5.addSlider("DimY")
-    .setPosition(xE, row5+ 50)
-    .setWidth(len)
-    .setValue(10)
-    .setRange(1, 50) // mm
-    ;
+  // cp5.addSlider("DimY")
+  //   .setPosition(xE, row5+ 50)
+  //   .setWidth(len)
+  //   .setValue(10)
+  //   .setRange(1, 50) // mm
+  //   ;
 
   cp5.addSlider("DimZ")
     .setPosition(xE, row5+ 75)
@@ -414,7 +399,7 @@ void initSlider() {
      .setWidth(len)
      .setRange(1,6) // values can range from big to small as well
      .setValue(LayersZ)
-     .setNumberOfTickMarks(10)
+     .setNumberOfTickMarks(6)
      .setSliderMode(Slider.FLEXIBLE)
      ;
 
@@ -466,9 +451,14 @@ void RESETUNITCELL() {
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
 
 
-  int voxX = int(10/0.040); //  num voxels in X
-  int voxY = int(10/0.040); //  num voxels in Y
-  int voxZ = int(5/0.030); //  num voxels in Z
+  int voxX = int(DimXY/0.040); //  num voxels in X
+  int voxY = int(DimXY/0.040); //  num voxels in Y
+  int voxZ = int(DimZ/0.030); //  num voxels in Z
+
+  // int voxX = int(10/0.040); //  num voxels in X
+  // int voxY = int(10/0.040); //  num voxels in Y
+  // int voxZ = int(1/0.030); //  num voxels in Z
+
 
   float inter = Intersection;
 
@@ -491,6 +481,7 @@ void RESETUNITCELL() {
   PShape boxCloud = createShape();
   boxCloud.beginShape(POINTS);
   boxCloud.stroke(255,150);
+  boxCloud.strokeWeight(1);
 
     ArrayList<PVector> temp = new ArrayList<PVector>();
     Thumb depth,alpha, mater; // place holder variables
@@ -513,13 +504,13 @@ void RESETUNITCELL() {
     materChannel.loadPixels();
 
 
-    int res = LayersZ;
+    int res = 1;
 
     float rangeLo = 255*inter;
     float rangeHi = 255 - rangeLo;
 
     int levels = LayersZ;
-    float amp = Amplitude/levels; // this is the total height
+
     float layerVoxels = voxZ/levels;
     boolean invert = false;
 
@@ -527,9 +518,11 @@ void RESETUNITCELL() {
   for (int z = 0; z < levels; z++){
     for (int x = 0; x < depthChannel.width; x += res) {
       for (int y = 0; y < depthChannel.height; y+= res) {
-        float alp = brightness((alphaChannel.get(x,y)));
+        float alph = brightness((alphaChannel.get(x,y)));
 
+        if (alph > 10){
            float val = brightness(depthChannel.get(x, y));
+           color c = materChannel.get(x,y);
 
            if (val > rangeHi )  { val = rangeHi;    }
            if (val < rangeLo) { val = rangeLo;  }
@@ -538,39 +531,29 @@ void RESETUNITCELL() {
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
-          boxCloud.stroke(random(255), random(255), random(255),200);
+          boxCloud.stroke(red(c), green(c), blue(c),200);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
-
+          }
         }
       }
 
       invert = !invert; // need to do something hear to invert
     }
-
-
-
-
-/*
-  for (int z = 0; z < levels; z++){
-    for (int x = 0; x < depth.map.width; x += res) {
-      for (int y = 0; y < depth.map.height; y+= res) {
-        float alp = brightness((alpha.map.get(x,y)));
-        // if (alp > 10) { // check alpha ??
-           float val = brightness(depth.map.get(x, y));
-           if (invert){val = 255-val;}
-            // temp.add(new PVector(x, y, val + z*255));
-            boxCloud.vertex(x, y, (amp*z + val/255*amp)/voxH);
-
-          // }
-        }
-      }
-      invert = !invert; // need to do something hear to invert
-    }
-*/
 
 
   boxCloud.endShape();
   c.v.vp3D.setCellUnit(boxCloud);
+
+
+
+
+  // PShape rdmCloud = createShape();
+  // rdmCloud.beginShape(POINTS);
+  // rdmCloud.stroke(255,150);
+  // for (int i = 0; i < 1000; i++) {rdmCloud.vertex(random(-200,200),random(-200,200),random(-200,200));}
+  // rdmCloud.endShape();
+  c.v.vp3Darray.setCellArray(boxCloud);
+  c.setCurrentUC(boxCloud);
 
 }
 

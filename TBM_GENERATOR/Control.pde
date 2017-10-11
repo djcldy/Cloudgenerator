@@ -33,8 +33,12 @@ class Controller {
   void initSelector(){
 
     zoneA = new Zone(xA, yD-os, xB, yE-os);                 // row 1
-    zoneB = new Zone(xA, yE, xB, yE+tWidth);                // row 2
-    zoneC = new Zone(xA, yE+tWidth+os, xB, yE+2*tWidth+os); // row 3
+
+
+    // zoneB = new Zone(xA, yE, xB, yE+tWidth);                // row 2
+
+    zoneB = new Zone(xA, row5, col4, yE+tWidth);                // row 2
+    zoneC = new Zone(xA, yE+tWidth+os, col4, yE+2*tWidth+os); // row 3
 
     zones.add(zoneA);
     zones.add(zoneB);
@@ -50,31 +54,40 @@ class Controller {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-    Thumb depth = new Thumb(app,"/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth",  false);
-    Thumb mater = new Thumb(app,"/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater", true);
-    Thumb alpha = new Thumb(app,"/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha", false);
+    dimThumb = new PVector((width/2 - os-os/2)/6,(width/2 - os-os/2)/6);
+
+
+    Thumb depth = new Thumb(app,"/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth",  "MONO");
+    Thumb mater = new Thumb(app,"/textures/array/mater/manta.png", new PVector(os+dimThumb.x,y4),   dimThumb, "unit/mater", "COLOR");
+    Thumb alpha = new Thumb(app,"/textures/array/alpha/solid.png",    new PVector(os+2*dimThumb.x,y4),  dimThumb, "unit/alpha", "MONO");
 
     thumbs.add(depth);
     thumbs.add(mater);
     thumbs.add(alpha);
 
-
-
     PShape shape = null;
-
     float cellWidth = (width/2 - os-os/2)/6;
 
     for (float x = os; x < width/2 - dimThumb.x; x += cellWidth){
       unitCells.add(new UnitCell(new PVector(x,row8), new PVector(cellWidth,cellWidth), shape ));
     }
-
+    unitCells.get(0).isSelected = true;
     mater.isSelected = true;
-
-
 
     initViewport(new PVector(os, yA),  dimThumbView,  mater);
 
   }
+
+  void setCurrentUC(PShape _pc){
+
+    for (UnitCell uc : unitCells){
+      if (uc.isSelected){
+        uc.setCloud(_pc);
+      }
+    }
+
+  }
+
 
   void initViewport(PVector _loc, PVector _size, Thumb _th){
     vp = new Viewport2D(_loc, _size, _th);
@@ -150,15 +163,14 @@ void checkR2(Thumb th,  PVector ms){
         vp.set(m.currentR2);
 }
 
-void checkR3(ArrayList<Thumb> _thumbs,  PVector ms){
+void checkR3(PVector _ms){
 
-
-  for (Thumb th : _thumbs) {
-      if (th.checkSelected(ms)) {
-        m.currentR3 = th;
-        vp.set(th);
-      }
+  for (UnitCell cell : unitCells){
+    if (cell.checkSelected(_ms)){
+      thread("RESETUNITCELL");
+    }
   }
+
 }
 
 
@@ -168,33 +180,13 @@ boolean unitSelect(PVector ms){
 
     if (zoneA.isSelected(ms)){
         regen = checkR1(m.thumbs, ms);
-      } else if (zoneB.isSelected(ms)){
-        if (m.currentR1 != null){
-          checkR2(m.currentR1, ms);
-        }
+    } else if (zoneB.isSelected(ms)){
+        if (m.currentR1 != null){checkR2(m.currentR1, ms);}
+    } else if (zoneC.isSelected(ms)) {
+       checkR3(ms);
     }
-
-
     return regen;
-}
-
-
-
-void arraySelect(PVector ms){
-      // println("array select");
-      if (zoneB.isSelected(ms)){
-        checkR1(m.thumbsGlobal, ms);
-      // println("zoneB: ");
-      } else if (zoneC.isSelected(ms)){
-        // println("checkZone");
-        if (m.currentR1 != null){
-          // println("zoneC");
-          checkR2(m.currentR1, ms);
-        } else {
-          // println("zoneC = null");
-        }
-      }
-}
+  }
 
   void mouseDown(PVector ms) {
 
@@ -203,9 +195,6 @@ void arraySelect(PVector ms){
         thread("RESETUNITCELL");
       }
       // thread("RESETUNITCELL");
-    } else {
-      // arraySelect(ms);
-      // thread("RESETARRAY");
     }
-}
+  }
 }

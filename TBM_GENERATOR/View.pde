@@ -3,7 +3,7 @@ class View {
   // this controls the styles of display
   Model model;
   Viewport2D vp2D;
-  Viewport3D vp3D;
+  Viewport3D vp3D, vp3Darray;
   Voxelator vox;
   // Control control;
 
@@ -19,7 +19,14 @@ class View {
     model = _m;
     // control = _C;
     vp2D = _vp;
-    vp3D = new Viewport3D(xC, yA, xD, yF-height/16);
+
+    vp3D      = new Viewport3D(xC, yA, width/2 - os/2, y10+tWidth);
+    vp3Darray = new Viewport3D(width/2 + os/2 , yA, width-os, y10+tWidth);
+
+    // vp3Darray = new Viewport3D(width/2+os/2,xA,width/6 +os,yF);
+
+ // vp3Darray = new Viewport3D(width/4,height/4,width/2,height/2);
+
   }
 
   void setCurrent() {
@@ -61,6 +68,8 @@ class View {
   void display3D() {
     vp3D.display();
 
+    vp3Darray.display();
+
   }
 
   void drawFrames() {
@@ -85,16 +94,17 @@ class View {
     line(0, yA, width, yA);
 
     // ROW 3-4
-
+    line(0,row4, width, row4);
+    line(0,row5, width, row5);
 
     // ROW 5-6
     // line(0,y10+ tWidth, width/2, y10 + tWidth);
-    line(0,y10+tWidth, width, y10+tWidth);
-    line(0,y10+ tWidth+os, width, y10 + tWidth+os);
+    // line(0,y10+tWidth, width, y10+tWidth);
+    // line(0,y10+ tWidth+os, width, y10 + tWidth+os);
 
     // ROW 7-8
-    line(0,y10 + 2*(tWidth)+os, width/2, y10 + 2*(tWidth)+os);
-    line(0,y10 + 2*(tWidth)+2*os, width/2, y10 + 2*(tWidth)+2*os);
+    line(0,row7 , width/2-os/2,row7 );
+    // line(0,y10 + 2*(tWidth)+2*os, width/2, y10 + 2*(tWidth)+2*os);
 
 
   }
@@ -186,7 +196,7 @@ class View {
   void drawZones() {
 
     stroke(34, 155, 215);
-    strokeWeight(3);
+    strokeWeight(1);
     noFill();
 
     // Zone Row 1

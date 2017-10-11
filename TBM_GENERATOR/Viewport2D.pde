@@ -74,7 +74,7 @@ class Viewport2D {
   void displayTool(){
 
     noFill();
-    strokeWeight(2);
+    strokeWeight(1);
     stroke(255,0,255);
     pushMatrix();
     translate(loc.x+size.x/3, loc.y+size.y/2);

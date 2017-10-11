@@ -25,7 +25,7 @@ class Zone {
   void display(PVector pt){
 
     stroke(255);
-    strokeWeight(3);
+
 
     if (isSelected(pt)){
       rect(a.x,a.y,dim.x,dim.y);

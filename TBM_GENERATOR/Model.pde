@@ -42,13 +42,13 @@ class Model {
     mater = thumbs.get(1);
     alpha = thumbs.get(2);
 
-    depthArray = depth.array(stepX,stepY);
-    alphaArray = alpha.array(stepX,stepY);
-    materArray = mater.array(stepX,stepY);
+    // depthArray = depth.array(stepX,stepY);
+    // alphaArray = alpha.array(stepX,stepY);
+    // materArray = mater.array(stepX,stepY);
 
-    thumbsArray.add(depthArray);
-    thumbsArray.add(alphaArray);
-    thumbsArray.add(materArray);
+    // thumbsArray.add(depthArray);
+    // thumbsArray.add(alphaArray);
+    // thumbsArray.add(materArray);
 
     initGlobalThumbs();
     initVoxel(thumbs, thumbsArray, thumbsGlobal);
@@ -91,15 +91,20 @@ class Model {
 
     int bW = int((width/4 - width/32));
     int tW = int((width/4 - width/32)/3); // width of thumb with row of 3
-    float y4 = height/16+width/64+bW;
+    // float y4 = height/16+width/64+bW;
 
     PVector dimThumb = new PVector(tW,tW);
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-    depth = new Thumb(app, "/textures/array/depth/bubble.png",   new PVector(os,y4),   dimThumb, "unit/depth");
-    mater = new Thumb(app, "/textures/array/mater/manta.png", new PVector(os+tW,y4),   dimThumb, "unit/mater");
-    alpha = new Thumb(app, "/textures/array/alpha/solid.png",    new PVector(os+2*tW,y4),  dimThumb, "unit/alpha");
+
+
+    // dimThumb = new PVector((width/2 - os-os/2)/6,(width/2 - os-os/2)/6);
+
+
+    depth = new Thumb(app, "/textures/array/depth/bubble.png",   new PVector(os,row3),   dimThumb, "unit/depth","MONO");
+    mater = new Thumb(app, "/textures/array/mater/manta.png", new PVector(os + dimThumb.x,row3),   dimThumb, "unit/mater", "COLOR");
+    alpha = new Thumb(app, "/textures/array/alpha/solid.png",    new PVector(os + dimThumb.x*2,row3),  dimThumb, "unit/alpha","MONO");
 
     thumbs.add(depth);
     thumbs.add(mater);
@@ -124,7 +129,7 @@ class Model {
 
      // depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
      // materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
-     alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe, "global/alpha");
+     // alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe, "global/alpha");
      shaper = new Shape(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe);
     // thumbsGlobal.add(depthGlb);
     // thumbsGlobal.add(materGlb);

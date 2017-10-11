@@ -33,7 +33,7 @@ class Viewport3D{
   }
 
   void setCellArray(PShape _pc){
-    cellArray.setCloud(_pc);
+    cellUnit.setCloudArray(_pc);
   }
 
   void toggleMode(){
@@ -59,18 +59,25 @@ class Viewport3D{
 
   void display(){
 
+cellUnit.display(true);
 
+  strokeWeight(1);
+  stroke(34,155,215);
+  // point(cellUnit.p1.x, cellUnit.p1.y);
+  // point(cellUnit.p2.x, cellUnit.p2.y);
+  strokeWeight(1);
 
-    if (mode == "UNIT"){
-        cellUnit.display(true);
-        // cellArray.display(false);
-      } else {
+}
+  //   if (mode == "UNIT"){
+  //       cellUnit.display(true);
+  //       // cellArray.display(false);
+  //     } else {
 
-        cellUnit.display(false);
-        // cellArray.display(true);
-    }
+  //       cellUnit.display(false);
+  //       // cellArray.display(true);
+  //   }
 
-  }
+  // }
 
 
 

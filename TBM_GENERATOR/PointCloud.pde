@@ -5,6 +5,7 @@ class PointCloud {
   PVector p1, p2;
 
   BoundingBox bbox;
+  ArrayList<BoundingBox> cellArray;
 
   float xRot, yRot, zRot;  // rotate camera
   float xScal, yScale, zScale; // scale camera
@@ -34,7 +35,44 @@ PShape boxCloud;
 
   void setCloud(PShape _pc){
     boxCloud = _pc;
+    getBoundingBox(boxCloud);
   }
+
+
+  void setCloudArray(PShape _pc){
+
+
+    PVector min = new PVector(-200,-200,-200);
+
+    boxCloud = _pc;
+    getBoundingBox(boxCloud);
+
+    float numZ = 3;
+    float numY = 3;
+    float numX = 3;
+
+    float stepX = (bbox.pMax.x - bbox.pMin.x) / numX;
+    float stepY = (bbox.pMax.y - bbox.pMin.y) / numY;
+    float stepZ = (bbox.pMax.z - bbox.pMin.z) / numZ;
+
+
+    cellArray = new ArrayList<BoundingBox>();
+
+ //  for (float x = bbox.pMin.x; x < bbox.pMax.x; x += stepX){
+ //   for (float y = bbox.pMin.y; y < bbox.pMax.y; y += stepY){
+ //    for (float z = bbox.pMin.z; z < bbox.pMax.z; z += stepZ){
+ //     cellArray.add(new BoundingBox(x,y,z, x + stepX, y + stepY, z + stepZ, p1, p2));
+ //    // println("cellarrays = " + cellArray.size());
+
+ //    }
+ //   }
+ // }
+
+      }
+
+
+
+
   void setMode2(){ // ZOOM OUT
 
   xScal = 1;
@@ -57,34 +95,11 @@ PShape boxCloud;
   void initView(){
 
     PVector start,scl,rot;
-
-    // if (mode){  // unitCell
-    //   // setMode1();
-    //   start = new PVector(width/4 + vWidth/8, yB + vHeight/8 - os, 0);
-    //   scl = new PVector(1,1,1);
-    //   rot = new PVector(-atan(sin(radians(-45))), radians(45),0);
-
-    // }else{
-    //   // setMode2();
-    //   start = new PVector(width/4 + vWidth/2, vHeight/2-2*os);
-    //   scl = new PVector(3,3,3);
-    //   rot = new PVector(-atan(sin(radians(45))), radians(45),0);
-
-    // }
-
-
-      // start = new PVector(width/4 + vWidth/8, yB + vHeight/8 - os, 0);
-
-
       float w = 3*width/8;
-
-      start = new PVector(w, yB + vHeight/8+height/8, -10);
       scl = new PVector(0.75,0.75,0.75);
       rot = new PVector(-atan(sin(radians(-30))), radians(-30),0);
-
-
+      start = new PVector((p2.x-p1.x)/2+p1.x, (p2.y-p1.y)/2 + p1.y, -10);
     float val = 0.1;
-
     position = new TweenPoint(start,start,val); // tween for position
     scale = new TweenPoint(scl,scl,val); // tween for position
     rotation = new TweenPoint(rot,rot,val);
@@ -121,7 +136,7 @@ void updateView(){
   void set(ArrayList<PVector> _pc){
     // println("Pointcloud list: " + _pc.size());
     pc = _pc;
-    getBoundingBox(_pc);
+    // getBoundingBox(_pc);
   }
 
    void updateCamera(){
@@ -136,6 +151,13 @@ void updateView(){
       //  zRot += 0.005;
     }
 
+    if (bbox != null){
+    if (bbox.grow){
+      scale.addIncrement(new PVector(0.0005,0.0005,0.0005));
+    } else {
+      scale.addIncrement(new PVector(-0.0005,-0.0005,-0.0005));
+    }
+    }
    }
 
    boolean isDisplay(float x, float y){
@@ -148,7 +170,7 @@ void updateView(){
 
 
     if (currentLayerPC != null){
-      strokeWeight(1);
+      // strokeWeight(1);
       stroke(255);
       for (PVector p: currentLayerPC){
         point(p.x, p.y, p.z);}
@@ -163,12 +185,15 @@ void updateView(){
       stroke(255,100);
       fill(255,100);
 
-      if (boxCloud != null){
+      if (boxCloud != null){ shape(boxCloud);}
+      if (bbox != null ){ bbox.display();}
 
-        shape(boxCloud);
+      // strokeWeight(1);
+      if (cellArray != null){
+        for (BoundingBox cell: cellArray){ cell.display();}
       }
+
       // if (showLayer){displayLayer();}
-      // if (bbox != null ){ bbox.display();}
 
       popMatrix();
       updateCamera();
@@ -181,24 +206,14 @@ void updateView(){
       PVector scl = scale.get();
       PVector rot = rotation.get();
 
-      strokeWeight(1);
+      // strokeWeight(1);
       stroke(255,100);
-      // translate(-5,-5,-5);
-      // rotateY(rot.y);
-      // rotateZ(rot.z);
-
-      // scale(scl.x);
-
-
-      // translate(width/2,height/2);
-
-      // translate(-5,-5,-.25);
-      translate(pos.x, pos.y,pos.z); //
+      translate(pos.x, pos.y, 0); //
       rotateX(rot.x);
       rotateY(rot.y);
       rotateZ(rot.z);
+      scale(scl.x);
 
-      scale(.75);
 
    }
 
@@ -208,7 +223,8 @@ void updateView(){
     currentLayerPC = _pc; // as percentage of a layer
    }
 
-   void getBoundingBox(ArrayList<PVector> _pc){
+   void getBoundingBox(PShape _pc){
+
 
     // println("getBoundingBox:" + _pc.size());
 
@@ -220,26 +236,22 @@ void updateView(){
     float zMax = 0;
 
 
-    for (PVector p: _pc) {
-
-      float z1 = p.z*Amplitude+5;
-      float z2 = p.z*Amplitude-5;
+    for (int i= 0; i < _pc.getVertexCount(); i++) {
+      PVector p = _pc.getVertex(i);
 
       if (p.x < xMin){ xMin = p.x; }
       if (p.y < yMin){ yMin = p.y; }
-      if (z1 < zMin){ zMin = z1; }
-      if (z2 < zMin){ zMin = z2; }
+      if (p.z < zMin){ zMin =  p.z; }
 
       if (p.x > xMax){ xMax = p.x; }
       if (p.y > yMax){ yMax = p.y; }
-      if (z1 > zMax){ zMax = z1; }
-      if (z2 > zMax){ zMax = z2; }
+      if (p.z > zMax){ zMax = p.z; }
 
     }
 
     // println("BoundingBox: " + xMin + "," + yMin + "," + zMin+ "," + xMax + "," + yMax + "," + zMax);
 
-    bbox = new BoundingBox(xMin,yMin,zMin,xMax,yMax,zMax);
+    bbox = new BoundingBox(xMin,yMin,zMin,xMax,yMax,zMax,p1,p2);
 
    }
 
