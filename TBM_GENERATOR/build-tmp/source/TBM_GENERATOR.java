@@ -271,6 +271,15 @@ public void initButtons(){
   int bW = PApplet.parseInt((width/4 - width/32)/4);
   int bH = PApplet.parseInt(height/16 - os);
 
+
+  cp5.addToggle("Invert")
+     .setPosition(2*os, row1 + os)
+     .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
+     .setValue(true)
+     // .setMode(ControlP5.SWITCH)
+     ;
+
+
   cp5.addToggle("SpinX")
      .setPosition(width/4+os, row5-2*os)
      .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
@@ -1711,7 +1720,9 @@ class Thumb {
   public void resetChild(Thumb _child){
 
     parent = _child.parent.get();
-    texture = _child.texture.get();
+    texture = parent.get();
+    texture.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+
     map = _child.map;
     mode = _child.mode;
   }
@@ -1750,14 +1761,14 @@ class Thumb {
 
     // PVector childSize = new PVector((width/2 - os-os/2)/6,(width/2 - os-os/2)/6);
 
-    PVector childSize = size;
+    PVector childSize = new PVector(size.x/2,size.x/2);
 
 
 if (filenames !=null) {
       for (int j = 0; j < b2; j++){
 
 
-        children.add(new Thumb(app, localPath + filenames[j], new PVector(os+size.x*col,loc.y+size.x+os), childSize, mode));
+        children.add(new Thumb(app, localPath + filenames[j], new PVector(os+childSize.x*col,loc.y+size.x+os), childSize, mode));
 
         col ++;
         // if (col == 3) {
@@ -2140,6 +2151,10 @@ class View {
 
     line(0, yA, width, yA);
 
+    line(0, row1, col3, row1);
+    line(0, row2, col3, row2);
+    line(0, row3, col3, row3);
+
     // ROW 3-4
     line(0,row4, width, row4);
     line(0,row5, width, row5);
@@ -2214,7 +2229,7 @@ class View {
 
     if (vp3D.mode == "UNIT"){
 
-    text("TEXTURE: CHANNELS", cA, yD-os-os/2); // row1 //
+    // text("TEXTURE: CHANNELS", cA, yD-os-os/2); // row1 //
     // text("TEXTURES", cA, yE-os/2); // row2 //
 
     } else {
@@ -2306,7 +2321,7 @@ class Viewport2D {
   public void update(){
     // println("update 2d: " + thumb.name + "," + thumb.parent);
     if (thumb.texture != null){
-      image = thumb.texture.get();
+      image = thumb.parent.get();
       image.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
     }
   }
@@ -3067,16 +3082,19 @@ os = width/64;
 
  tWidth = PApplet.parseInt((width/4 - width/32)/3); // width of a thumb
 
-
- row2 = yA;
- row3 = height/16+width/64+ width/4 - width/32 - height/32;
+ row1 = os + width/4 - width/32;
+ row2 = height/32+ width/4 - width/64 + os ;
+ row3 = row2 + os;
  row4 = row3 + tWidth;
  row5 = row4 + os;
  row6 = row5;
  row7 = height/16+width/64+ width/4 - width/32 + 2*(tWidth);
  row8 = row7 + os;
 
+ col2 = width/4 -os;
+ col3 = col2 +os;
  col4 = (width - os)/2;
+
 }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "--present", "--window-color=#666666", "--stop-color=#CCCCCC", "TBM_GENERATOR" };

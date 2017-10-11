@@ -93,6 +93,10 @@ class View {
 
     line(0, yA, width, yA);
 
+    line(0, row1, col3, row1);
+    line(0, row2, col3, row2);
+    line(0, row3, col3, row3);
+
     // ROW 3-4
     line(0,row4, width, row4);
     line(0,row5, width, row5);
@@ -167,7 +171,7 @@ class View {
 
     if (vp3D.mode == "UNIT"){
 
-    text("TEXTURE: CHANNELS", cA, yD-os-os/2); // row1 //
+    // text("TEXTURE: CHANNELS", cA, yD-os-os/2); // row1 //
     // text("TEXTURES", cA, yE-os/2); // row2 //
 
     } else {

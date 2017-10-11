@@ -52,7 +52,9 @@ class Thumb {
   void resetChild(Thumb _child){
 
     parent = _child.parent.get();
-    texture = _child.texture.get();
+    texture = parent.get();
+    texture.resize(int(size.x),int(size.y));
+
     map = _child.map;
     mode = _child.mode;
   }
@@ -91,14 +93,14 @@ class Thumb {
 
     // PVector childSize = new PVector((width/2 - os-os/2)/6,(width/2 - os-os/2)/6);
 
-    PVector childSize = size;
+    PVector childSize = new PVector(size.x/2,size.x/2);
 
 
 if (filenames !=null) {
       for (int j = 0; j < b2; j++){
 
 
-        children.add(new Thumb(app, localPath + filenames[j], new PVector(os+size.x*col,loc.y+size.x+os), childSize, mode));
+        children.add(new Thumb(app, localPath + filenames[j], new PVector(os+childSize.x*col,loc.y+size.x+os), childSize, mode));
 
         col ++;
         // if (col == 3) {

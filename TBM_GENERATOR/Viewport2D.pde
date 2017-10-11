@@ -39,7 +39,7 @@ class Viewport2D {
   void update(){
     // println("update 2d: " + thumb.name + "," + thumb.parent);
     if (thumb.texture != null){
-      image = thumb.texture.get();
+      image = thumb.parent.get();
       image.resize(int(size.x), int(size.y));
     }
   }

@@ -248,6 +248,15 @@ void initButtons(){
   int bW = int((width/4 - width/32)/4);
   int bH = int(height/16 - os);
 
+
+  cp5.addToggle("Invert")
+     .setPosition(2*os, row1 + os)
+     .setSize(int(os), int(os/4))
+     .setValue(true)
+     // .setMode(ControlP5.SWITCH)
+     ;
+
+
   cp5.addToggle("SpinX")
      .setPosition(width/4+os, row5-2*os)
      .setSize(int(os), int(os/4))

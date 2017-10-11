@@ -45,14 +45,17 @@ os = width/64;
 
  tWidth = int((width/4 - width/32)/3); // width of a thumb
 
-
- row2 = yA;
- row3 = height/16+width/64+ width/4 - width/32 - height/32;
+ row1 = os + width/4 - width/32;
+ row2 = height/32+ width/4 - width/64 + os ;
+ row3 = row2 + os;
  row4 = row3 + tWidth;
  row5 = row4 + os;
  row6 = row5;
  row7 = height/16+width/64+ width/4 - width/32 + 2*(tWidth);
  row8 = row7 + os;
 
+ col2 = width/4 -os;
+ col3 = col2 +os;
  col4 = (width - os)/2;
+
 }
