@@ -24,12 +24,12 @@ class Zone {
 
   void display(PVector pt){
 
-    stroke(255);
+    stroke(255,25);
+    strokeWeight(3);
 
+    // noFill();
 
-    if (isSelected(pt)){
-      rect(a.x,a.y,dim.x,dim.y);
-    }
+    if (isSelected(pt)){      rect(a.x,a.y,dim.x,dim.y);}
 
   }
 

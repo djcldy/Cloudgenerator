@@ -6,12 +6,13 @@ class Shape {
   PGraphics map;
   PVector loc,size;
   PApplet app;
-  String path;
+  String path, mode;
   boolean isSelected = false;
 
-  Shape(PApplet _app, String _path, PVector _loc, PVector _size) {
+  Shape(PApplet _app, String _path, PVector _loc, PVector _size, String _mode) {
     app   =   _app;
     // name  =   _name;
+    mode = _mode;
     size  =  _size;
     loc = _loc;
     path = _path;
@@ -22,8 +23,24 @@ class Shape {
 
   void reset(String _path, PVector _loc){
     println("reset: " + _path + "," + size);
-    it = new ImageThread(app, _path,size);
-    it.start();
+
+    if (mode == "DEFAULT"){
+
+      PGraphics temp = createGraphics(1024,1024);
+      temp.beginDraw();
+      temp.background(255);
+      temp.endDraw();
+
+      parent = temp.get();
+      texture = parent.get();
+      texture.resize(int(size.x), int(size.y));
+      map = null;
+      loaded = true;
+
+    } else {
+      it = new ImageThread(app, _path,size);
+      it.start();
+    }
   }
 
 

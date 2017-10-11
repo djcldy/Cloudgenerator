@@ -13,7 +13,7 @@ class Controller {
 
   Viewport2D vp;
 
-  Zone zoneA, zoneB, zoneC;  // select zones
+  Zone zoneA, zoneB, zoneC, zoneD, zoneE, zoneF;  // select zones
   ArrayList<Zone> zones = new ArrayList<Zone>();
 
   Controller(PApplet _app) {
@@ -32,19 +32,18 @@ class Controller {
 
   void initSelector(){
 
-    // zoneA = new Zone(xA, yD-os, xB, yE-os);                 // row 1
     zoneA = new Zone(os, row3, col2,row4);
+    zoneB = new Zone(os, row5, col4, row6);                 // row 2
+    zoneC = new Zone(os, row7, col4, row8);                 //
+    zoneD = new Zone(width/4, row0, col4, row4);                     //
+     zoneE = new Zone(col5, row0, col10, row4);
 
-    // zoneB = new Zone(xA, yE, xB, yE+tWidth);                // row 2
-
-    zoneB = new Zone(os, row5, col4, row6);                // row 2
-
-
-    zoneC = new Zone(os, row7, col4, row8); // row 3
 
     zones.add(zoneA);
     zones.add(zoneB);
     zones.add(zoneC);
+    zones.add(zoneD);
+     zones.add(zoneE);
 
   }
 

@@ -61,9 +61,21 @@ class Thumb {
 
   void reset(String _path, PVector _loc){
  // /("reset: " + _path + "," + size);
+ if (mode != "DEFAULT"){
     it = new ImageThread(app, _path,size);
     it.start();
-
+  } else {
+    PGraphics temp = createGraphics(1024,1024);
+    temp.beginDraw();
+    temp.background(255);
+    temp.endDraw();
+    PImage defaultImage = temp.get();
+    parent = defaultImage;
+    texture = parent.get();
+    texture.resize(int(size.x),int(size.y));
+    map = null;
+    loaded = true;
+   }
   }
 
 
@@ -99,7 +111,7 @@ class Thumb {
     float childWidth = int((xC - 2*os)/3);
     int items = filenames.length;
     int row = 0;
-    int col = 0;
+    // int col = 0;
     int b1 = scroll;
     int b2 = 3+scroll;
     b2 = 6;
@@ -111,10 +123,18 @@ class Thumb {
 
     // PVector childSize = new PVector((width/2 - os-os/2)/6,(width/2 - os-os/2)/6);
 
+
+    int col = 1;
+
+
+
     PVector childSize = new PVector(size.x/2,size.x/2);
 
+    // add default material
+    children.add(new Thumb(app, null, new PVector(os,loc.y+size.x+os), childSize, "DEFAULT"));
 
-if (filenames !=null) {
+
+    if (filenames !=null) {
       for (int j = 0; j < b2; j++){
 
 
@@ -189,7 +209,7 @@ if (filenames !=null) {
    Thumb chi = null;
 
    for (Thumb child: children){
-      if ((mouseX > child.loc.x) && (mouseX < (child.loc.x + map.width)) && (mouseY > child.loc.y) && (mouseY < (child.loc.y + map.height))) {
+      if ((mouseX > child.loc.x) && (mouseX < (child.loc.x + size.x)) && (mouseY > child.loc.y) && (mouseY < (child.loc.y + size.y))) {
         child.isSelected = true;
         chi = child;
 
@@ -222,7 +242,7 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
 
       noFill();
       stroke(163, 149, 41);
-      rect(loc.x, loc.y, map.width, map.height); // Left
+      rect(loc.x, loc.y, size.x, size.y); // Left
 
   }
   void display() {
@@ -240,13 +260,13 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
-          map = it.map;
+          map = null;
 
         }else{
           println("normalize");
-          parent = it.parent;//
+          parent = normalize(it.parent);//
           texture = normalize(it.texture);//
-          map = it.map;
+          map = null;
         }
         it.stop();
         loaded = true;

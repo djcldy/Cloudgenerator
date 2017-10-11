@@ -48,10 +48,7 @@ class ImageThread implements Runnable {
       // parent = normalize(parent);
       texture = parent.get();
        texture.resize(x,y);
-      map = createGraphics(x,y);
-      map.beginDraw();
-      map.image(texture, 0, 0);
-      map.endDraw();
+      map = null;
 
 
       try {

@@ -7,8 +7,8 @@ float cA,cB,cC,cD;
 float rA,rB,rC,rD,rE;
 int tWidth;
 int y10;
-float row1,row2,row3,row4,row5, row6, row7, row8, row9,row10;
-float col1,col2,col3,col4,col5,col6,col7,col8;
+float row0,row1,row2,row3,row4,row5, row6, row7, row8, row9,row10;
+float col1,col2,col3,col4,col5,col6,col7,col8,col9,col10;
 float cellWidth;
 void setConst(){
 
@@ -47,7 +47,7 @@ os = width/64;
  rA = yA/2;
 
  tWidth = int((width/4 - width/32)/3); // width of a thumb
-
+ row0 = os;
  row1 = os + width/4 - width/32;
  row2 = height/32+ width/4 - width/64 + os ;
  row3 = row2 + os;
@@ -62,9 +62,10 @@ os = width/64;
   col2 = width/4 -os;
   col3 = col2 +os;
   col4 = (width - os)/2;
-  col5 = col4;
+  col5 = col4+os;
   col6 = col4;
   col7 = col4;
   col8 = width*5/6 + os/2;
+  col10 = width-os;
 
 }

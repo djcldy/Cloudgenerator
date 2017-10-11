@@ -104,7 +104,7 @@ class Model {
 
     depth = new Thumb(app, "/textures/array/depth/bubble.png",   new PVector(os,row3),   dimThumb, "unit/depth","MONO");
     mater = new Thumb(app, "/textures/array/mater/manta.png", new PVector(os + dimThumb.x,row3),   dimThumb, "unit/mater", "COLOR");
-    alpha = new Thumb(app, "/textures/array/alpha/solid.png",    new PVector(os + dimThumb.x*2,row3),  dimThumb, "unit/alpha","MONO");
+    alpha = new Thumb(app, "/textures/unit/alpha/dots.png",    new PVector(os + dimThumb.x*2,row3),  dimThumb, "unit/alpha","MONO");
 
     thumbs.add(depth);
     thumbs.add(mater);
@@ -130,10 +130,10 @@ class Model {
      // depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
      // materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
      // alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe, "global/alpha");
-     shaper = new Shape(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe);
+     shaper = new Shape(app,null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
     // thumbsGlobal.add(depthGlb);
     // thumbsGlobal.add(materGlb);
-    thumbsGlobal.add(alphaGlb);
+    // thumbsGlobal.add(alphaGlb);
 
     // materGlb.isSelected = true;
     // currentR1 = materGlb;

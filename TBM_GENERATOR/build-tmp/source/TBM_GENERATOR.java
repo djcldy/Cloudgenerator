@@ -758,7 +758,7 @@ class Controller {
 
   Viewport2D vp;
 
-  Zone zoneA, zoneB, zoneC;  // select zones
+  Zone zoneA, zoneB, zoneC, zoneD, zoneE, zoneF;  // select zones
   ArrayList<Zone> zones = new ArrayList<Zone>();
 
   Controller(PApplet _app) {
@@ -777,19 +777,18 @@ class Controller {
 
   public void initSelector(){
 
-    // zoneA = new Zone(xA, yD-os, xB, yE-os);                 // row 1
     zoneA = new Zone(os, row3, col2,row4);
+    zoneB = new Zone(os, row5, col4, row6);                 // row 2
+    zoneC = new Zone(os, row7, col4, row8);                 //
+    zoneD = new Zone(width/4, row0, col4, row4);                     //
+     zoneE = new Zone(col5, row0, col10, row4);
 
-    // zoneB = new Zone(xA, yE, xB, yE+tWidth);                // row 2
-
-    zoneB = new Zone(os, row5, col4, row6);                // row 2
-
-
-    zoneC = new Zone(os, row7, col4, row8); // row 3
 
     zones.add(zoneA);
     zones.add(zoneB);
     zones.add(zoneC);
+    zones.add(zoneD);
+     zones.add(zoneE);
 
   }
 
@@ -994,10 +993,7 @@ class ImageThread implements Runnable {
       // parent = normalize(parent);
       texture = parent.get();
        texture.resize(x,y);
-      map = createGraphics(x,y);
-      map.beginDraw();
-      map.image(texture, 0, 0);
-      map.endDraw();
+      map = null;
 
 
       try {
@@ -1156,7 +1152,7 @@ class Model {
 
     depth = new Thumb(app, "/textures/array/depth/bubble.png",   new PVector(os,row3),   dimThumb, "unit/depth","MONO");
     mater = new Thumb(app, "/textures/array/mater/manta.png", new PVector(os + dimThumb.x,row3),   dimThumb, "unit/mater", "COLOR");
-    alpha = new Thumb(app, "/textures/array/alpha/solid.png",    new PVector(os + dimThumb.x*2,row3),  dimThumb, "unit/alpha","MONO");
+    alpha = new Thumb(app, "/textures/unit/alpha/dots.png",    new PVector(os + dimThumb.x*2,row3),  dimThumb, "unit/alpha","MONO");
 
     thumbs.add(depth);
     thumbs.add(mater);
@@ -1182,10 +1178,10 @@ class Model {
      // depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
      // materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
      // alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe, "global/alpha");
-     shaper = new Shape(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe);
+     shaper = new Shape(app,null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
     // thumbsGlobal.add(depthGlb);
     // thumbsGlobal.add(materGlb);
-    thumbsGlobal.add(alphaGlb);
+    // thumbsGlobal.add(alphaGlb);
 
     // materGlb.isSelected = true;
     // currentR1 = materGlb;
@@ -1546,12 +1542,13 @@ class Shape {
   PGraphics map;
   PVector loc,size;
   PApplet app;
-  String path;
+  String path, mode;
   boolean isSelected = false;
 
-  Shape(PApplet _app, String _path, PVector _loc, PVector _size) {
+  Shape(PApplet _app, String _path, PVector _loc, PVector _size, String _mode) {
     app   =   _app;
     // name  =   _name;
+    mode = _mode;
     size  =  _size;
     loc = _loc;
     path = _path;
@@ -1562,8 +1559,24 @@ class Shape {
 
   public void reset(String _path, PVector _loc){
     println("reset: " + _path + "," + size);
-    it = new ImageThread(app, _path,size);
-    it.start();
+
+    if (mode == "DEFAULT"){
+
+      PGraphics temp = createGraphics(1024,1024);
+      temp.beginDraw();
+      temp.background(255);
+      temp.endDraw();
+
+      parent = temp.get();
+      texture = parent.get();
+      texture.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
+      map = null;
+      loaded = true;
+
+    } else {
+      it = new ImageThread(app, _path,size);
+      it.start();
+    }
   }
 
 
@@ -1694,9 +1707,21 @@ class Thumb {
 
   public void reset(String _path, PVector _loc){
  // /("reset: " + _path + "," + size);
+ if (mode != "DEFAULT"){
     it = new ImageThread(app, _path,size);
     it.start();
-
+  } else {
+    PGraphics temp = createGraphics(1024,1024);
+    temp.beginDraw();
+    temp.background(255);
+    temp.endDraw();
+    PImage defaultImage = temp.get();
+    parent = defaultImage;
+    texture = parent.get();
+    texture.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+    map = null;
+    loaded = true;
+   }
   }
 
 
@@ -1732,7 +1757,7 @@ class Thumb {
     float childWidth = PApplet.parseInt((xC - 2*os)/3);
     int items = filenames.length;
     int row = 0;
-    int col = 0;
+    // int col = 0;
     int b1 = scroll;
     int b2 = 3+scroll;
     b2 = 6;
@@ -1744,10 +1769,18 @@ class Thumb {
 
     // PVector childSize = new PVector((width/2 - os-os/2)/6,(width/2 - os-os/2)/6);
 
+
+    int col = 1;
+
+
+
     PVector childSize = new PVector(size.x/2,size.x/2);
 
+    // add default material
+    children.add(new Thumb(app, null, new PVector(os,loc.y+size.x+os), childSize, "DEFAULT"));
 
-if (filenames !=null) {
+
+    if (filenames !=null) {
       for (int j = 0; j < b2; j++){
 
 
@@ -1822,7 +1855,7 @@ if (filenames !=null) {
    Thumb chi = null;
 
    for (Thumb child: children){
-      if ((mouseX > child.loc.x) && (mouseX < (child.loc.x + map.width)) && (mouseY > child.loc.y) && (mouseY < (child.loc.y + map.height))) {
+      if ((mouseX > child.loc.x) && (mouseX < (child.loc.x + size.x)) && (mouseY > child.loc.y) && (mouseY < (child.loc.y + size.y))) {
         child.isSelected = true;
         chi = child;
 
@@ -1855,7 +1888,7 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
 
       noFill();
       stroke(163, 149, 41);
-      rect(loc.x, loc.y, map.width, map.height); // Left
+      rect(loc.x, loc.y, size.x, size.y); // Left
 
   }
   public void display() {
@@ -1873,13 +1906,13 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
-          map = it.map;
+          map = null;
 
         }else{
           println("normalize");
-          parent = it.parent;//
+          parent = normalize(it.parent);//
           texture = normalize(it.texture);//
-          map = it.map;
+          map = null;
         }
         it.stop();
         loaded = true;
@@ -2801,12 +2834,12 @@ class Zone {
 
   public void display(PVector pt){
 
-    stroke(255);
+    stroke(255,25);
+    strokeWeight(3);
 
+    // noFill();
 
-    if (isSelected(pt)){
-      rect(a.x,a.y,dim.x,dim.y);
-    }
+    if (isSelected(pt)){      rect(a.x,a.y,dim.x,dim.y);}
 
   }
 
@@ -3088,8 +3121,8 @@ float cA,cB,cC,cD;
 float rA,rB,rC,rD,rE;
 int tWidth;
 int y10;
-float row1,row2,row3,row4,row5, row6, row7, row8, row9,row10;
-float col1,col2,col3,col4,col5,col6,col7,col8;
+float row0,row1,row2,row3,row4,row5, row6, row7, row8, row9,row10;
+float col1,col2,col3,col4,col5,col6,col7,col8,col9,col10;
 float cellWidth;
 public void setConst(){
 
@@ -3128,7 +3161,7 @@ os = width/64;
  rA = yA/2;
 
  tWidth = PApplet.parseInt((width/4 - width/32)/3); // width of a thumb
-
+ row0 = os;
  row1 = os + width/4 - width/32;
  row2 = height/32+ width/4 - width/64 + os ;
  row3 = row2 + os;
@@ -3143,10 +3176,11 @@ os = width/64;
   col2 = width/4 -os;
   col3 = col2 +os;
   col4 = (width - os)/2;
-  col5 = col4;
+  col5 = col4+os;
   col6 = col4;
   col7 = col4;
   col8 = width*5/6 + os/2;
+  col10 = width-os;
 
 }
   static public void main(String[] passedArgs) {
