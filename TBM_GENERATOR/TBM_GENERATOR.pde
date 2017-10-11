@@ -242,6 +242,25 @@ void SPIN(){
   c.v.vp3D.toggleSpin();
 }
 
+void Invert(){
+
+
+ thread("INVERTTEXTURE");
+}
+
+
+void Shell(){
+
+  if (!isSetup){
+    c.m.vox.toggleFillMode();
+  }
+}
+
+
+void INVERTTEXTURE(){ // inverts the color of the texture
+ c.v.vp2D.invertTexture();
+ RESETUNITCELL();
+}
 
 void initButtons(){
 
@@ -250,7 +269,14 @@ void initButtons(){
 
 
   cp5.addToggle("Invert")
-     .setPosition(2*os, row1 + os)
+     .setPosition(os, row1 + os)
+     .setSize(int(os), int(os/4))
+     .setValue(true)
+     // .setMode(ControlP5.SWITCH)
+     ;
+
+  cp5.addToggle("Shell")
+     .setPosition(col8, row10)
      .setSize(int(os), int(os/4))
      .setValue(true)
      // .setMode(ControlP5.SWITCH)
@@ -370,13 +396,6 @@ void initSlider() {
     .setValue(10)
     .setRange(1, 50) // mm?
     ;
-
-  // cp5.addSlider("DimY")
-  //   .setPosition(xE, row5+ 50)
-  //   .setWidth(len)
-  //   .setValue(10)
-  //   .setRange(1, 50) // mm
-  //   ;
 
   cp5.addSlider("DimZ")
     .setPosition(xE, row5+ 75)
@@ -499,15 +518,6 @@ void RESETUNITCELL() {
     alpha = c.m.alpha;
     mater = c.m.mater;
 
-
-    depth = c.m.depth;
-    alpha = c.m.alpha;
-    mater = c.m.mater;
-
-    depth.texture.loadPixels();
-    alpha.texture.loadPixels();
-    mater.texture.loadPixels();
-
     depthChannel.loadPixels();
     alphaChannel.loadPixels();
     materChannel.loadPixels();
@@ -523,14 +533,36 @@ void RESETUNITCELL() {
     float layerVoxels = voxZ/levels;
     boolean invert = false;
 
+    float max = 0;
+    float min = 255;
+
+    // get Pixel range
+    for (int x = 0; x < depthChannel.width; x += 5) {
+      for (int y = 0; y < depthChannel.height; y+= 5) {
+
+      float value1 = brightness((alphaChannel.get(x,y)));
+      float value2 =  brightness((depthChannel.get(x,y)));
+
+        if (value1 > 0){
+          if (value2 > max){max = value2;}
+          else if (value2 < min){min = value2;}
+
+        }
+      }
+    }
+
+
 
   for (int z = 0; z < levels; z++){
     for (int x = 0; x < depthChannel.width; x += res) {
       for (int y = 0; y < depthChannel.height; y+= res) {
         float alph = brightness((alphaChannel.get(x,y)));
 
-        if (alph > 10){
+        if (alph > 0){
            float val = brightness(depthChannel.get(x, y));
+
+           val =  (val-min)*(255/max);
+
            color c = materChannel.get(x,y);
 
            if (val > rangeHi )  { val = rangeHi;    }
@@ -540,7 +572,7 @@ void RESETUNITCELL() {
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
-          boxCloud.stroke(red(c), green(c), blue(c),200);
+          boxCloud.stroke(red(c), green(c), blue(c),150);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
           }
         }
@@ -552,77 +584,9 @@ void RESETUNITCELL() {
 
   boxCloud.endShape();
   c.v.vp3D.setCellUnit(boxCloud);
-
-
-
-
-  // PShape rdmCloud = createShape();
-  // rdmCloud.beginShape(POINTS);
-  // rdmCloud.stroke(255,150);
-  // for (int i = 0; i < 1000; i++) {rdmCloud.vertex(random(-200,200),random(-200,200),random(-200,200));}
-  // rdmCloud.endShape();
   c.v.vp3Darray.setCellArray(boxCloud);
   c.setCurrentUC(boxCloud);
-
-}
-
-void RESETARRAY() {
-
-
-  PShape boxCloud = createShape();
-  boxCloud.beginShape(POINTS);
-  boxCloud.stroke(255);
-
-    ArrayList<PVector> temp = new ArrayList<PVector>();
-    Thumb depth,alpha, mater; // place holder variables
-
-    depth = c.m.depth;
-    alpha = c.m.alpha;
-    mater = c.m.mater;
-
-
-  depth = c.m.depthArray;
-    alpha = c.m.alphaArray;
-    mater = c.m.materArray;
-
-    depth.map.loadPixels();
-    alpha.map.loadPixels();
-    mater.map.loadPixels();
-
-    // println("depth map size = " + depth.map.width + "," + depth.map.height);
-
-    int res = 1;
-    float range = 255;
-
-
-    int levels = LayersZ;
-    float amp = Amplitude/levels; // this is the total height
-    boolean invert = false;
-
-
-  for (int z = 0; z < levels; z++){
-    for (int x = 0; x < depth.map.width; x += res) {
-      for (int y = 0; y < depth.map.height; y+= res) {
-        float alp = brightness((alpha.map.get(x,y)));
-
-        // if (alp > 10) { // check alpha ??
-
-           float val = brightness(depth.map.get(x, y));
-           if (invert){val = 255-val;}
-            // temp.add(new PVector(x, y, val + z*255));
-            boxCloud.vertex(x, y, amp*z + val/255*amp);
-
-          // }
-        }
-      }
-
-      invert = !invert; // need to do something hear to invert
-    }
-
-    boxCloud.endShape();
-    // c.m.points = temp;
-    c.v.vp3D.setCellArray(boxCloud);
-
+    c.m.vox.update();
 }
 
 

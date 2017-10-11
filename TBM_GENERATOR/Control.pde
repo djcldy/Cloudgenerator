@@ -32,13 +32,15 @@ class Controller {
 
   void initSelector(){
 
-    zoneA = new Zone(xA, yD-os, xB, yE-os);                 // row 1
-
+    // zoneA = new Zone(xA, yD-os, xB, yE-os);                 // row 1
+    zoneA = new Zone(os, row3, col2,row4);
 
     // zoneB = new Zone(xA, yE, xB, yE+tWidth);                // row 2
 
-    zoneB = new Zone(xA, row5, col4, yE+tWidth);                // row 2
-    zoneC = new Zone(xA, yE+tWidth+os, col4, yE+2*tWidth+os); // row 3
+    zoneB = new Zone(os, row5, col4, row6);                // row 2
+
+
+    zoneC = new Zone(os, row7, col4, row8); // row 3
 
     zones.add(zoneA);
     zones.add(zoneB);
@@ -66,10 +68,9 @@ class Controller {
     thumbs.add(alpha);
 
     PShape shape = null;
-    float cellWidth = (width/2 - os-os/2)/6;
 
     for (float x = os; x < width/2 - dimThumb.x; x += cellWidth){
-      unitCells.add(new UnitCell(new PVector(x,row8), new PVector(cellWidth,cellWidth), shape ));
+      unitCells.add(new UnitCell(new PVector(x,row7), new PVector(cellWidth,cellWidth), shape ));
     }
     unitCells.get(0).isSelected = true;
     mater.isSelected = true;
@@ -97,7 +98,7 @@ class Controller {
   void update() {
     PVector mouse = new PVector(mouseX, mouseY);
     v.display();
-    // for  (Zone z: zones){ z.display(mouse);} // not necessary
+    for  (Zone z: zones){ z.display(mouse);} // not necessary
   }
 
 

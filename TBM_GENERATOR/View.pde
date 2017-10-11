@@ -89,26 +89,26 @@ class View {
     // ROWS
 
 
-    // ROW 1-2
+    // ROW 0
 
     line(0, yA, width, yA);
 
+    // ROW 1-2
+
     line(0, row1, col3, row1);
     line(0, row2, col3, row2);
-    line(0, row3, col3, row3);
 
     // ROW 3-4
+
+    line(0, row3, col3, row3);
     line(0,row4, width, row4);
-    line(0,row5, width, row5);
 
     // ROW 5-6
-    // line(0,y10+ tWidth, width/2, y10 + tWidth);
-    // line(0,y10+tWidth, width, y10+tWidth);
-    // line(0,y10+ tWidth+os, width, y10 + tWidth+os);
+    line(0,row5, width, row5);
+    line(0,row6 , col4,row6 );
 
     // ROW 7-8
     line(0,row7 , width/2-os/2,row7 );
-    // line(0,y10 + 2*(tWidth)+2*os, width/2, y10 + 2*(tWidth)+2*os);
 
 
   }

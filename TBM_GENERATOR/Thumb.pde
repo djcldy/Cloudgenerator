@@ -41,6 +41,24 @@ class Thumb {
 
   }
 
+  void invertTexture(){
+
+          parent =  invert(parent);
+          texture = invert(texture);
+  }
+
+
+  PImage invert(PImage _img){
+    PImage img = _img.get();
+    img.loadPixels();
+    for (int i = 0; i < img.pixels.length; i++) {
+      float val = 255 - brightness(img.pixels[i]);
+      img.pixels[i] = color(val);
+    }
+    img.updatePixels();
+    return img;
+  }
+
   void reset(String _path, PVector _loc){
  // /("reset: " + _path + "," + size);
     it = new ImageThread(app, _path,size);

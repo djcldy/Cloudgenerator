@@ -7,11 +7,14 @@ float cA,cB,cC,cD;
 float rA,rB,rC,rD,rE;
 int tWidth;
 int y10;
-float row1,row2,row3,row4,row5, row6, row7, row8;
-float col1,col2,col3,col4;
-
+float row1,row2,row3,row4,row5, row6, row7, row8, row9,row10;
+float col1,col2,col3,col4,col5,col6,col7,col8;
+float cellWidth;
 void setConst(){
+
 os = width/64;
+
+  cellWidth = (width/2 - os-os/2)/6;
 
  xA = os;
  xB = width/4 - os;
@@ -50,12 +53,18 @@ os = width/64;
  row3 = row2 + os;
  row4 = row3 + tWidth;
  row5 = row4 + os;
- row6 = row5;
- row7 = height/16+width/64+ width/4 - width/32 + 2*(tWidth);
- row8 = row7 + os;
+ row6 = row5 + tWidth/2;
+ row7 = row6 + os;
+ row8 = row7 + cellWidth;
+ row9 = row8;
+ row10 = height - 2*os;
 
- col2 = width/4 -os;
- col3 = col2 +os;
- col4 = (width - os)/2;
+  col2 = width/4 -os;
+  col3 = col2 +os;
+  col4 = (width - os)/2;
+  col5 = col4;
+  col6 = col4;
+  col7 = col4;
+  col8 = width*5/6 + os/2;
 
 }

@@ -17,6 +17,12 @@ class Viewport2D {
 
   }
 
+  void invertTexture(){
+    thumb.invertTexture();
+    update();
+    // set(thumb);
+  }
+
   void displayCellUnit(){
     // println("displayCell");
     pushMatrix();

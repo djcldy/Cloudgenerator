@@ -18,6 +18,7 @@ class Voxelator {
   boolean loaded = false;
 
   String mode = "UNIT";
+  String fillMode = "SHELL";
 
   Voxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
 
@@ -47,10 +48,24 @@ class Voxelator {
   }
 
 
-  // void getCurrentPC(){
+  void toggleMode(){
+
+    // do nothing //
+
+  }
 
 
-  // }
+  void toggleFillMode(){
+
+    println("toggleFillMode");
+    if (fillMode == "SHELL"){
+      fillMode = "SOLID";
+    } else {
+      fillMode = "SHELL";
+    }
+    update();
+  }
+
   ArrayList<PVector> getCurrentPC(){  // returns pointcloud of the current list
 
     ArrayList<PVector> _pc = new ArrayList<PVector>();
@@ -79,19 +94,6 @@ class Voxelator {
     if (alphaGlobe != null ){updateArray(); }
     //
   }
-
-  // ArrayList getPC(){
-
-   void toggleMode(){
-    if (mode == "UNIT"){
-      mode = "ARRAY";
-    } else {
-      mode = "UNIT";
-    }
-    update();
-   }
-
-  // }
 
   void exportStack(){
     export();
@@ -134,21 +136,28 @@ class Voxelator {
   }
 
   void update(){
-
-    // println("update Vox");
-
-    if (mode == "ARRAY"){
-      updateArray();
-    } else {
-      updateUnit();
-    }
-
+    updateUnit();
   }
 
 
 
   void updateUnit(){
 
+
+    println("updateUnit");
+    if (fillMode == "SHELL"){
+      println("fill shell");
+      updateShell();
+    } else {
+      println("fill solid");
+      updateSolid();
+    }
+  }
+
+
+void updateSolid(){
+
+    println("update solid");
     if (depth.texture != null){
 
     PImage img = depth.texture.get();
@@ -185,15 +194,62 @@ class Voxelator {
 
     for (int k = 0; k <  img.pixels.length; k++) {
       float val = brightness(img.pixels[k]);
-    if ((val < (currentLayer+thickness)) && (val > (currentLayer-thickness))) { pg.pixels[k] = color(255);}
+      if (val < currentLayer) { pg.pixels[k] = color(255);}
+    }
+      pg.updatePixels();
+      pg.endDraw();
+      pcLayer = getCurrentPC(); // this displays the current cut layer in 3D
+
+
+    }
+  }
+
+  void updateShell(){
+
+    println("update shell");
+      if (depth.texture != null){
+
+    PImage img = depth.texture.get();
+    img.resize(int(size.x),int(size.y));
+
+    boolean invertLayer;
+
+    int res = 1;
+    float range = 255;
+    int numLevels = LayersZ;
+
+    float domain = range;
+    // float amp = Amplitude/levels; // this is the total height
+    float totalSlices = 255;
+    float subDomain = totalSlices/numLevels;
+
+    int currentSlice = int(totalSlices*layer); // current slice
+    int currentStep = floor(currentSlice/subDomain);
+    float currentLayer = (currentSlice%subDomain)/subDomain*255;
+
+    // println("Update Vox, currentLayer = " + currentLayer);
+
+    if (currentStep%2 == 0){
+      invertLayer = false;
+    } else {
+      invertLayer = true;
     }
 
+
+    pg = createGraphics(int(size.x),int(size.y));
+    pg.beginDraw();
+    pg.background(0);
+    pg.loadPixels();
+
+    for (int k = 0; k <  img.pixels.length; k++) {
+      float val = brightness(img.pixels[k]);
+    if ((val < (currentLayer+thickness)) && (val > (currentLayer-thickness))) { pg.pixels[k] = color(255);}}
     pg.updatePixels();
     pg.endDraw();
     pcLayer = getCurrentPC(); // this displays the current cut layer in 3D
   }
-  }
 
+}
 
   void updateArray(){
 
@@ -235,8 +291,7 @@ class Voxelator {
   void display(){
 
     if (loaded){
-      image(pg, int(loc.x) , int(loc.y) );
-
+      if (pg != null){ image(pg, int(loc.x) , int(loc.y) );}
     } else if (depth.texture != null){
       updateUnit();
       loaded = true;

@@ -265,6 +265,25 @@ public void SPIN(){
   c.v.vp3D.toggleSpin();
 }
 
+public void Invert(){
+
+
+ thread("INVERTTEXTURE");
+}
+
+
+public void Shell(){
+
+  if (!isSetup){
+    c.m.vox.toggleFillMode();
+  }
+}
+
+
+public void INVERTTEXTURE(){ // inverts the color of the texture
+ c.v.vp2D.invertTexture();
+ RESETUNITCELL();
+}
 
 public void initButtons(){
 
@@ -273,7 +292,14 @@ public void initButtons(){
 
 
   cp5.addToggle("Invert")
-     .setPosition(2*os, row1 + os)
+     .setPosition(os, row1 + os)
+     .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
+     .setValue(true)
+     // .setMode(ControlP5.SWITCH)
+     ;
+
+  cp5.addToggle("Shell")
+     .setPosition(col8, row10)
      .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
      .setValue(true)
      // .setMode(ControlP5.SWITCH)
@@ -393,13 +419,6 @@ public void initSlider() {
     .setValue(10)
     .setRange(1, 50) // mm?
     ;
-
-  // cp5.addSlider("DimY")
-  //   .setPosition(xE, row5+ 50)
-  //   .setWidth(len)
-  //   .setValue(10)
-  //   .setRange(1, 50) // mm
-  //   ;
 
   cp5.addSlider("DimZ")
     .setPosition(xE, row5+ 75)
@@ -522,15 +541,6 @@ public void RESETUNITCELL() {
     alpha = c.m.alpha;
     mater = c.m.mater;
 
-
-    depth = c.m.depth;
-    alpha = c.m.alpha;
-    mater = c.m.mater;
-
-    depth.texture.loadPixels();
-    alpha.texture.loadPixels();
-    mater.texture.loadPixels();
-
     depthChannel.loadPixels();
     alphaChannel.loadPixels();
     materChannel.loadPixels();
@@ -546,14 +556,36 @@ public void RESETUNITCELL() {
     float layerVoxels = voxZ/levels;
     boolean invert = false;
 
+    float max = 0;
+    float min = 255;
+
+    // get Pixel range
+    for (int x = 0; x < depthChannel.width; x += 5) {
+      for (int y = 0; y < depthChannel.height; y+= 5) {
+
+      float value1 = brightness((alphaChannel.get(x,y)));
+      float value2 =  brightness((depthChannel.get(x,y)));
+
+        if (value1 > 0){
+          if (value2 > max){max = value2;}
+          else if (value2 < min){min = value2;}
+
+        }
+      }
+    }
+
+
 
   for (int z = 0; z < levels; z++){
     for (int x = 0; x < depthChannel.width; x += res) {
       for (int y = 0; y < depthChannel.height; y+= res) {
         float alph = brightness((alphaChannel.get(x,y)));
 
-        if (alph > 10){
+        if (alph > 0){
            float val = brightness(depthChannel.get(x, y));
+
+           val =  (val-min)*(255/max);
+
            int c = materChannel.get(x,y);
 
            if (val > rangeHi )  { val = rangeHi;    }
@@ -563,7 +595,7 @@ public void RESETUNITCELL() {
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
-          boxCloud.stroke(red(c), green(c), blue(c),200);
+          boxCloud.stroke(red(c), green(c), blue(c),150);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
           }
         }
@@ -575,77 +607,9 @@ public void RESETUNITCELL() {
 
   boxCloud.endShape();
   c.v.vp3D.setCellUnit(boxCloud);
-
-
-
-
-  // PShape rdmCloud = createShape();
-  // rdmCloud.beginShape(POINTS);
-  // rdmCloud.stroke(255,150);
-  // for (int i = 0; i < 1000; i++) {rdmCloud.vertex(random(-200,200),random(-200,200),random(-200,200));}
-  // rdmCloud.endShape();
   c.v.vp3Darray.setCellArray(boxCloud);
   c.setCurrentUC(boxCloud);
-
-}
-
-public void RESETARRAY() {
-
-
-  PShape boxCloud = createShape();
-  boxCloud.beginShape(POINTS);
-  boxCloud.stroke(255);
-
-    ArrayList<PVector> temp = new ArrayList<PVector>();
-    Thumb depth,alpha, mater; // place holder variables
-
-    depth = c.m.depth;
-    alpha = c.m.alpha;
-    mater = c.m.mater;
-
-
-  depth = c.m.depthArray;
-    alpha = c.m.alphaArray;
-    mater = c.m.materArray;
-
-    depth.map.loadPixels();
-    alpha.map.loadPixels();
-    mater.map.loadPixels();
-
-    // println("depth map size = " + depth.map.width + "," + depth.map.height);
-
-    int res = 1;
-    float range = 255;
-
-
-    int levels = LayersZ;
-    float amp = Amplitude/levels; // this is the total height
-    boolean invert = false;
-
-
-  for (int z = 0; z < levels; z++){
-    for (int x = 0; x < depth.map.width; x += res) {
-      for (int y = 0; y < depth.map.height; y+= res) {
-        float alp = brightness((alpha.map.get(x,y)));
-
-        // if (alp > 10) { // check alpha ??
-
-           float val = brightness(depth.map.get(x, y));
-           if (invert){val = 255-val;}
-            // temp.add(new PVector(x, y, val + z*255));
-            boxCloud.vertex(x, y, amp*z + val/255*amp);
-
-          // }
-        }
-      }
-
-      invert = !invert; // need to do something hear to invert
-    }
-
-    boxCloud.endShape();
-    // c.m.points = temp;
-    c.v.vp3D.setCellArray(boxCloud);
-
+    c.m.vox.update();
 }
 
 
@@ -813,13 +777,15 @@ class Controller {
 
   public void initSelector(){
 
-    zoneA = new Zone(xA, yD-os, xB, yE-os);                 // row 1
-
+    // zoneA = new Zone(xA, yD-os, xB, yE-os);                 // row 1
+    zoneA = new Zone(os, row3, col2,row4);
 
     // zoneB = new Zone(xA, yE, xB, yE+tWidth);                // row 2
 
-    zoneB = new Zone(xA, row5, col4, yE+tWidth);                // row 2
-    zoneC = new Zone(xA, yE+tWidth+os, col4, yE+2*tWidth+os); // row 3
+    zoneB = new Zone(os, row5, col4, row6);                // row 2
+
+
+    zoneC = new Zone(os, row7, col4, row8); // row 3
 
     zones.add(zoneA);
     zones.add(zoneB);
@@ -847,10 +813,9 @@ class Controller {
     thumbs.add(alpha);
 
     PShape shape = null;
-    float cellWidth = (width/2 - os-os/2)/6;
 
     for (float x = os; x < width/2 - dimThumb.x; x += cellWidth){
-      unitCells.add(new UnitCell(new PVector(x,row8), new PVector(cellWidth,cellWidth), shape ));
+      unitCells.add(new UnitCell(new PVector(x,row7), new PVector(cellWidth,cellWidth), shape ));
     }
     unitCells.get(0).isSelected = true;
     mater.isSelected = true;
@@ -878,7 +843,7 @@ class Controller {
   public void update() {
     PVector mouse = new PVector(mouseX, mouseY);
     v.display();
-    // for  (Zone z: zones){ z.display(mouse);} // not necessary
+    for  (Zone z: zones){ z.display(mouse);} // not necessary
   }
 
 
@@ -1709,6 +1674,24 @@ class Thumb {
 
   }
 
+  public void invertTexture(){
+
+          parent =  invert(parent);
+          texture = invert(texture);
+  }
+
+
+  public PImage invert(PImage _img){
+    PImage img = _img.get();
+    img.loadPixels();
+    for (int i = 0; i < img.pixels.length; i++) {
+      float val = 255 - brightness(img.pixels[i]);
+      img.pixels[i] = color(val);
+    }
+    img.updatePixels();
+    return img;
+  }
+
   public void reset(String _path, PVector _loc){
  // /("reset: " + _path + "," + size);
     it = new ImageThread(app, _path,size);
@@ -2147,26 +2130,26 @@ class View {
     // ROWS
 
 
-    // ROW 1-2
+    // ROW 0
 
     line(0, yA, width, yA);
 
+    // ROW 1-2
+
     line(0, row1, col3, row1);
     line(0, row2, col3, row2);
-    line(0, row3, col3, row3);
 
     // ROW 3-4
+
+    line(0, row3, col3, row3);
     line(0,row4, width, row4);
-    line(0,row5, width, row5);
 
     // ROW 5-6
-    // line(0,y10+ tWidth, width/2, y10 + tWidth);
-    // line(0,y10+tWidth, width, y10+tWidth);
-    // line(0,y10+ tWidth+os, width, y10 + tWidth+os);
+    line(0,row5, width, row5);
+    line(0,row6 , col4,row6 );
 
     // ROW 7-8
     line(0,row7 , width/2-os/2,row7 );
-    // line(0,y10 + 2*(tWidth)+2*os, width/2, y10 + 2*(tWidth)+2*os);
 
 
   }
@@ -2297,6 +2280,12 @@ class Viewport2D {
 
     update();
 
+  }
+
+  public void invertTexture(){
+    thumb.invertTexture();
+    update();
+    // set(thumb);
   }
 
   public void displayCellUnit(){
@@ -2474,6 +2463,7 @@ class Voxelator {
   boolean loaded = false;
 
   String mode = "UNIT";
+  String fillMode = "SHELL";
 
   Voxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
 
@@ -2503,10 +2493,24 @@ class Voxelator {
   }
 
 
-  // void getCurrentPC(){
+  public void toggleMode(){
+
+    // do nothing //
+
+  }
 
 
-  // }
+  public void toggleFillMode(){
+
+    println("toggleFillMode");
+    if (fillMode == "SHELL"){
+      fillMode = "SOLID";
+    } else {
+      fillMode = "SHELL";
+    }
+    update();
+  }
+
   public ArrayList<PVector> getCurrentPC(){  // returns pointcloud of the current list
 
     ArrayList<PVector> _pc = new ArrayList<PVector>();
@@ -2535,19 +2539,6 @@ class Voxelator {
     if (alphaGlobe != null ){updateArray(); }
     //
   }
-
-  // ArrayList getPC(){
-
-   public void toggleMode(){
-    if (mode == "UNIT"){
-      mode = "ARRAY";
-    } else {
-      mode = "UNIT";
-    }
-    update();
-   }
-
-  // }
 
   public void exportStack(){
     export();
@@ -2590,21 +2581,28 @@ class Voxelator {
   }
 
   public void update(){
-
-    // println("update Vox");
-
-    if (mode == "ARRAY"){
-      updateArray();
-    } else {
-      updateUnit();
-    }
-
+    updateUnit();
   }
 
 
 
   public void updateUnit(){
 
+
+    println("updateUnit");
+    if (fillMode == "SHELL"){
+      println("fill shell");
+      updateShell();
+    } else {
+      println("fill solid");
+      updateSolid();
+    }
+  }
+
+
+public void updateSolid(){
+
+    println("update solid");
     if (depth.texture != null){
 
     PImage img = depth.texture.get();
@@ -2641,15 +2639,62 @@ class Voxelator {
 
     for (int k = 0; k <  img.pixels.length; k++) {
       float val = brightness(img.pixels[k]);
-    if ((val < (currentLayer+thickness)) && (val > (currentLayer-thickness))) { pg.pixels[k] = color(255);}
+      if (val < currentLayer) { pg.pixels[k] = color(255);}
+    }
+      pg.updatePixels();
+      pg.endDraw();
+      pcLayer = getCurrentPC(); // this displays the current cut layer in 3D
+
+
+    }
+  }
+
+  public void updateShell(){
+
+    println("update shell");
+      if (depth.texture != null){
+
+    PImage img = depth.texture.get();
+    img.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+
+    boolean invertLayer;
+
+    int res = 1;
+    float range = 255;
+    int numLevels = LayersZ;
+
+    float domain = range;
+    // float amp = Amplitude/levels; // this is the total height
+    float totalSlices = 255;
+    float subDomain = totalSlices/numLevels;
+
+    int currentSlice = PApplet.parseInt(totalSlices*layer); // current slice
+    int currentStep = floor(currentSlice/subDomain);
+    float currentLayer = (currentSlice%subDomain)/subDomain*255;
+
+    // println("Update Vox, currentLayer = " + currentLayer);
+
+    if (currentStep%2 == 0){
+      invertLayer = false;
+    } else {
+      invertLayer = true;
     }
 
+
+    pg = createGraphics(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+    pg.beginDraw();
+    pg.background(0);
+    pg.loadPixels();
+
+    for (int k = 0; k <  img.pixels.length; k++) {
+      float val = brightness(img.pixels[k]);
+    if ((val < (currentLayer+thickness)) && (val > (currentLayer-thickness))) { pg.pixels[k] = color(255);}}
     pg.updatePixels();
     pg.endDraw();
     pcLayer = getCurrentPC(); // this displays the current cut layer in 3D
   }
-  }
 
+}
 
   public void updateArray(){
 
@@ -2691,8 +2736,7 @@ class Voxelator {
   public void display(){
 
     if (loaded){
-      image(pg, PApplet.parseInt(loc.x) , PApplet.parseInt(loc.y) );
-
+      if (pg != null){ image(pg, PApplet.parseInt(loc.x) , PApplet.parseInt(loc.y) );}
     } else if (depth.texture != null){
       updateUnit();
       loaded = true;
@@ -3044,11 +3088,14 @@ float cA,cB,cC,cD;
 float rA,rB,rC,rD,rE;
 int tWidth;
 int y10;
-float row1,row2,row3,row4,row5, row6, row7, row8;
-float col1,col2,col3,col4;
-
+float row1,row2,row3,row4,row5, row6, row7, row8, row9,row10;
+float col1,col2,col3,col4,col5,col6,col7,col8;
+float cellWidth;
 public void setConst(){
+
 os = width/64;
+
+  cellWidth = (width/2 - os-os/2)/6;
 
  xA = os;
  xB = width/4 - os;
@@ -3087,13 +3134,19 @@ os = width/64;
  row3 = row2 + os;
  row4 = row3 + tWidth;
  row5 = row4 + os;
- row6 = row5;
- row7 = height/16+width/64+ width/4 - width/32 + 2*(tWidth);
- row8 = row7 + os;
+ row6 = row5 + tWidth/2;
+ row7 = row6 + os;
+ row8 = row7 + cellWidth;
+ row9 = row8;
+ row10 = height - 2*os;
 
- col2 = width/4 -os;
- col3 = col2 +os;
- col4 = (width - os)/2;
+  col2 = width/4 -os;
+  col3 = col2 +os;
+  col4 = (width - os)/2;
+  col5 = col4;
+  col6 = col4;
+  col7 = col4;
+  col8 = width*5/6 + os/2;
 
 }
   static public void main(String[] passedArgs) {
