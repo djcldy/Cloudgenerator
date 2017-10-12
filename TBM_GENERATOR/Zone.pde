@@ -27,7 +27,7 @@ class Zone {
     stroke(255,25);
     strokeWeight(3);
 
-    // noFill();
+    noFill();
 
     if (isSelected(pt)){      rect(a.x,a.y,dim.x,dim.y);}
 

@@ -83,11 +83,11 @@ void draw() {
 
 void settings(){
   size(1800,1000,P3D);
+  smooth(8);
 
    // fullScreen(P3D);
 }
 void setStyle(){
-  smooth();
   // background(0, 51, 102);
   ortho();
 
@@ -246,6 +246,7 @@ void Invert(){
 
 
  thread("INVERTTEXTURE");
+ // thread("RESETUNITCELL");
 }
 
 
@@ -268,12 +269,20 @@ void initButtons(){
   int bH = int(height/16 - os);
 
 
-  cp5.addToggle("Invert")
+
+
+  cp5.addButton("Invert")
+    .setValue(0)
      .setPosition(os, row1 + os)
-     .setSize(int(os), int(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
+     .setSize(int(2*os), int(os))
+    ;
+
+  // cp5.addToggle("Invert")
+  //    .setPosition(os, row1 + os)
+  //    .setSize(int(os), int(os/4))
+  //    .setValue(true)
+  //    // .setMode(ControlP5.SWITCH)
+  //    ;
 
   cp5.addToggle("Shell")
      .setPosition(col8, row10)
@@ -316,7 +325,7 @@ void initButtons(){
 
 
 
-  int y4 = int(height/16+width/64+ width/4 - width/32);
+  // int y4 = int(height/16+width/64+ width/4 - width/32);
 
   // cp5.addButton("R1")
   //   .setValue(0)
@@ -330,30 +339,44 @@ void initButtons(){
   //   .setSize(int(os), int(tWidth))
   //   ;
 
-  // cp5.addButton("R3")
-  //   .setValue(0)
-  //   .setPosition(width/4-os, y4 + 2*(tWidth + os))
-  //   .setSize(int(os), int(tWidth))
-  //   ;
+  // y4 = width/2;
 
-  // cp5.addButton("L1")
-  //   .setValue(0)
-  //   .setPosition(0, y4)
-  //   .setSize(int(os), int(tWidth))
-  //   ;
+  cp5.addButton("LEFT")
+    .setValue(0)
+    .setPosition(col3, row5-os)
+    .setSize(int(os), int(os))
+    ;
 
-  // cp5.addButton("L2")
-  //   .setValue(0)
-  //   .setPosition(0, y4 + tWidth + os)
-  //   .setSize(int(os), int(tWidth))
-  //   ;
 
-  // cp5.addButton("L3")
-  //   .setValue(0)
-  //   .setPosition(0, y4 + 2*(tWidth + os))
-  //   .setSize(int(os), int(tWidth))
-  //   ;
+  cp5.addButton("RIGHT")
+    .setValue(0)
+    .setPosition(col3 + os,row5-os)
+    .setSize(int(os), int(os))
+    ;
 
+
+  cp5.addButton("AXO")
+    .setValue(0)
+    .setPosition(col3 + 2*os, row5-os)
+    .setSize(int(os), int(os))
+    ;
+}
+
+void LEFT(){
+  c.v.vp3D.cellUnit.setLeft();
+  c.v.vp3Darray.cellUnit.setLeft();
+}
+
+
+void RIGHT(){
+  c.v.vp3D.cellUnit.setRight();
+  c.v.vp3Darray.cellUnit.setRight();
+}
+
+
+void AXO(){
+  c.v.vp3D.cellUnit.setAxo();
+  c.v.vp3Darray.cellUnit.setAxo();
 }
 
 

@@ -106,11 +106,11 @@ public void draw() {
 
 public void settings(){
   size(1800,1000,P3D);
+  smooth(8);
 
    // fullScreen(P3D);
 }
 public void setStyle(){
-  smooth();
   // background(0, 51, 102);
   ortho();
 
@@ -269,6 +269,7 @@ public void Invert(){
 
 
  thread("INVERTTEXTURE");
+ // thread("RESETUNITCELL");
 }
 
 
@@ -291,12 +292,20 @@ public void initButtons(){
   int bH = PApplet.parseInt(height/16 - os);
 
 
-  cp5.addToggle("Invert")
+
+
+  cp5.addButton("Invert")
+    .setValue(0)
      .setPosition(os, row1 + os)
-     .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
+     .setSize(PApplet.parseInt(2*os), PApplet.parseInt(os))
+    ;
+
+  // cp5.addToggle("Invert")
+  //    .setPosition(os, row1 + os)
+  //    .setSize(int(os), int(os/4))
+  //    .setValue(true)
+  //    // .setMode(ControlP5.SWITCH)
+  //    ;
 
   cp5.addToggle("Shell")
      .setPosition(col8, row10)
@@ -339,7 +348,7 @@ public void initButtons(){
 
 
 
-  int y4 = PApplet.parseInt(height/16+width/64+ width/4 - width/32);
+  // int y4 = int(height/16+width/64+ width/4 - width/32);
 
   // cp5.addButton("R1")
   //   .setValue(0)
@@ -353,30 +362,44 @@ public void initButtons(){
   //   .setSize(int(os), int(tWidth))
   //   ;
 
-  // cp5.addButton("R3")
-  //   .setValue(0)
-  //   .setPosition(width/4-os, y4 + 2*(tWidth + os))
-  //   .setSize(int(os), int(tWidth))
-  //   ;
+  // y4 = width/2;
 
-  // cp5.addButton("L1")
-  //   .setValue(0)
-  //   .setPosition(0, y4)
-  //   .setSize(int(os), int(tWidth))
-  //   ;
+  cp5.addButton("LEFT")
+    .setValue(0)
+    .setPosition(col3, row5-os)
+    .setSize(PApplet.parseInt(os), PApplet.parseInt(os))
+    ;
 
-  // cp5.addButton("L2")
-  //   .setValue(0)
-  //   .setPosition(0, y4 + tWidth + os)
-  //   .setSize(int(os), int(tWidth))
-  //   ;
 
-  // cp5.addButton("L3")
-  //   .setValue(0)
-  //   .setPosition(0, y4 + 2*(tWidth + os))
-  //   .setSize(int(os), int(tWidth))
-  //   ;
+  cp5.addButton("RIGHT")
+    .setValue(0)
+    .setPosition(col3 + os,row5-os)
+    .setSize(PApplet.parseInt(os), PApplet.parseInt(os))
+    ;
 
+
+  cp5.addButton("AXO")
+    .setValue(0)
+    .setPosition(col3 + 2*os, row5-os)
+    .setSize(PApplet.parseInt(os), PApplet.parseInt(os))
+    ;
+}
+
+public void LEFT(){
+  c.v.vp3D.cellUnit.setLeft();
+  c.v.vp3Darray.cellUnit.setLeft();
+}
+
+
+public void RIGHT(){
+  c.v.vp3D.cellUnit.setRight();
+  c.v.vp3Darray.cellUnit.setRight();
+}
+
+
+public void AXO(){
+  c.v.vp3D.cellUnit.setAxo();
+  c.v.vp3Darray.cellUnit.setAxo();
 }
 
 
@@ -954,7 +977,7 @@ class ImageThread implements Runnable {
   // Specimen specimenNew;
   int pauseTime;
   String filepath;
-  PImage parent, texture;
+  PImage parent, texture, parentA, textureA;
   PGraphics map;
   PVector size;
   int x, y;
@@ -990,9 +1013,10 @@ class ImageThread implements Runnable {
       // println("filepath:" + filepath);
 
       parent = loadImage(filepath);
-      // parent = normalize(parent);
+      parentA = invert(parent);
       texture = parent.get();
-       texture.resize(x,y);
+      texture.resize(x,y);
+      textureA = invert(texture);
       map = null;
 
 
@@ -1044,6 +1068,17 @@ class ImageThread implements Runnable {
     return img;
   }
 
+  public PImage invert(PImage _img){
+    PImage img = _img.get();
+    PGraphics temp = createGraphics(img.width,img.height);
+    temp.beginDraw();
+    temp.image(img, 0, 0);
+    temp.filter(INVERT);
+    temp.endDraw();
+
+    img = temp.get();
+    return img;
+  }
 
 }
 class Model {
@@ -1378,6 +1413,30 @@ PShape boxCloud;
     position = new TweenPoint(start,start,val); // tween for position
     scale = new TweenPoint(scl,scl,val); // tween for position
     rotation = new TweenPoint(rot,rot,val);
+    setLeft();
+  }
+
+  public void setLeft(){
+
+    println("set left");
+    PVector rot = new PVector((radians(-90)), 0, 0);
+    rotation.set(rot);
+
+  }
+
+  public void setAxo(){
+    println("set axo");
+    PVector rot = new PVector((radians(-45)), radians(-45), 0);
+    rotation.set(rot);
+
+  }
+
+
+  public void setRight(){
+    println("set right");
+    PVector rot = new PVector((radians(90)), 0, 0);
+    rotation.set(rot);
+
   }
 
 public void updateView(){
@@ -1416,14 +1475,11 @@ public void updateView(){
 
    public void updateCamera(){
 
-    if (!mode){
 
+    if (!mode){
       if (SpinX){   rotation.addIncrement(new PVector(0.005f,0,0));  }
       if (SpinY){   rotation.addIncrement(new PVector(0,0.005f,0));  }
       if (SpinZ){   rotation.addIncrement(new PVector(0,0,0.005f));  }
-      // rotation.addIncrement(new PVector(0,-0.005,0));
-      // yRot += 0.005;
-      //  zRot += 0.005;
     }
 
     if (bbox != null){
@@ -1433,6 +1489,7 @@ public void updateView(){
       scale.addIncrement(new PVector(-0.0005f,-0.0005f,-0.0005f));
     }
     }
+
    }
 
    public boolean isDisplay(float x, float y){
@@ -1647,7 +1704,7 @@ class Shape {
 class Thumb {
   boolean loaded = false;
   PGraphics map;
-  PImage texture, parent;
+  PImage texture, parent, textureA, parentA, textureB, parentB;
   String path, name, mode;
   PVector loc, size;
   boolean isSelected = false;
@@ -1658,6 +1715,7 @@ class Thumb {
   PApplet app;
   int scroll = 0;
   boolean fsaddfdasgsad;
+  boolean isInverted = false;
 
 
 
@@ -1689,21 +1747,19 @@ class Thumb {
 
   public void invertTexture(){
 
-          parent =  invert(parent);
-          texture = invert(texture);
-  }
+    prinltn("invert texture");
 
-
-  public PImage invert(PImage _img){
-    PImage img = _img.get();
-    img.loadPixels();
-    for (int i = 0; i < img.pixels.length; i++) {
-      float val = 255 - brightness(img.pixels[i]);
-      img.pixels[i] = color(val);
+    isInverted = !isInverted;
+    if (isInverted){
+        parent =  parentA;
+        texture = textureA;
+    } else {
+        parent =  parentB;
+        texture = textureB;
     }
-    img.updatePixels();
-    return img;
+
   }
+
 
   public void reset(String _path, PVector _loc){
  // /("reset: " + _path + "," + size);
@@ -1717,8 +1773,13 @@ class Thumb {
     temp.endDraw();
     PImage defaultImage = temp.get();
     parent = defaultImage;
+    parentA = parent;
+    parentB = parent;
     texture = parent.get();
     texture.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+    textureA = texture;
+    textureB = texture;
+
     map = null;
     loaded = true;
    }
@@ -1870,6 +1931,19 @@ class Thumb {
     return chi;
   }
 
+  public PImage invert(PImage _img){
+    println("invert");
+    PImage img = _img.get();
+    PGraphics temp = createGraphics(img.width,img.height);
+    temp.beginDraw();
+    temp.image(img, 0, 0);
+    temp.filter(INVERT);
+    temp.endDraw();
+
+    img = temp.get();
+    return img;
+  }
+
 
 
   public boolean checkSelected(PVector ms) { // hmm we can  refactor this
@@ -1906,12 +1980,25 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
+          parentA = it.parentA;
+          textureA = it.parentA;
+          parentB = parent;
+          textureB = texture;
+
           map = null;
 
         }else{
           println("normalize");
           parent = normalize(it.parent);//
-          texture = normalize(it.texture);//
+          texture = parent.get();
+          texture.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
+          // texture = normalize(it.texture);//
+          parentA = it.parentA;
+          textureA = parentA.get();
+          textureA.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+          // textureA = normalize(it.texture)
+          parentB = parent;
+          textureB = texture;
           map = null;
         }
         it.stop();
@@ -2408,6 +2495,8 @@ class Viewport3D{
   float xPos, yPos, zPos;
   float vWidth, vHeight;
 
+  boolean pauseView = false;
+
   String mode = "UNIT"; // set as "UNIT" or "GLOBAL"
 
   Viewport3D(float x1, float y1, float x2, float y2){
@@ -2456,24 +2545,9 @@ cellUnit.display(true);
 
   strokeWeight(1);
   stroke(34,155,215);
-  // point(cellUnit.p1.x, cellUnit.p1.y);
-  // point(cellUnit.p2.x, cellUnit.p2.y);
   strokeWeight(1);
 
 }
-  //   if (mode == "UNIT"){
-  //       cellUnit.display(true);
-  //       // cellArray.display(false);
-  //     } else {
-
-  //       cellUnit.display(false);
-  //       // cellArray.display(true);
-  //   }
-
-  // }
-
-
-
 
 }
 class Voxelator {
@@ -2837,7 +2911,7 @@ class Zone {
     stroke(255,25);
     strokeWeight(3);
 
-    // noFill();
+    noFill();
 
     if (isSelected(pt)){      rect(a.x,a.y,dim.x,dim.y);}
 

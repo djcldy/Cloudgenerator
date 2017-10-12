@@ -103,6 +103,30 @@ PShape boxCloud;
     position = new TweenPoint(start,start,val); // tween for position
     scale = new TweenPoint(scl,scl,val); // tween for position
     rotation = new TweenPoint(rot,rot,val);
+    setLeft();
+  }
+
+  void setLeft(){
+
+    println("set left");
+    PVector rot = new PVector((radians(-90)), 0, 0);
+    rotation.set(rot);
+
+  }
+
+  void setAxo(){
+    println("set axo");
+    PVector rot = new PVector((radians(-45)), radians(-45), 0);
+    rotation.set(rot);
+
+  }
+
+
+  void setRight(){
+    println("set right");
+    PVector rot = new PVector((radians(90)), 0, 0);
+    rotation.set(rot);
+
   }
 
 void updateView(){
@@ -141,14 +165,11 @@ void updateView(){
 
    void updateCamera(){
 
-    if (!mode){
 
+    if (!mode){
       if (SpinX){   rotation.addIncrement(new PVector(0.005,0,0));  }
       if (SpinY){   rotation.addIncrement(new PVector(0,0.005,0));  }
       if (SpinZ){   rotation.addIncrement(new PVector(0,0,0.005));  }
-      // rotation.addIncrement(new PVector(0,-0.005,0));
-      // yRot += 0.005;
-      //  zRot += 0.005;
     }
 
     if (bbox != null){
@@ -158,6 +179,7 @@ void updateView(){
       scale.addIncrement(new PVector(-0.0005,-0.0005,-0.0005));
     }
     }
+
    }
 
    boolean isDisplay(float x, float y){

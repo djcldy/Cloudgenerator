@@ -15,6 +15,8 @@ class Viewport3D{
   float xPos, yPos, zPos;
   float vWidth, vHeight;
 
+  boolean pauseView = false;
+
   String mode = "UNIT"; // set as "UNIT" or "GLOBAL"
 
   Viewport3D(float x1, float y1, float x2, float y2){
@@ -63,23 +65,8 @@ cellUnit.display(true);
 
   strokeWeight(1);
   stroke(34,155,215);
-  // point(cellUnit.p1.x, cellUnit.p1.y);
-  // point(cellUnit.p2.x, cellUnit.p2.y);
   strokeWeight(1);
 
 }
-  //   if (mode == "UNIT"){
-  //       cellUnit.display(true);
-  //       // cellArray.display(false);
-  //     } else {
-
-  //       cellUnit.display(false);
-  //       // cellArray.display(true);
-  //   }
-
-  // }
-
-
-
 
 }

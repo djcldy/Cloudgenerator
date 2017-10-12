@@ -9,7 +9,7 @@ class ImageThread implements Runnable {
   // Specimen specimenNew;
   int pauseTime;
   String filepath;
-  PImage parent, texture;
+  PImage parent, texture, parentA, textureA;
   PGraphics map;
   PVector size;
   int x, y;
@@ -45,9 +45,10 @@ class ImageThread implements Runnable {
       // println("filepath:" + filepath);
 
       parent = loadImage(filepath);
-      // parent = normalize(parent);
+      parentA = invert(parent);
       texture = parent.get();
-       texture.resize(x,y);
+      texture.resize(x,y);
+      textureA = invert(texture);
       map = null;
 
 
@@ -99,5 +100,16 @@ class ImageThread implements Runnable {
     return img;
   }
 
+  PImage invert(PImage _img){
+    PImage img = _img.get();
+    PGraphics temp = createGraphics(img.width,img.height);
+    temp.beginDraw();
+    temp.image(img, 0, 0);
+    temp.filter(INVERT);
+    temp.endDraw();
+
+    img = temp.get();
+    return img;
+  }
 
 }

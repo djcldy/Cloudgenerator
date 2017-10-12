@@ -1,7 +1,7 @@
 class Thumb {
   boolean loaded = false;
   PGraphics map;
-  PImage texture, parent;
+  PImage texture, parent, textureA, parentA, textureB, parentB;
   String path, name, mode;
   PVector loc, size;
   boolean isSelected = false;
@@ -12,6 +12,7 @@ class Thumb {
   PApplet app;
   int scroll = 0;
   boolean fsaddfdasgsad;
+  boolean isInverted = false;
 
 
 
@@ -43,21 +44,19 @@ class Thumb {
 
   void invertTexture(){
 
-          parent =  invert(parent);
-          texture = invert(texture);
-  }
+    prinltn("invert texture");
 
-
-  PImage invert(PImage _img){
-    PImage img = _img.get();
-    img.loadPixels();
-    for (int i = 0; i < img.pixels.length; i++) {
-      float val = 255 - brightness(img.pixels[i]);
-      img.pixels[i] = color(val);
+    isInverted = !isInverted;
+    if (isInverted){
+        parent =  parentA;
+        texture = textureA;
+    } else {
+        parent =  parentB;
+        texture = textureB;
     }
-    img.updatePixels();
-    return img;
+
   }
+
 
   void reset(String _path, PVector _loc){
  // /("reset: " + _path + "," + size);
@@ -71,8 +70,13 @@ class Thumb {
     temp.endDraw();
     PImage defaultImage = temp.get();
     parent = defaultImage;
+    parentA = parent;
+    parentB = parent;
     texture = parent.get();
     texture.resize(int(size.x),int(size.y));
+    textureA = texture;
+    textureB = texture;
+
     map = null;
     loaded = true;
    }
@@ -224,6 +228,19 @@ class Thumb {
     return chi;
   }
 
+  PImage invert(PImage _img){
+    println("invert");
+    PImage img = _img.get();
+    PGraphics temp = createGraphics(img.width,img.height);
+    temp.beginDraw();
+    temp.image(img, 0, 0);
+    temp.filter(INVERT);
+    temp.endDraw();
+
+    img = temp.get();
+    return img;
+  }
+
 
 
   boolean checkSelected(PVector ms) { // hmm we can  refactor this
@@ -260,12 +277,25 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
+          parentA = it.parentA;
+          textureA = it.parentA;
+          parentB = parent;
+          textureB = texture;
+
           map = null;
 
         }else{
           println("normalize");
           parent = normalize(it.parent);//
-          texture = normalize(it.texture);//
+          texture = parent.get();
+          texture.resize(int(size.x), int(size.y));
+          // texture = normalize(it.texture);//
+          parentA = it.parentA;
+          textureA = parentA.get();
+          textureA.resize(int(size.x),int(size.y));
+          // textureA = normalize(it.texture)
+          parentB = parent;
+          textureB = texture;
           map = null;
         }
         it.stop();
