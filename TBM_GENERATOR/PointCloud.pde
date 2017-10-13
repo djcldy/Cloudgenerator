@@ -108,14 +108,14 @@ PShape boxCloud;
 
   void setLeft(){
 
-    println("set left");
+    // println("set left");
     PVector rot = new PVector((radians(-90)), 0, 0);
     rotation.set(rot);
 
   }
 
   void setAxo(){
-    println("set axo");
+    // println("set axo");
     PVector rot = new PVector((radians(-45)), radians(-45), 0);
     rotation.set(rot);
 

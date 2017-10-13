@@ -386,20 +386,22 @@ public void initButtons(){
 }
 
 public void LEFT(){
+  if (!isSetup){
   c.v.vp3D.cellUnit.setLeft();
   c.v.vp3Darray.cellUnit.setLeft();
+  }
 }
 
 
 public void RIGHT(){
-  c.v.vp3D.cellUnit.setRight();
-  c.v.vp3Darray.cellUnit.setRight();
+  // c.v.vp3D.cellUnit.setRight();
+  // c.v.vp3Darray.cellUnit.setRight();
 }
 
 
 public void AXO(){
-  c.v.vp3D.cellUnit.setAxo();
-  c.v.vp3Darray.cellUnit.setAxo();
+  // c.v.vp3D.cellUnit.setAxo();
+  // c.v.vp3Darray.cellUnit.setAxo();
 }
 
 
@@ -527,6 +529,7 @@ public void RESETUNITCELL() {
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
   // REFACTOR THIS CODE...
 
+  println("reset unitcell");
   int voxX = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
   int voxY = PApplet.parseInt(DimXY/0.040f); //  num voxels in Y
   int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
@@ -1501,14 +1504,14 @@ PShape boxCloud;
 
   public void setLeft(){
 
-    println("set left");
+    // println("set left");
     PVector rot = new PVector((radians(-90)), 0, 0);
     rotation.set(rot);
 
   }
 
   public void setAxo(){
-    println("set axo");
+    // println("set axo");
     PVector rot = new PVector((radians(-45)), radians(-45), 0);
     rotation.set(rot);
 
@@ -2093,10 +2096,15 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           // println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
-          parentA = it.parentA;
-          textureA = it.parentA;
-          parentB = parent;
-          textureB = texture;
+          // parentA = it.parentA;
+          // textureA = it.parentA;
+          // parentB = parent;
+          // textureB = texture;
+
+          parentA    = null;
+          textureA  = null;
+          parentB   = null;
+          textureB  = null;
 
           map = null;
 
@@ -2106,12 +2114,21 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           texture = parent.get();
           texture.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
           // texture = normalize(it.texture);//
+/*
           parentA = it.parentA;
           textureA = parentA.get();
-          textureA.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
-          // textureA = normalize(it.texture)
+          textureA.resize(int(size.x),int(size.y));
           parentB = parent;
           textureB = texture;
+
+*/
+
+          parentA    = null;
+          textureA  = null;
+          parentB   = null;
+          textureB  = null;
+
+          // textureA = normalize(it.texture)
           map = null;
         }
         it.stop();

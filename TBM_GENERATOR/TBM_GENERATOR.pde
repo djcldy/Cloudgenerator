@@ -363,20 +363,22 @@ void initButtons(){
 }
 
 void LEFT(){
+  if (!isSetup){
   c.v.vp3D.cellUnit.setLeft();
   c.v.vp3Darray.cellUnit.setLeft();
+  }
 }
 
 
 void RIGHT(){
-  c.v.vp3D.cellUnit.setRight();
-  c.v.vp3Darray.cellUnit.setRight();
+  // c.v.vp3D.cellUnit.setRight();
+  // c.v.vp3Darray.cellUnit.setRight();
 }
 
 
 void AXO(){
-  c.v.vp3D.cellUnit.setAxo();
-  c.v.vp3Darray.cellUnit.setAxo();
+  // c.v.vp3D.cellUnit.setAxo();
+  // c.v.vp3Darray.cellUnit.setAxo();
 }
 
 
@@ -504,6 +506,7 @@ void RESETUNITCELL() {
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
   // REFACTOR THIS CODE...
 
+  println("reset unitcell");
   int voxX = int(DimXY/0.040); //  num voxels in X
   int voxY = int(DimXY/0.040); //  num voxels in Y
   int voxZ = int(DimZ/0.030); //  num voxels in Z

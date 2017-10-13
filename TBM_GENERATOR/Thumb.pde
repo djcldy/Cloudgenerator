@@ -287,10 +287,15 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           // println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
-          parentA = it.parentA;
-          textureA = it.parentA;
-          parentB = parent;
-          textureB = texture;
+          // parentA = it.parentA;
+          // textureA = it.parentA;
+          // parentB = parent;
+          // textureB = texture;
+
+          parentA    = null;
+          textureA  = null;
+          parentB   = null;
+          textureB  = null;
 
           map = null;
 
@@ -300,12 +305,21 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           texture = parent.get();
           texture.resize(int(size.x), int(size.y));
           // texture = normalize(it.texture);//
+/*
           parentA = it.parentA;
           textureA = parentA.get();
           textureA.resize(int(size.x),int(size.y));
-          // textureA = normalize(it.texture)
           parentB = parent;
           textureB = texture;
+
+*/
+
+          parentA    = null;
+          textureA  = null;
+          parentB   = null;
+          textureB  = null;
+
+          // textureA = normalize(it.texture)
           map = null;
         }
         it.stop();
