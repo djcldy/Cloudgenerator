@@ -500,26 +500,13 @@ void RESETUNITCELL() {
 
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
-
+  // REFACTOR THIS CODE...
 
   int voxX = int(DimXY/0.040); //  num voxels in X
   int voxY = int(DimXY/0.040); //  num voxels in Y
   int voxZ = int(DimZ/0.030); //  num voxels in Z
 
-  // int voxX = int(10/0.040); //  num voxels in X
-  // int voxY = int(10/0.040); //  num voxels in Y
-  // int voxZ = int(1/0.030); //  num voxels in Z
-
-
   float inter = Intersection;
-
-
-
-  println("reset unit cell" + voxX + "," + voxY + "," + voxZ);
-  println("intersection = " + inter);
-
-  //////////////////////////////////////////////
-
 
     PImage depthChannel = c.m.depth.texture.get();
     PImage alphaChannel = c.m.alpha.texture.get();
@@ -529,21 +516,22 @@ void RESETUNITCELL() {
     alphaChannel.resize(voxX,voxY);
     materChannel.resize(voxX,voxY);
 
-  PShape boxCloud = createShape();
-  boxCloud.beginShape(POINTS);
-  boxCloud.stroke(255,150);
-  boxCloud.strokeWeight(1);
-
-    ArrayList<PVector> temp = new ArrayList<PVector>();
-    Thumb depth,alpha, mater; // place holder variables
-
-    depth = c.m.depth;
-    alpha = c.m.alpha;
-    mater = c.m.mater;
 
     depthChannel.loadPixels();
     alphaChannel.loadPixels();
     materChannel.loadPixels();
+
+
+    println("depthChannel Width = " + voxX + "," + voxY);
+
+    PShape boxCloud = createShape();
+    boxCloud.beginShape(POINTS);
+    boxCloud.stroke(255,150);
+    boxCloud.strokeWeight(1);
+
+    ArrayList<PVector> temp = new ArrayList<PVector>();
+    Thumb depth,alpha, mater; // place holder variables
+
 
 
     int res = 1;
@@ -583,19 +571,16 @@ void RESETUNITCELL() {
 
         if (alph > 0){
            float val = brightness(depthChannel.get(x, y));
-
            val =  (val-min)*(255/max);
-
            color c = materChannel.get(x,y);
 
            if (val > rangeHi )  { val = rangeHi;    }
            if (val < rangeLo) { val = rangeLo;  }
-
            if (invert){val = 255-val;}
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
-          boxCloud.stroke(red(c), green(c), blue(c),150);
+            boxCloud.stroke(red(c), green(c), blue(c),150);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
           }
         }
@@ -603,12 +588,13 @@ void RESETUNITCELL() {
 
       invert = !invert; // need to do something hear to invert
     }
+    boxCloud.endShape();
 
 
-  boxCloud.endShape();
-  c.v.vp3D.setCellUnit(boxCloud);
+    c.v.vp3D.setCellUnit(boxCloud);
   // c.v.vp3Darray.setCellArray(boxCloud);
-  c.setCurrentUC(boxCloud);
+    c.setCurrentUC(boxCloud);
+    c.m.vox.pointCloud = boxCloud;
     c.m.vox.update();
 }
 

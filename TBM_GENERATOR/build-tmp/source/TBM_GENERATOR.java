@@ -523,26 +523,13 @@ public void RESETUNITCELL() {
 
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
-
+  // REFACTOR THIS CODE...
 
   int voxX = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
   int voxY = PApplet.parseInt(DimXY/0.040f); //  num voxels in Y
   int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
 
-  // int voxX = int(10/0.040); //  num voxels in X
-  // int voxY = int(10/0.040); //  num voxels in Y
-  // int voxZ = int(1/0.030); //  num voxels in Z
-
-
   float inter = Intersection;
-
-
-
-  println("reset unit cell" + voxX + "," + voxY + "," + voxZ);
-  println("intersection = " + inter);
-
-  //////////////////////////////////////////////
-
 
     PImage depthChannel = c.m.depth.texture.get();
     PImage alphaChannel = c.m.alpha.texture.get();
@@ -552,21 +539,22 @@ public void RESETUNITCELL() {
     alphaChannel.resize(voxX,voxY);
     materChannel.resize(voxX,voxY);
 
-  PShape boxCloud = createShape();
-  boxCloud.beginShape(POINTS);
-  boxCloud.stroke(255,150);
-  boxCloud.strokeWeight(1);
-
-    ArrayList<PVector> temp = new ArrayList<PVector>();
-    Thumb depth,alpha, mater; // place holder variables
-
-    depth = c.m.depth;
-    alpha = c.m.alpha;
-    mater = c.m.mater;
 
     depthChannel.loadPixels();
     alphaChannel.loadPixels();
     materChannel.loadPixels();
+
+
+    println("depthChannel Width = " + voxX + "," + voxY);
+
+    PShape boxCloud = createShape();
+    boxCloud.beginShape(POINTS);
+    boxCloud.stroke(255,150);
+    boxCloud.strokeWeight(1);
+
+    ArrayList<PVector> temp = new ArrayList<PVector>();
+    Thumb depth,alpha, mater; // place holder variables
+
 
 
     int res = 1;
@@ -606,19 +594,16 @@ public void RESETUNITCELL() {
 
         if (alph > 0){
            float val = brightness(depthChannel.get(x, y));
-
            val =  (val-min)*(255/max);
-
            int c = materChannel.get(x,y);
 
            if (val > rangeHi )  { val = rangeHi;    }
            if (val < rangeLo) { val = rangeLo;  }
-
            if (invert){val = 255-val;}
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
-          boxCloud.stroke(red(c), green(c), blue(c),150);
+            boxCloud.stroke(red(c), green(c), blue(c),150);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
           }
         }
@@ -626,12 +611,13 @@ public void RESETUNITCELL() {
 
       invert = !invert; // need to do something hear to invert
     }
+    boxCloud.endShape();
 
 
-  boxCloud.endShape();
-  c.v.vp3D.setCellUnit(boxCloud);
+    c.v.vp3D.setCellUnit(boxCloud);
   // c.v.vp3Darray.setCellArray(boxCloud);
-  c.setCurrentUC(boxCloud);
+    c.setCurrentUC(boxCloud);
+    c.m.vox.pointCloud = boxCloud;
     c.m.vox.update();
 }
 
@@ -2595,7 +2581,13 @@ class Voxelator {
   ArrayList<Thumb> globes = new ArrayList<Thumb>();
   ArrayList<PVector> pcLayer = new ArrayList<PVector>();
   PGraphics pg;
+  PImage currentLayer;
+
   float layer, thickness;
+
+
+  PShape pointCloud;
+
 
   float dimX, dimY;
 
@@ -2743,101 +2735,49 @@ class Voxelator {
   }
 
 
-public void updateSolid(){
+  public void updateSolid(){
 
-    println("update solid");
-    if (depth.texture != null){
 
-    PImage img = depth.texture.get();
-    img.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+    if (pointCloud != null){
 
-    boolean invertLayer;
+      int voxXY = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
+      int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
+      float layer = 0.33f;
+      int z = PApplet.parseInt(voxZ*layer);
 
-    int res = 1;
-    float range = 255;
-    int numLevels = LayersZ;
 
-    float domain = range;
-    // float amp = Amplitude/levels; // this is the total height
-    float totalSlices = 255;
-    float subDomain = totalSlices/numLevels;
+      println("Voxelator Width = " + voxXY + "," + voxXY);
+      PGraphics temp = createGraphics(voxXY,voxXY);
 
-    int currentSlice = PApplet.parseInt(totalSlices*layer); // current slice
-    int currentStep = floor(currentSlice/subDomain);
-    float currentLayer = (currentSlice%subDomain)/subDomain*255;
+      int white = color(255);
 
-    // println("Update Vox, currentLayer = " + currentLayer);
+      temp.beginDraw();
+      temp.background(34,155,215);
 
-    if (currentStep%2 == 0){
-      invertLayer = false;
-    } else {
-      invertLayer = true;
+
+
+      // println(pointCloud)
+
+      for (int i = 0; i < pointCloud.getVertexCount(); i++) {
+        PVector v = pointCloud.getVertex(i);
+        temp.set(PApplet.parseInt(v.x),PApplet.parseInt(v.y), white);
+        // if (v.z == z){
+        //   temp.set(int(v.x),int(v.y), white);
+        // }
+      }
+      temp.endDraw();
+      currentLayer = temp.get();
+      // cburrentLayer.resize(int(size.x),int(size.y));
     }
 
-
-    pg = createGraphics(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
-    pg.beginDraw();
-    pg.background(0);
-    pg.loadPixels();
-
-    for (int k = 0; k <  img.pixels.length; k++) {
-      float val = brightness(img.pixels[k]);
-      if (val < currentLayer) { pg.pixels[k] = color(255);}
-    }
-      pg.updatePixels();
-      pg.endDraw();
-      pcLayer = getCurrentPC(); // this displays the current cut layer in 3D
-
-
-    }
   }
 
   public void updateShell(){
 
-    println("update shell");
-      if (depth.texture != null){
-
-    PImage img = depth.texture.get();
-    img.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
-
-    boolean invertLayer;
-
-    int res = 1;
-    float range = 255;
-    int numLevels = LayersZ;
-
-    float domain = range;
-    // float amp = Amplitude/levels; // this is the total height
-    float totalSlices = 255;
-    float subDomain = totalSlices/numLevels;
-
-    int currentSlice = PApplet.parseInt(totalSlices*layer); // current slice
-    int currentStep = floor(currentSlice/subDomain);
-    float currentLayer = (currentSlice%subDomain)/subDomain*255;
-
-    // println("Update Vox, currentLayer = " + currentLayer);
-
-    if (currentStep%2 == 0){
-      invertLayer = false;
-    } else {
-      invertLayer = true;
-    }
+    updateSolid();
 
 
-    pg = createGraphics(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
-    pg.beginDraw();
-    pg.background(0);
-    pg.loadPixels();
-
-    for (int k = 0; k <  img.pixels.length; k++) {
-      float val = brightness(img.pixels[k]);
-    if ((val < (currentLayer+thickness)) && (val > (currentLayer-thickness))) { pg.pixels[k] = color(255);}}
-    pg.updatePixels();
-    pg.endDraw();
-    pcLayer = getCurrentPC(); // this displays the current cut layer in 3D
   }
-
-}
 
   public void updateArray(){
 
@@ -2878,8 +2818,9 @@ public void updateSolid(){
 
   public void display(){
 
+    //  display voxel layer
     if (loaded){
-      if (pg != null){ image(pg, PApplet.parseInt(loc.x) , PApplet.parseInt(loc.y) );}
+      if (currentLayer != null){ image(currentLayer, PApplet.parseInt(loc.x) , PApplet.parseInt(loc.y) );}
     } else if (depth.texture != null){
       updateUnit();
       loaded = true;
@@ -2887,37 +2828,11 @@ public void updateSolid(){
   }
 
 
+
 }
-//   void getLayer(float layer){ // express layer as a percentage of total
 
 
 
-
-//     String s = "Image Stack: " + t;
-
-
-//     // textAlign(CENTER);
-//     // text(s, 340, 965);
-//   }
-
-
-
-
-
-
-//   }
-
-
-
-
-
-//   void export(String path, PVector dim){
-
-
-
-//  }
-
-// }
 class Zone {
 
   PVector a,b,dim; // width and height of zone
