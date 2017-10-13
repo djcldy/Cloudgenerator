@@ -2,7 +2,7 @@ class PointCloud {
 
   // class to control viewport3D // pointcloud
   ArrayList<PVector> pc, currentLayerPC;
-  PVector p1, p2;
+  PVector p1, p2, defaultPosition;
 
   BoundingBox bbox;
   ArrayList<BoundingBox> cellArray;
@@ -24,11 +24,10 @@ PShape boxCloud;
 
     p1 = new PVector(x1,y1);
     p2 = new PVector(x2,y2);
-
     vWidth = x2 -x1;
     vHeight = y2 - y1;
-
     mode = _mode;
+
     initView();
 
   }
@@ -75,20 +74,20 @@ PShape boxCloud;
 
   void setMode2(){ // ZOOM OUT
 
-  xScal = 1;
-    xRot = -atan(sin(radians(45)));
-    yRot =  radians(45);
-    xPos = width/4 + vWidth/8;
-    yPos = yB + vHeight/8 - os;
+  // xScal = 1;
+  //   xRot = -atan(sin(radians(45)));
+  //   yRot =  radians(45);
+  //   xPos = width/4 + vWidth/8;
+  //   yPos = yB + vHeight/8 - os;
 
   }
 
   void setMode1(){ // ZOOM IN
-    xScal = 3;
-    xRot = -atan(sin(radians(45)));
-    yRot =  radians(45);
-    xPos = width/4 + vWidth/2;
-    yPos = vHeight/2-2*os;
+    // xScal = 3;
+    // xRot = -atan(sin(radians(45)));
+    // yRot =  radians(45);
+    // xPos = width/4 + vWidth/2;
+    // yPos = vHeight/2-2*os;
 
   }
 
@@ -99,6 +98,7 @@ PShape boxCloud;
       scl = new PVector(0.75,0.75,0.75);
       rot = new PVector(-atan(sin(radians(-30))), radians(-30),0);
       start = new PVector((p2.x-p1.x)/2+p1.x, (p2.y-p1.y)/2 + p1.y, -10);
+      defaultPosition = start;
     float val = 0.1;
     position = new TweenPoint(start,start,val); // tween for position
     scale = new TweenPoint(scl,scl,val); // tween for position
@@ -174,6 +174,9 @@ void updateView(){
 
     if (bbox != null){
     if (bbox.grow){
+      // println("GROW!!!");
+
+      // scale.addIncrement(new PVector(0.01,0.01,0.01));
       scale.addIncrement(new PVector(0.0005,0.0005,0.0005));
     } else {
       scale.addIncrement(new PVector(-0.0005,-0.0005,-0.0005));
@@ -199,6 +202,29 @@ void updateView(){
       }
    }
 
+
+void displayFS(){
+    // println("DISPLAY FULLSCREEN");
+      pushMatrix();
+      setView();
+
+      stroke(255,100);
+      fill(255,100);
+
+      if (boxCloud != null){ shape(boxCloud);}
+      if (bbox != null ){ bbox.display(true);}
+      // // strokeWeight(1);
+      // if (cellArray != null){
+      //   for (BoundingBox cell: cellArray){ cell.display();}
+      // }
+      // if (showLayer){displayLayer();}
+
+      popMatrix();
+      updateCamera();
+
+   }
+
+
   void display(boolean showLayer){
 
       pushMatrix();
@@ -208,15 +234,8 @@ void updateView(){
       fill(255,100);
 
       if (boxCloud != null){ shape(boxCloud);}
-      if (bbox != null ){ bbox.display();}
-
-      // strokeWeight(1);
-      if (cellArray != null){
-        for (BoundingBox cell: cellArray){ cell.display();}
-      }
-
-      // if (showLayer){displayLayer();}
-
+      if (bbox != null ){ bbox.display(false);}
+      if (cellArray != null){ for (BoundingBox cell: cellArray){ cell.display(false);}}
       popMatrix();
       updateCamera();
 
@@ -238,6 +257,7 @@ void updateView(){
 
 
    }
+
 
 
 

@@ -9,6 +9,7 @@ class Controller {
 
   int currentRow = 1;
 
+
   // can get rid of this ?
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
   ArrayList<UnitCell> unitCells = new ArrayList<UnitCell>();
@@ -104,9 +105,11 @@ class Controller {
 
 
   void update() {
+
     PVector mouse = new PVector(mouseX, mouseY);
     v.display();
-    for  (Zone z: zones){ z.display(mouse);} // not necessary
+    // for  (Zone z: zones){ z.display(mouse);} // not necessary
+
   }
 
 

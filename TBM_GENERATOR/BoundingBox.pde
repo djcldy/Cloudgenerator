@@ -76,35 +76,38 @@ v2=  new PVector(pMin.x, pMax.y, pMin.z);
     } else {
       maximize = false;
           }
-
     return maximize;
 
   }
-  void display(){
 
-    if (display){
+
+
+  void display(boolean fullScreen){
+
+    if ((display) && !fullScreen) { drawBox(); }
+    if (fullScreen){
+      grow = checkExtents(new PVector(os,os),new PVector(width-os, height-os));
+    } else {
+      grow = checkExtents(p1,p2);
+    }
+
+  }
+
+  void drawBox(){
     stroke(34,155,215,150);
     strokeWeight(1);
-
     line(pMin.x,pMin.y,pMin.z, pMax.x, pMin.y,pMin.z);
     line(pMin.x,pMin.y,pMin.z, pMin.x, pMax.y,pMin.z);
     line(pMin.x,pMin.y,pMin.z, pMin.x, pMin.y,pMax.z);
     line(pMin.x,pMax.y,pMax.z, pMax.x, pMax.y,pMax.z);
     line(pMax.x,pMin.y,pMax.z, pMax.x, pMax.y,pMax.z);
     line(pMax.x,pMax.y,pMin.z, pMax.x, pMax.y,pMax.z);
-
     line(pMin.x,pMax.y,pMin.z, pMin.x, pMax.y,pMax.z);
     line(pMax.x,pMin.y,pMin.z, pMax.x, pMin.y,pMax.z);
-
     line(pMin.x,pMax.y,pMin.z, pMax.x, pMax.y,pMin.z);
     line(pMax.x,pMin.y,pMin.z, pMax.x, pMax.y,pMin.z);
-
     line(pMin.x,pMax.y,pMax.z, pMin.x, pMin.y,pMax.z);
     line(pMax.x,pMin.y,pMax.z, pMin.x, pMin.y,pMax.z);
-
-    }
-
-    grow = checkExtents(p1,p2);
   }
 
 

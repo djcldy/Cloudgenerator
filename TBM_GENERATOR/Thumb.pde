@@ -44,7 +44,7 @@ class Thumb {
 
   void invertTexture(){
 
-    println("invert texture");
+    // println("invert texture");
 
     isInverted = !isInverted;
     if (isInverted){
@@ -239,7 +239,7 @@ class Thumb {
   }
 
   PImage invert(PImage _img){
-    println("invert");
+    // println("invert");
     PImage img = _img.get();
     PGraphics temp = createGraphics(img.width,img.height);
     temp.beginDraw();
@@ -284,7 +284,7 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
         // println("it is ready");
 
         if (mode == "COLOR"){
-          println("multi-material");
+          // println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
           parentA = it.parentA;
@@ -295,7 +295,7 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           map = null;
 
         }else{
-          println("normalize");
+          // println("normalize");
           parent = normalize(it.parent);//
           texture = parent.get();
           texture.resize(int(size.x), int(size.y));

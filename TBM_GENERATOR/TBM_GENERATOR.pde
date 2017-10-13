@@ -3,8 +3,6 @@
 // Sayjel Vijay Patel (2017), SUTD Digital Manufacturing & Design Centre
 // 3DJ Texture Generator for the Stratasys J-1750 Voxel Print Technology
 // Create multi-material, procedural micro-structures & textures for 3D printing
-
-
 // import libraries
 
 import java.util.Collections;
@@ -15,6 +13,8 @@ import java.util.*;
 import java.io.File;
 
 ControlP5 cp5;
+ControlP5 cp5View;
+
 
 public Controller c;
 
@@ -53,38 +53,35 @@ int LayersZ =1;
 
 //
 PImage exportDepth;
-
-// PUBLIC VARIABLES FOR LAYOUT
 boolean isSetup = true;
+PWindow win;
 
 
+int step = 0;
 
 void setup() {
 
   println("setup started");
   float time01 = float(millis());
-
-
   init();
-
   float time02 = float(millis());
   float elapsedTime = time02 - time01;
   println("setup completed after " + elapsedTime/1000 + " s.");
+
 
 }
 
 
 void draw() {
   background(2, 7, 49);
-  c.update(
-    );
+  c.update();
+  step ++;
 }
 
 
 void settings(){
   size(1800,1000,P3D);
   smooth(8);
-
    // fullScreen(P3D);
 }
 void setStyle(){
@@ -103,6 +100,7 @@ void init(){
   initViewport();
   isSetup = false;
   initGeo();
+  // win = new PWindow();
 }
 
 
@@ -137,14 +135,6 @@ void DimXY(float value){
   thread("RESETUNITCELL");
   }
 }
-
-
-// void DimY(float value){
-//   if (!isSetup){
-//   DimY = value;
-//   thread("RESETUNITCELL");
-//   }
-// }
 
 
 void DimZ(float value){
@@ -257,6 +247,10 @@ void Shell(){
   }
 }
 
+void VIEWMODE(){
+  c.v.toggleMode();
+}
+
 
 void INVERTTEXTURE(){ // inverts the color of the texture
  c.v.vp2D.invertTexture(c.currentRow);
@@ -268,6 +262,12 @@ void initButtons(){
   int bW = int((width/4 - width/32)/4);
   int bH = int(height/16 - os);
 
+  cp5View.addButton("VIEWMODE")
+     .setPosition(int(os), 0)
+     .setSize(int(2*os), int(os))
+     // .setValue(true)
+     // .setMode(ControlP5.SWITCH)
+     ;
 
 
 
@@ -383,6 +383,7 @@ void AXO(){
 void setInterface(){
 
   cp5 = new ControlP5(this);
+  cp5View = new ControlP5(this);
 
   initButtons();
   initSlider();
@@ -471,6 +472,7 @@ void initSlider() {
 void Current(float value) {
   if (!isSetup){  //
 
+    Current = value;
     c.m.vox.layer = value;    //l: set vox");
     c.m.vox.update();         //
     c.v.vp3D.setCurrentLayer(c.m.vox.pcLayer);
@@ -496,8 +498,8 @@ void dropdown(int n) {
 
 
 
-void RESETUNITCELL() {
 
+void RESETUNITCELL() {
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
   // REFACTOR THIS CODE...
@@ -508,21 +510,18 @@ void RESETUNITCELL() {
 
   float inter = Intersection;
 
-    PImage depthChannel = c.m.depth.texture.get();
-    PImage alphaChannel = c.m.alpha.texture.get();
-    PImage materChannel = c.m.mater.texture.get();
+  PImage depthChannel = c.m.depth.texture.get();
+  PImage alphaChannel = c.m.alpha.texture.get();
+  PImage materChannel = c.m.mater.texture.get();
 
-    depthChannel.resize(voxX,voxY);
-    alphaChannel.resize(voxX,voxY);
-    materChannel.resize(voxX,voxY);
+  ArrayList<PVector> vertexCols = new ArrayList<PVector>();
+  depthChannel.resize(voxX,voxY);
+  alphaChannel.resize(voxX,voxY);
+  materChannel.resize(voxX,voxY);
 
-
-    depthChannel.loadPixels();
-    alphaChannel.loadPixels();
-    materChannel.loadPixels();
-
-
-    println("depthChannel Width = " + voxX + "," + voxY);
+   depthChannel.loadPixels();
+   alphaChannel.loadPixels();
+   materChannel.loadPixels();
 
     PShape boxCloud = createShape();
     boxCloud.beginShape(POINTS);
@@ -530,12 +529,8 @@ void RESETUNITCELL() {
     boxCloud.strokeWeight(1);
 
     ArrayList<PVector> temp = new ArrayList<PVector>();
-    Thumb depth,alpha, mater; // place holder variables
-
-
 
     int res = 1;
-
     float rangeLo = 255*inter;
     float rangeHi = 255 - rangeLo;
 
@@ -580,14 +575,19 @@ void RESETUNITCELL() {
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
-            boxCloud.stroke(red(c), green(c), blue(c),150);
+           PVector col  = new PVector(red(c),green(c), blue(c));
+           vertexCols.add(col);
+
+           boxCloud.stroke(col.x, col.y, col.z, 150);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
+
           }
         }
       }
 
       invert = !invert; // need to do something hear to invert
     }
+
     boxCloud.endShape();
 
 
@@ -596,9 +596,29 @@ void RESETUNITCELL() {
     c.setCurrentUC(boxCloud);
     c.m.vox.pointCloud = boxCloud;
     c.m.vox.update();
+    PShape d = copyPS(boxCloud,vertexCols);
+
+    // win.setPointCloud(d);
 }
 
 
+ PShape copyPS(PShape s, ArrayList<PVector> vertexCols){
+
+    PShape cloud = s;
+    cloud = createShape();
+    cloud.beginShape(POINTS);
+    cloud.strokeWeight(1);
+    for(int i = 0; i < s.getVertexCount(); i++){
+      float x = s.getVertexX(i);
+      float y = s.getVertexY(i);
+      float z = s.getVertexZ(i);
+      PVector col = vertexCols.get(i);
+      cloud.stroke(col.x, col.y, col.z,150);
+      cloud.vertex(x,y,z);
+    }
+    cloud.endShape();
+    return cloud;
+ }
 
 
 

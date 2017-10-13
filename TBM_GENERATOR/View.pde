@@ -1,6 +1,7 @@
 class View {
 
   // this controls the styles of display
+  int viewMode = 2;
   Model model;
   Viewport2D vp2D;
   Viewport3D vp3D, vp3Darray;
@@ -36,9 +37,16 @@ class View {
 
   void display() {
 
-    String mode = vp3D.mode;
-    display2D();
-    display3D();
+    if (viewMode == 2){
+      String mode = vp3D.mode;
+      display2D();
+      display3D();
+
+    } else {
+
+      display3D();
+
+    }
 
   }
 
@@ -139,6 +147,30 @@ class View {
     // colum 11-12
     line(width-os, 0, width-os, height);
 
+
+  }
+
+  void toggleMode(){
+
+      println("toggleMode");
+
+
+    if (viewMode == 2){
+
+      viewMode = 1;
+      vp3D.setView(1);
+      vp3D.fullScreen = true;
+      cp5.hide();
+
+    } else {
+
+      viewMode = 2;
+      vp3D.setView(2);
+      vp3D.fullScreen = false;
+      cp5.show();
+
+
+    }
 
   }
 

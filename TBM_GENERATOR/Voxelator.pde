@@ -63,7 +63,6 @@ class Voxelator {
 
   void toggleFillMode(){
 
-    println("toggleFillMode");
     if (fillMode == "SHELL"){
       fillMode = "SOLID";
     } else {
@@ -150,12 +149,12 @@ class Voxelator {
   void updateUnit(){
 
 
-    println("updateUnit");
+    // println("updateUnit");
     if (fillMode == "SHELL"){
-      println("fill shell");
+      // println("fill shell");
       updateShell();
     } else {
-      println("fill solid");
+      // println("fill solid");
       updateSolid();
     }
   }
@@ -168,32 +167,36 @@ class Voxelator {
 
       int voxXY = int(DimXY/0.040); //  num voxels in X
       int voxZ = int(DimZ/0.030); //  num voxels in Z
-      float layer = 0.33;
       int z = int(voxZ*layer);
 
 
-      println("Voxelator Width = " + voxXY + "," + voxXY);
+      // println("Voxelator Width = " + voxXY + "," + voxXY);
+      // println("Voxelator Size = " + size.x + "," + size.y);
+
       PGraphics temp = createGraphics(voxXY,voxXY);
 
-      color white = color(255);
+      color white = color(255,255);
 
       temp.beginDraw();
-      temp.background(34,155,215);
+      temp.background(0);
 
+      boolean invertLayer = true;
 
+      if (layer > 0.5){ invertLayer = false;} // we gotta make this one smarter
 
       // println(pointCloud)
 
       for (int i = 0; i < pointCloud.getVertexCount(); i++) {
         PVector v = pointCloud.getVertex(i);
-        temp.set(int(v.x),int(v.y), white);
-        // if (v.z == z){
-        //   temp.set(int(v.x),int(v.y), white);
-        // }
+
+        if (invertLayer){ if (v.z + voxZ/2 < z){temp.set(int(v.x+voxXY/2),int(v.y+voxXY/2), white);}
+        } else { if (v.z + voxZ/2 > z){temp.set(int(v.x+voxXY/2),int(v.y+voxXY/2), white);}
+        }
+
       }
       temp.endDraw();
       currentLayer = temp.get();
-      // cburrentLayer.resize(int(size.x),int(size.y));
+      currentLayer.resize(int(size.x),int(size.y));
     }
 
   }
@@ -207,7 +210,7 @@ class Voxelator {
 
   void updateArray(){
 
-    println("get depth texture");
+    // println("get depth texture");
     PImage img = depthArray.parent.get();
     PImage shape = alphaGlobe.parent.get();
 
@@ -233,7 +236,6 @@ class Voxelator {
         pg.pixels[k] = color(255);
       } else {
       pg.pixels[k] = color(0);
-
       }
     }
 

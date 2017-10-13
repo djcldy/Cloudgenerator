@@ -26,8 +26,6 @@ public class TBM_GENERATOR extends PApplet {
 // Sayjel Vijay Patel (2017), SUTD Digital Manufacturing & Design Centre
 // 3DJ Texture Generator for the Stratasys J-1750 Voxel Print Technology
 // Create multi-material, procedural micro-structures & textures for 3D printing
-
-
 // import libraries
 
 
@@ -38,6 +36,8 @@ public class TBM_GENERATOR extends PApplet {
 
 
 ControlP5 cp5;
+ControlP5 cp5View;
+
 
 public Controller c;
 
@@ -76,38 +76,35 @@ int LayersZ =1;
 
 //
 PImage exportDepth;
-
-// PUBLIC VARIABLES FOR LAYOUT
 boolean isSetup = true;
+PWindow win;
 
 
+int step = 0;
 
 public void setup() {
 
   println("setup started");
   float time01 = PApplet.parseFloat(millis());
-
-
   init();
-
   float time02 = PApplet.parseFloat(millis());
   float elapsedTime = time02 - time01;
   println("setup completed after " + elapsedTime/1000 + " s.");
+
 
 }
 
 
 public void draw() {
   background(2, 7, 49);
-  c.update(
-    );
+  c.update();
+  step ++;
 }
 
 
 public void settings(){
   size(1800,1000,P3D);
   smooth(8);
-
    // fullScreen(P3D);
 }
 public void setStyle(){
@@ -126,6 +123,7 @@ public void init(){
   initViewport();
   isSetup = false;
   initGeo();
+  // win = new PWindow();
 }
 
 
@@ -160,14 +158,6 @@ public void DimXY(float value){
   thread("RESETUNITCELL");
   }
 }
-
-
-// void DimY(float value){
-//   if (!isSetup){
-//   DimY = value;
-//   thread("RESETUNITCELL");
-//   }
-// }
 
 
 public void DimZ(float value){
@@ -280,6 +270,10 @@ public void Shell(){
   }
 }
 
+public void VIEWMODE(){
+  c.v.toggleMode();
+}
+
 
 public void INVERTTEXTURE(){ // inverts the color of the texture
  c.v.vp2D.invertTexture(c.currentRow);
@@ -291,6 +285,12 @@ public void initButtons(){
   int bW = PApplet.parseInt((width/4 - width/32)/4);
   int bH = PApplet.parseInt(height/16 - os);
 
+  cp5View.addButton("VIEWMODE")
+     .setPosition(PApplet.parseInt(os), 0)
+     .setSize(PApplet.parseInt(2*os), PApplet.parseInt(os))
+     // .setValue(true)
+     // .setMode(ControlP5.SWITCH)
+     ;
 
 
 
@@ -406,6 +406,7 @@ public void AXO(){
 public void setInterface(){
 
   cp5 = new ControlP5(this);
+  cp5View = new ControlP5(this);
 
   initButtons();
   initSlider();
@@ -494,6 +495,7 @@ public void initSlider() {
 public void Current(float value) {
   if (!isSetup){  //
 
+    Current = value;
     c.m.vox.layer = value;    //l: set vox");
     c.m.vox.update();         //
     c.v.vp3D.setCurrentLayer(c.m.vox.pcLayer);
@@ -519,8 +521,8 @@ public void dropdown(int n) {
 
 
 
-public void RESETUNITCELL() {
 
+public void RESETUNITCELL() {
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
   // REFACTOR THIS CODE...
@@ -531,21 +533,18 @@ public void RESETUNITCELL() {
 
   float inter = Intersection;
 
-    PImage depthChannel = c.m.depth.texture.get();
-    PImage alphaChannel = c.m.alpha.texture.get();
-    PImage materChannel = c.m.mater.texture.get();
+  PImage depthChannel = c.m.depth.texture.get();
+  PImage alphaChannel = c.m.alpha.texture.get();
+  PImage materChannel = c.m.mater.texture.get();
 
-    depthChannel.resize(voxX,voxY);
-    alphaChannel.resize(voxX,voxY);
-    materChannel.resize(voxX,voxY);
+  ArrayList<PVector> vertexCols = new ArrayList<PVector>();
+  depthChannel.resize(voxX,voxY);
+  alphaChannel.resize(voxX,voxY);
+  materChannel.resize(voxX,voxY);
 
-
-    depthChannel.loadPixels();
-    alphaChannel.loadPixels();
-    materChannel.loadPixels();
-
-
-    println("depthChannel Width = " + voxX + "," + voxY);
+   depthChannel.loadPixels();
+   alphaChannel.loadPixels();
+   materChannel.loadPixels();
 
     PShape boxCloud = createShape();
     boxCloud.beginShape(POINTS);
@@ -553,12 +552,8 @@ public void RESETUNITCELL() {
     boxCloud.strokeWeight(1);
 
     ArrayList<PVector> temp = new ArrayList<PVector>();
-    Thumb depth,alpha, mater; // place holder variables
-
-
 
     int res = 1;
-
     float rangeLo = 255*inter;
     float rangeHi = 255 - rangeLo;
 
@@ -603,14 +598,19 @@ public void RESETUNITCELL() {
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
-            boxCloud.stroke(red(c), green(c), blue(c),150);
+           PVector col  = new PVector(red(c),green(c), blue(c));
+           vertexCols.add(col);
+
+           boxCloud.stroke(col.x, col.y, col.z, 150);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
+
           }
         }
       }
 
       invert = !invert; // need to do something hear to invert
     }
+
     boxCloud.endShape();
 
 
@@ -619,9 +619,29 @@ public void RESETUNITCELL() {
     c.setCurrentUC(boxCloud);
     c.m.vox.pointCloud = boxCloud;
     c.m.vox.update();
+    PShape d = copyPS(boxCloud,vertexCols);
+
+    // win.setPointCloud(d);
 }
 
 
+ public PShape copyPS(PShape s, ArrayList<PVector> vertexCols){
+
+    PShape cloud = s;
+    cloud = createShape();
+    cloud.beginShape(POINTS);
+    cloud.strokeWeight(1);
+    for(int i = 0; i < s.getVertexCount(); i++){
+      float x = s.getVertexX(i);
+      float y = s.getVertexY(i);
+      float z = s.getVertexZ(i);
+      PVector col = vertexCols.get(i);
+      cloud.stroke(col.x, col.y, col.z,150);
+      cloud.vertex(x,y,z);
+    }
+    cloud.endShape();
+    return cloud;
+ }
 
 
 
@@ -703,35 +723,38 @@ v2=  new PVector(pMin.x, pMax.y, pMin.z);
     } else {
       maximize = false;
           }
-
     return maximize;
 
   }
-  public void display(){
 
-    if (display){
+
+
+  public void display(boolean fullScreen){
+
+    if ((display) && !fullScreen) { drawBox(); }
+    if (fullScreen){
+      grow = checkExtents(new PVector(os,os),new PVector(width-os, height-os));
+    } else {
+      grow = checkExtents(p1,p2);
+    }
+
+  }
+
+  public void drawBox(){
     stroke(34,155,215,150);
     strokeWeight(1);
-
     line(pMin.x,pMin.y,pMin.z, pMax.x, pMin.y,pMin.z);
     line(pMin.x,pMin.y,pMin.z, pMin.x, pMax.y,pMin.z);
     line(pMin.x,pMin.y,pMin.z, pMin.x, pMin.y,pMax.z);
     line(pMin.x,pMax.y,pMax.z, pMax.x, pMax.y,pMax.z);
     line(pMax.x,pMin.y,pMax.z, pMax.x, pMax.y,pMax.z);
     line(pMax.x,pMax.y,pMin.z, pMax.x, pMax.y,pMax.z);
-
     line(pMin.x,pMax.y,pMin.z, pMin.x, pMax.y,pMax.z);
     line(pMax.x,pMin.y,pMin.z, pMax.x, pMin.y,pMax.z);
-
     line(pMin.x,pMax.y,pMin.z, pMax.x, pMax.y,pMin.z);
     line(pMax.x,pMin.y,pMin.z, pMax.x, pMax.y,pMin.z);
-
     line(pMin.x,pMax.y,pMax.z, pMin.x, pMin.y,pMax.z);
     line(pMax.x,pMin.y,pMax.z, pMin.x, pMin.y,pMax.z);
-
-    }
-
-    grow = checkExtents(p1,p2);
   }
 
 
@@ -762,6 +785,7 @@ class Controller {
   PApplet app;
 
   int currentRow = 1;
+
 
   // can get rid of this ?
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
@@ -858,9 +882,11 @@ class Controller {
 
 
   public void update() {
+
     PVector mouse = new PVector(mouseX, mouseY);
     v.display();
-    for  (Zone z: zones){ z.display(mouse);} // not necessary
+    // for  (Zone z: zones){ z.display(mouse);} // not necessary
+
   }
 
 
@@ -1310,11 +1336,66 @@ class Model {
 
 
 }
+
+class PWindow extends PApplet {
+  // this class displays 3D Content
+
+  PShape cloud = null;
+
+  PWindow() {
+    super();
+    PApplet.runSketch(new String[] {this.getClass().getSimpleName()}, this);
+  }
+
+
+  float rotX = 0.05f;
+  float rotY =0.05f;
+
+  public void settings() {
+    size(1000, 1000, P3D);
+      // fullScreen(P3D);
+  }
+
+
+  public void setup() {
+    background(150);
+  }
+
+ public void setPointCloud(PShape s){
+
+  cloud = s;
+ }
+
+
+   public void draw() {
+    background(0);
+    fill(255);
+    stroke(255);
+    strokeWeight(10);
+    pushMatrix();
+    translate(width/2, height/2, 0);
+    rotateX(rotY);
+    rotateY(rotY);
+    rotateZ(rotY);
+    if (cloud != null) {
+      shape(cloud);
+
+    } else {
+      point(0,0,0); }
+    popMatrix();
+    rotY +=0.025f;
+  }
+
+  public void mousePressed() {
+    println("mousePressed in secondary window");
+  }
+}
+
 class PointCloud {
 
   // class to control viewport3D // pointcloud
   ArrayList<PVector> pc, currentLayerPC;
-  PVector p1, p2;
+  PVector p1, p2, defaultPosition;
 
   BoundingBox bbox;
   ArrayList<BoundingBox> cellArray;
@@ -1336,11 +1417,10 @@ PShape boxCloud;
 
     p1 = new PVector(x1,y1);
     p2 = new PVector(x2,y2);
-
     vWidth = x2 -x1;
     vHeight = y2 - y1;
-
     mode = _mode;
+
     initView();
 
   }
@@ -1387,20 +1467,20 @@ PShape boxCloud;
 
   public void setMode2(){ // ZOOM OUT
 
-  xScal = 1;
-    xRot = -atan(sin(radians(45)));
-    yRot =  radians(45);
-    xPos = width/4 + vWidth/8;
-    yPos = yB + vHeight/8 - os;
+  // xScal = 1;
+  //   xRot = -atan(sin(radians(45)));
+  //   yRot =  radians(45);
+  //   xPos = width/4 + vWidth/8;
+  //   yPos = yB + vHeight/8 - os;
 
   }
 
   public void setMode1(){ // ZOOM IN
-    xScal = 3;
-    xRot = -atan(sin(radians(45)));
-    yRot =  radians(45);
-    xPos = width/4 + vWidth/2;
-    yPos = vHeight/2-2*os;
+    // xScal = 3;
+    // xRot = -atan(sin(radians(45)));
+    // yRot =  radians(45);
+    // xPos = width/4 + vWidth/2;
+    // yPos = vHeight/2-2*os;
 
   }
 
@@ -1411,6 +1491,7 @@ PShape boxCloud;
       scl = new PVector(0.75f,0.75f,0.75f);
       rot = new PVector(-atan(sin(radians(-30))), radians(-30),0);
       start = new PVector((p2.x-p1.x)/2+p1.x, (p2.y-p1.y)/2 + p1.y, -10);
+      defaultPosition = start;
     float val = 0.1f;
     position = new TweenPoint(start,start,val); // tween for position
     scale = new TweenPoint(scl,scl,val); // tween for position
@@ -1486,6 +1567,9 @@ public void updateView(){
 
     if (bbox != null){
     if (bbox.grow){
+      // println("GROW!!!");
+
+      // scale.addIncrement(new PVector(0.01,0.01,0.01));
       scale.addIncrement(new PVector(0.0005f,0.0005f,0.0005f));
     } else {
       scale.addIncrement(new PVector(-0.0005f,-0.0005f,-0.0005f));
@@ -1511,6 +1595,29 @@ public void updateView(){
       }
    }
 
+
+public void displayFS(){
+    // println("DISPLAY FULLSCREEN");
+      pushMatrix();
+      setView();
+
+      stroke(255,100);
+      fill(255,100);
+
+      if (boxCloud != null){ shape(boxCloud);}
+      if (bbox != null ){ bbox.display(true);}
+      // // strokeWeight(1);
+      // if (cellArray != null){
+      //   for (BoundingBox cell: cellArray){ cell.display();}
+      // }
+      // if (showLayer){displayLayer();}
+
+      popMatrix();
+      updateCamera();
+
+   }
+
+
   public void display(boolean showLayer){
 
       pushMatrix();
@@ -1520,15 +1627,8 @@ public void updateView(){
       fill(255,100);
 
       if (boxCloud != null){ shape(boxCloud);}
-      if (bbox != null ){ bbox.display();}
-
-      // strokeWeight(1);
-      if (cellArray != null){
-        for (BoundingBox cell: cellArray){ cell.display();}
-      }
-
-      // if (showLayer){displayLayer();}
-
+      if (bbox != null ){ bbox.display(false);}
+      if (cellArray != null){ for (BoundingBox cell: cellArray){ cell.display(false);}}
       popMatrix();
       updateCamera();
 
@@ -1550,6 +1650,7 @@ public void updateView(){
 
 
    }
+
 
 
 
@@ -1749,7 +1850,7 @@ class Thumb {
 
   public void invertTexture(){
 
-    println("invert texture");
+    // println("invert texture");
 
     isInverted = !isInverted;
     if (isInverted){
@@ -1944,7 +2045,7 @@ class Thumb {
   }
 
   public PImage invert(PImage _img){
-    println("invert");
+    // println("invert");
     PImage img = _img.get();
     PGraphics temp = createGraphics(img.width,img.height);
     temp.beginDraw();
@@ -1989,7 +2090,7 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
         // println("it is ready");
 
         if (mode == "COLOR"){
-          println("multi-material");
+          // println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
           parentA = it.parentA;
@@ -2000,7 +2101,7 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           map = null;
 
         }else{
-          println("normalize");
+          // println("normalize");
           parent = normalize(it.parent);//
           texture = parent.get();
           texture.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
@@ -2174,6 +2275,7 @@ class UnitCell {
 class View {
 
   // this controls the styles of display
+  int viewMode = 2;
   Model model;
   Viewport2D vp2D;
   Viewport3D vp3D, vp3Darray;
@@ -2209,9 +2311,16 @@ class View {
 
   public void display() {
 
-    String mode = vp3D.mode;
-    display2D();
-    display3D();
+    if (viewMode == 2){
+      String mode = vp3D.mode;
+      display2D();
+      display3D();
+
+    } else {
+
+      display3D();
+
+    }
 
   }
 
@@ -2312,6 +2421,30 @@ class View {
     // colum 11-12
     line(width-os, 0, width-os, height);
 
+
+  }
+
+  public void toggleMode(){
+
+      println("toggleMode");
+
+
+    if (viewMode == 2){
+
+      viewMode = 1;
+      vp3D.setView(1);
+      vp3D.fullScreen = true;
+      cp5.hide();
+
+    } else {
+
+      viewMode = 2;
+      vp3D.setView(2);
+      vp3D.fullScreen = false;
+      cp5.show();
+
+
+    }
 
   }
 
@@ -2418,8 +2551,8 @@ class Viewport2D {
 
     // thumb.invertTexture(); // this is the selected thumb here we should update the channel & child..
 
-    m.currentR1.invertTexture();
-    m.currentR2.invertTexture();
+    if (m.currentR1 != null ){ m.currentR1.invertTexture();}
+    if (m.currentR2 != null ){ m.currentR2.invertTexture();}
 
     image = null;
     // update();
@@ -2506,6 +2639,8 @@ class Viewport3D{
   ArrayList<PVector> pc;
   PVector p1, p2;
 
+  boolean fullScreen = false;
+
   BoundingBox bbox;
 
   float currentLayer = 0.5f;
@@ -2524,6 +2659,28 @@ class Viewport3D{
   Viewport3D(float x1, float y1, float x2, float y2){
     cellUnit = new PointCloud(x1,y1,x2,y2, false);
     cellArray = new PointCloud(x1,y1,x2,y2, true);
+
+  }
+
+
+  public void setView(int viewMode){
+
+    if (viewMode == 2){
+      // println("set position 2");
+      PVector p1 = cellUnit.p1;
+      PVector p2 = cellUnit.p2;
+      PVector start = new PVector((p2.x-p1.x)/2+p1.x, (p2.y-p1.y)/2 + p1.y, -10);
+      cellUnit.position.set(start);
+      cellUnit.scale.set(new PVector(1,1,1));
+
+      fullScreen = false;
+
+    } else {
+
+      cellUnit.position.set(new PVector(width/2,height/2));
+      cellUnit.scale.set(new PVector(3,3,3));
+      fullScreen = true;
+    }
 
   }
 
@@ -2563,13 +2720,17 @@ class Viewport3D{
 
   public void display(){
 
-cellUnit.display(true);
+    if (!fullScreen){
+      cellUnit.display(true);
+    } else {
+      cellUnit.displayFS();
+    }
 
   strokeWeight(1);
   stroke(34,155,215);
   strokeWeight(1);
 
-}
+  }
 
 }
 class Voxelator {
@@ -2637,7 +2798,6 @@ class Voxelator {
 
   public void toggleFillMode(){
 
-    println("toggleFillMode");
     if (fillMode == "SHELL"){
       fillMode = "SOLID";
     } else {
@@ -2724,12 +2884,12 @@ class Voxelator {
   public void updateUnit(){
 
 
-    println("updateUnit");
+    // println("updateUnit");
     if (fillMode == "SHELL"){
-      println("fill shell");
+      // println("fill shell");
       updateShell();
     } else {
-      println("fill solid");
+      // println("fill solid");
       updateSolid();
     }
   }
@@ -2742,32 +2902,36 @@ class Voxelator {
 
       int voxXY = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
       int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
-      float layer = 0.33f;
       int z = PApplet.parseInt(voxZ*layer);
 
 
-      println("Voxelator Width = " + voxXY + "," + voxXY);
+      // println("Voxelator Width = " + voxXY + "," + voxXY);
+      // println("Voxelator Size = " + size.x + "," + size.y);
+
       PGraphics temp = createGraphics(voxXY,voxXY);
 
-      int white = color(255);
+      int white = color(255,255);
 
       temp.beginDraw();
-      temp.background(34,155,215);
+      temp.background(0);
 
+      boolean invertLayer = true;
 
+      if (layer > 0.5f){ invertLayer = false;} // we gotta make this one smarter
 
       // println(pointCloud)
 
       for (int i = 0; i < pointCloud.getVertexCount(); i++) {
         PVector v = pointCloud.getVertex(i);
-        temp.set(PApplet.parseInt(v.x),PApplet.parseInt(v.y), white);
-        // if (v.z == z){
-        //   temp.set(int(v.x),int(v.y), white);
-        // }
+
+        if (invertLayer){ if (v.z + voxZ/2 < z){temp.set(PApplet.parseInt(v.x+voxXY/2),PApplet.parseInt(v.y+voxXY/2), white);}
+        } else { if (v.z + voxZ/2 > z){temp.set(PApplet.parseInt(v.x+voxXY/2),PApplet.parseInt(v.y+voxXY/2), white);}
+        }
+
       }
       temp.endDraw();
       currentLayer = temp.get();
-      // cburrentLayer.resize(int(size.x),int(size.y));
+      currentLayer.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
     }
 
   }
@@ -2781,7 +2945,7 @@ class Voxelator {
 
   public void updateArray(){
 
-    println("get depth texture");
+    // println("get depth texture");
     PImage img = depthArray.parent.get();
     PImage shape = alphaGlobe.parent.get();
 
@@ -2807,7 +2971,6 @@ class Voxelator {
         pg.pixels[k] = color(255);
       } else {
       pg.pixels[k] = color(0);
-
       }
     }
 

@@ -21,8 +21,8 @@ class Viewport2D {
 
     // thumb.invertTexture(); // this is the selected thumb here we should update the channel & child..
 
-    m.currentR1.invertTexture();
-    m.currentR2.invertTexture();
+    if (m.currentR1 != null ){ m.currentR1.invertTexture();}
+    if (m.currentR2 != null ){ m.currentR2.invertTexture();}
 
     image = null;
     // update();
