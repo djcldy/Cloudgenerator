@@ -7,6 +7,8 @@ class Controller {
 
   PApplet app;
 
+  int currentRow = 1;
+
   // can get rid of this ?
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
   ArrayList<UnitCell> unitCells = new ArrayList<UnitCell>();
@@ -39,11 +41,18 @@ class Controller {
      zoneE = new Zone(col5, row0, col10, row4);
 
 
+     PVector dimGlobe = new PVector(width/6-os-os/2, width/6-os-os/2);
+    // shaper = new Thumb(app, null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
+
+    zoneF = new Zone(width/2+width/6+os,row5,width/2+width/6+os+dimGlobe.x,row5+dimGlobe.y);
+
+
     zones.add(zoneA);
     zones.add(zoneB);
     zones.add(zoneC);
     zones.add(zoneD);
      zones.add(zoneE);
+     zones.add(zoneF); // shaper tool
 
   }
 
@@ -137,13 +146,10 @@ class Controller {
 
 
 boolean checkR1(ArrayList<Thumb> _thumbs,  PVector ms){
-
   boolean regen = true;   // R1 is the channel level of thumbs
 
   for (Thumb th : _thumbs) {
-
      boolean b1 = th.isSelected;
-
       if (th.checkSelected(ms)) {
         if (!b1){
           m.currentR1 = th;
@@ -155,19 +161,25 @@ boolean checkR1(ArrayList<Thumb> _thumbs,  PVector ms){
 
   }
 
+  if (regen){ currentRow = 1; }
   return regen;
 }
 
 void checkR2(Thumb th,  PVector ms){
         m.currentR2 = th.checkSelectedChildren();
         vp.set(m.currentR2);
+        currentRow = 2;
+
 }
 
 void checkR3(PVector _ms){
 
   for (UnitCell cell : unitCells){
-    if (cell.checkSelected(_ms)){
-      thread("RESETUNITCELL");
+    if (cell.checkSelected(_ms)) {
+      if (cell.pc != null){
+        v.vp3D.setCellUnit(cell.pc);
+        // v.vp3Darray.setCellArray(cell.pc);
+      }
     }
   }
 
@@ -184,6 +196,7 @@ boolean unitSelect(PVector ms){
         if (m.currentR1 != null){checkR2(m.currentR1, ms);}
     } else if (zoneC.isSelected(ms)) {
        checkR3(ms);
+       regen = false;
     }
     return regen;
   }
@@ -194,7 +207,6 @@ boolean unitSelect(PVector ms){
       if (unitSelect(ms)){
         thread("RESETUNITCELL");
       }
-      // thread("RESETUNITCELL");
     }
   }
 }

@@ -44,7 +44,7 @@ class Thumb {
 
   void invertTexture(){
 
-    prinltn("invert texture");
+    println("invert texture");
 
     isInverted = !isInverted;
     if (isInverted){
@@ -86,8 +86,18 @@ class Thumb {
   void resetChild(Thumb _child){
 
     parent = _child.parent.get();
+
+    parentA = _child.parentA.get();
+    parentB = _child.parentB.get();
+
     texture = parent.get();
     texture.resize(int(size.x),int(size.y));
+
+    textureA = parentA.get();
+    textureA.resize(int(size.x), int(size.y));
+
+    textureB = texture;
+
 
     map = _child.map;
     mode = _child.mode;

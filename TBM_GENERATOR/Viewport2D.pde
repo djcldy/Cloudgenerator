@@ -17,9 +17,15 @@ class Viewport2D {
 
   }
 
-  void invertTexture(){
-    thumb.invertTexture();
-    update();
+  void invertTexture(int currentRow){
+
+    // thumb.invertTexture(); // this is the selected thumb here we should update the channel & child..
+
+    m.currentR1.invertTexture();
+    m.currentR2.invertTexture();
+
+    image = null;
+    // update();
     // set(thumb);
   }
 
@@ -44,9 +50,13 @@ class Viewport2D {
 
   void update(){
     // println("update 2d: " + thumb.name + "," + thumb.parent);
-    if (thumb.texture != null){
-      image = thumb.parent.get();
-      image.resize(int(size.x), int(size.y));
+    if (thumb.parent != null){
+      PGraphics temp  = createGraphics(int(size.x), int(size.y));
+      temp.beginDraw();
+      temp.image(thumb.parent, 0,0,int(size.x),int(size.y));
+      temp.endDraw();
+      image = temp.get();
+
     }
   }
 

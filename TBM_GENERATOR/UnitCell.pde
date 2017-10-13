@@ -1,7 +1,7 @@
 class UnitCell {
 
   // Thumb depth, alpha, mater;
-  PShape pc;
+  PShape pc = null;
   PVector loc, size;
 
   boolean isSelected = false;

@@ -259,7 +259,7 @@ void Shell(){
 
 
 void INVERTTEXTURE(){ // inverts the color of the texture
- c.v.vp2D.invertTexture();
+ c.v.vp2D.invertTexture(c.currentRow);
  RESETUNITCELL();
 }
 
@@ -607,7 +607,7 @@ void RESETUNITCELL() {
 
   boxCloud.endShape();
   c.v.vp3D.setCellUnit(boxCloud);
-  c.v.vp3Darray.setCellArray(boxCloud);
+  // c.v.vp3Darray.setCellArray(boxCloud);
   c.setCurrentUC(boxCloud);
     c.m.vox.update();
 }

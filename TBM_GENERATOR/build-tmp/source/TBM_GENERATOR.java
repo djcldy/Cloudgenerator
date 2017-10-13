@@ -282,7 +282,7 @@ public void Shell(){
 
 
 public void INVERTTEXTURE(){ // inverts the color of the texture
- c.v.vp2D.invertTexture();
+ c.v.vp2D.invertTexture(c.currentRow);
  RESETUNITCELL();
 }
 
@@ -630,7 +630,7 @@ public void RESETUNITCELL() {
 
   boxCloud.endShape();
   c.v.vp3D.setCellUnit(boxCloud);
-  c.v.vp3Darray.setCellArray(boxCloud);
+  // c.v.vp3Darray.setCellArray(boxCloud);
   c.setCurrentUC(boxCloud);
     c.m.vox.update();
 }
@@ -775,6 +775,8 @@ class Controller {
 
   PApplet app;
 
+  int currentRow = 1;
+
   // can get rid of this ?
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
   ArrayList<UnitCell> unitCells = new ArrayList<UnitCell>();
@@ -807,11 +809,18 @@ class Controller {
      zoneE = new Zone(col5, row0, col10, row4);
 
 
+     PVector dimGlobe = new PVector(width/6-os-os/2, width/6-os-os/2);
+    // shaper = new Thumb(app, null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
+
+    zoneF = new Zone(width/2+width/6+os,row5,width/2+width/6+os+dimGlobe.x,row5+dimGlobe.y);
+
+
     zones.add(zoneA);
     zones.add(zoneB);
     zones.add(zoneC);
     zones.add(zoneD);
      zones.add(zoneE);
+     zones.add(zoneF); // shaper tool
 
   }
 
@@ -905,13 +914,10 @@ class Controller {
 
 
 public boolean checkR1(ArrayList<Thumb> _thumbs,  PVector ms){
-
   boolean regen = true;   // R1 is the channel level of thumbs
 
   for (Thumb th : _thumbs) {
-
      boolean b1 = th.isSelected;
-
       if (th.checkSelected(ms)) {
         if (!b1){
           m.currentR1 = th;
@@ -923,19 +929,25 @@ public boolean checkR1(ArrayList<Thumb> _thumbs,  PVector ms){
 
   }
 
+  if (regen){ currentRow = 1; }
   return regen;
 }
 
 public void checkR2(Thumb th,  PVector ms){
         m.currentR2 = th.checkSelectedChildren();
         vp.set(m.currentR2);
+        currentRow = 2;
+
 }
 
 public void checkR3(PVector _ms){
 
   for (UnitCell cell : unitCells){
-    if (cell.checkSelected(_ms)){
-      thread("RESETUNITCELL");
+    if (cell.checkSelected(_ms)) {
+      if (cell.pc != null){
+        v.vp3D.setCellUnit(cell.pc);
+        // v.vp3Darray.setCellArray(cell.pc);
+      }
     }
   }
 
@@ -952,6 +964,7 @@ public boolean unitSelect(PVector ms){
         if (m.currentR1 != null){checkR2(m.currentR1, ms);}
     } else if (zoneC.isSelected(ms)) {
        checkR3(ms);
+       regen = false;
     }
     return regen;
   }
@@ -962,7 +975,6 @@ public boolean unitSelect(PVector ms){
       if (unitSelect(ms)){
         thread("RESETUNITCELL");
       }
-      // thread("RESETUNITCELL");
     }
   }
 }
@@ -1088,7 +1100,7 @@ class Model {
   PImage slice;
   PGraphics pg;
   PointCloud pointCloud;
-  Shape shaper;
+  Thumb shaper;
   PApplet app;
 
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
@@ -1208,12 +1220,16 @@ class Model {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-    PVector dimGlobe = new PVector(width/6-os-os/2, width/6-os-os/2);
 
      // depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
      // materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
      // alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe, "global/alpha");
-     shaper = new Shape(app,null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
+     // shaper = new Shape(app,null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
+
+
+    PVector dimGlobe = new PVector(width/6-os-os/2, width/6-os-os/2);
+    shaper = new Thumb(app, null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
+
     // thumbsGlobal.add(depthGlb);
     // thumbsGlobal.add(materGlb);
     // thumbsGlobal.add(alphaGlb);
@@ -1747,7 +1763,7 @@ class Thumb {
 
   public void invertTexture(){
 
-    prinltn("invert texture");
+    println("invert texture");
 
     isInverted = !isInverted;
     if (isInverted){
@@ -1789,8 +1805,18 @@ class Thumb {
   public void resetChild(Thumb _child){
 
     parent = _child.parent.get();
+
+    parentA = _child.parentA.get();
+    parentB = _child.parentB.get();
+
     texture = parent.get();
     texture.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+
+    textureA = parentA.get();
+    textureA.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
+
+    textureB = texture;
+
 
     map = _child.map;
     mode = _child.mode;
@@ -2081,7 +2107,7 @@ PVector start,end;
 class UnitCell {
 
   // Thumb depth, alpha, mater;
-  PShape pc;
+  PShape pc = null;
   PVector loc, size;
 
   boolean isSelected = false;
@@ -2402,9 +2428,15 @@ class Viewport2D {
 
   }
 
-  public void invertTexture(){
-    thumb.invertTexture();
-    update();
+  public void invertTexture(int currentRow){
+
+    // thumb.invertTexture(); // this is the selected thumb here we should update the channel & child..
+
+    m.currentR1.invertTexture();
+    m.currentR2.invertTexture();
+
+    image = null;
+    // update();
     // set(thumb);
   }
 
@@ -2429,9 +2461,13 @@ class Viewport2D {
 
   public void update(){
     // println("update 2d: " + thumb.name + "," + thumb.parent);
-    if (thumb.texture != null){
-      image = thumb.parent.get();
-      image.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
+    if (thumb.parent != null){
+      PGraphics temp  = createGraphics(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
+      temp.beginDraw();
+      temp.image(thumb.parent, 0,0,PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+      temp.endDraw();
+      image = temp.get();
+
     }
   }
 
@@ -2908,13 +2944,13 @@ class Zone {
 
   public void display(PVector pt){
 
-    stroke(255,25);
-    strokeWeight(3);
-
+    stroke(34,155,215,200);
+    strokeWeight(5);
     noFill();
 
     if (isSelected(pt)){      rect(a.x,a.y,dim.x,dim.y);}
 
+    strokeWeight(1);
   }
 
 

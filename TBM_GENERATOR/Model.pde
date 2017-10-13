@@ -5,7 +5,7 @@ class Model {
   PImage slice;
   PGraphics pg;
   PointCloud pointCloud;
-  Shape shaper;
+  Thumb shaper;
   PApplet app;
 
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
@@ -125,12 +125,16 @@ class Model {
     PVector dimVox = new PVector(width/6-os,width/6-os);
     PVector dimThumbView = new PVector(bW,bW);
 
-    PVector dimGlobe = new PVector(width/6-os-os/2, width/6-os-os/2);
 
      // depthGlb = new Thumb(app,"/textures/global/depth/blank.png",   new PVector(os,y4),   dimThumb, "global/depth");
      // materGlb = new Thumb(app,"/textures/global/mater/blank.png", new PVector(os+tW,y4),   dimThumb, "global/mater");
      // alphaGlb = new Thumb(app,"/textures/global/alpha/blank.png",new PVector(width/2+ width/6+os, row5),  dimGlobe, "global/alpha");
-     shaper = new Shape(app,null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
+     // shaper = new Shape(app,null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
+
+
+    PVector dimGlobe = new PVector(width/6-os-os/2, width/6-os-os/2);
+    shaper = new Thumb(app, null,new PVector(width/2+ width/6+os, row5),  dimGlobe, "DEFAULT");
+
     // thumbsGlobal.add(depthGlb);
     // thumbsGlobal.add(materGlb);
     // thumbsGlobal.add(alphaGlb);
