@@ -1,7 +1,9 @@
 class Thumb {
+
+
   boolean loaded = false;
   PGraphics map;
-  PImage texture, parent, textureA, parentA, textureB, parentB;
+  PImage texture, parent, textureA, parentA, textureB, parentB, texMap;
   String path, name, mode;
   PVector loc, size;
   boolean isSelected = false;
@@ -13,9 +15,6 @@ class Thumb {
   int scroll = 0;
   boolean fsaddfdasgsad;
   boolean isInverted = false;
-
-
-
 
 
   Thumb(PApplet _app, String _path, PVector _loc, PVector _size, String _name, String _mode) {
@@ -58,6 +57,19 @@ class Thumb {
   }
 
 
+
+  PImage getMap(int dim){
+    PGraphics temp;
+    if (texMap != null){
+      if (texMap.width != dim){texMap.resize(dim,dim);}
+    } else {
+      texMap = parent.get();
+      texMap.resize(dim,dim);
+    }
+    return texMap;
+  }
+
+
   void reset(String _path, PVector _loc){
  // /("reset: " + _path + "," + size);
  if (mode != "DEFAULT"){
@@ -86,18 +98,14 @@ class Thumb {
   void resetChild(Thumb _child){
 
     parent = _child.parent.get();
-
     parentA = _child.parentA.get();
     parentB = _child.parentB.get();
-
     texture = parent.get();
     texture.resize(int(size.x),int(size.y));
-
     textureA = parentA.get();
     textureA.resize(int(size.x), int(size.y));
-
     textureB = texture;
-
+    texMap = null;
 
     map = _child.map;
     mode = _child.mode;
@@ -274,11 +282,6 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
   }
   void display() {
 
-
-
-        // println("isnt ready:" + isMater + " " + name);
-        // println("fsaddfdasgsad = " + name + " " + fsaddfdasgsad);
-
     if (loaded == false){
       if (it.isReady){
         // println("it is ready");
@@ -287,15 +290,15 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           // println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
-          // parentA = it.parentA;
-          // textureA = it.parentA;
-          // parentB = parent;
-          // textureB = texture;
+          parentA = it.parentA;
+          textureA = it.parentA;
+          parentB = parent;
+          textureB = texture;
 
-          parentA    = null;
-          textureA  = null;
-          parentB   = null;
-          textureB  = null;
+          // parentA    = null;
+          // textureA  = null;
+          // parentB   = null;
+          // textureB  = null;
 
           map = null;
 
@@ -305,19 +308,17 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           texture = parent.get();
           texture.resize(int(size.x), int(size.y));
           // texture = normalize(it.texture);//
-/*
+
           parentA = it.parentA;
           textureA = parentA.get();
           textureA.resize(int(size.x),int(size.y));
           parentB = parent;
           textureB = texture;
 
-*/
-
-          parentA    = null;
-          textureA  = null;
-          parentB   = null;
-          textureB  = null;
+          // parentA    = null;
+          // textureA  = null;
+          // parentB   = null;
+          // textureB  = null;
 
           // textureA = normalize(it.texture)
           map = null;
@@ -350,7 +351,5 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
       stroke(255, 100);
       rect(loc.x, loc.y, size.x, size.y); // Left
     }
-
-
   }
 }

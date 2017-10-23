@@ -27,6 +27,8 @@ public class TBM_GENERATOR extends PApplet {
 // 3DJ Texture Generator for the Stratasys J-1750 Voxel Print Technology
 // Create multi-material, procedural micro-structures & textures for 3D printing
 // import libraries
+// Max file size 2.5 Gb
+
 
 
 
@@ -39,6 +41,8 @@ ControlP5 cp5;
 ControlP5 cp5View;
 
 
+// surboard dimension = 170 mm x 170 mm x 9 mm
+
 public Controller c;
 
 
@@ -47,9 +51,11 @@ public float layerHeight = .030f; // cm
 public float voxW = 0.040f; // cm
 public float voxH = 0.040f; // cm
 
-public float DimXY = 10;
+public float DimXY = 20;
 // public float DimY = 10;
 public float DimZ = 3;
+public ArrayList<PVector> vertexColors;
+// public ArrayList<color> vertexColors = new ArrayList<color>();
 
 boolean SpinX = true;
 boolean SpinY = true;
@@ -61,26 +67,28 @@ CheckBox checkbox;
 
 ///////////
 float Intersection = 0;
-
-
 /////////////////// these may be obsolete
 float Amplitude = 10; // cm
 float Thickness = 10;
 float Current = 0.5f;
-
-
+////////////////////////////////////////
 int LayersY =1;
 int LayersX =1;
 int LayersZ =1;
-
-
-//
+///////////////////////////////////////////////
 PImage exportDepth;
 boolean isSetup = true;
 PWindow win;
-
-
+/////////////////////////////////////////////////
 int step = 0;
+/////////////////////////////////////////////////
+    int Cyan    = color(0,89,158);
+    int Magenta = color(161,35,99);
+    int Yellow  = color (213, 178, 0);
+    int Black   = color(30,30,30);
+    int White   = color(220,222,216);
+//
+
 
 public void setup() {
 
@@ -89,8 +97,7 @@ public void setup() {
   init();
   float time02 = PApplet.parseFloat(millis());
   float elapsedTime = time02 - time01;
-  println("setup completed after " + elapsedTime/1000 + " s.");
-
+  println("setup completed after " + elapsedTime/1000 + " s."); //MIN: 0.548s  MAX: 0.637s
 
 }
 
@@ -120,7 +127,6 @@ public void init(){
   setConst();
   initControl();
   setInterface(); // these are all of the buttons ect.
-  initViewport();
   isSetup = false;
   initGeo();
   // win = new PWindow();
@@ -134,10 +140,6 @@ public void initControl(){
   c.m.vox.layer = Current;
   c.m.vox.update();
 }
-
-public void initViewport(){
-}
-
 
 public void initGeo(){
   // thread("RESETUNITCELL"); //
@@ -176,13 +178,8 @@ public void Intersection(float value){
   }
 }
 
-public void R2() {
- if (c.v.vp3D.mode == "UNIT"){ c.m.currentThumb.setChildren(1);}
-}
-
-public void L2(){
-if (c.v.vp3D.mode == "UNIT"){c.m.currentThumb.setChildren(-1);}
-}
+public void R2() { if (c.v.vp3D.mode == "UNIT"){ c.m.currentThumb.setChildren(1);}}
+public void L2(){if (c.v.vp3D.mode == "UNIT"){c.m.currentThumb.setChildren(-1);}}
 
 
 public void togglecell() {
@@ -192,18 +189,11 @@ public void togglecell() {
   }
 }
 
-
-public void checkBox(float[] a) {
-  println(a); // these are the toggles
-  c.m.points = c.m.resetPC(3, a); // we will have to multi thread this bitch
-}
-
-
 public void Export() {
 
   if (!isSetup){
-    exportDepth = c.m.vox.depth.texture.get();
-    export();
+    // exportDepth = c.m.vox.depth.texture.get();
+    c.m.vox.exportStack();
   }
 }
 
@@ -255,12 +245,7 @@ public void SPIN(){
   c.v.vp3D.toggleSpin();
 }
 
-public void Invert(){
-
-
- thread("INVERTTEXTURE");
- // thread("RESETUNITCELL");
-}
+public void Invert(){ if (!isSetup){ thread("INVERTTEXTURE");}}
 
 
 public void Shell(){
@@ -271,7 +256,7 @@ public void Shell(){
 }
 
 public void VIEWMODE(){
-  c.v.toggleMode();
+  if (!isSetup){c.v.toggleMode();}
 }
 
 
@@ -282,107 +267,24 @@ public void INVERTTEXTURE(){ // inverts the color of the texture
 
 public void initButtons(){
 
-  int bW = PApplet.parseInt((width/4 - width/32)/4);
-  int bH = PApplet.parseInt(height/16 - os);
-
-  cp5View.addButton("VIEWMODE")
-     .setPosition(PApplet.parseInt(os), 0)
-     .setSize(PApplet.parseInt(2*os), PApplet.parseInt(os))
-     // .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
+  addButton(cp5View, "VIEWMODE", os, 0, PApplet.parseInt(2*os), PApplet.parseInt(os));
+  addButton(cp5,"Invert", os,row1+os, PApplet.parseInt(2*os), PApplet.parseInt(os));
+  addButton(cp5,"LEFT", col3,row5-os, PApplet.parseInt(os), PApplet.parseInt(os));
+  addButton(cp5,"RIGHT", col3+os,row5-os, PApplet.parseInt(os), PApplet.parseInt(os));
+  addButton(cp5,"AXO", col3+2*os,row5-os, PApplet.parseInt(os), PApplet.parseInt(os));
+  addButton(cp5,"Export", col8,row8, PApplet.parseInt(width/6), PApplet.parseInt(os));
 
 
+}
 
-  cp5.addButton("Invert")
-    .setValue(0)
-     .setPosition(os, row1 + os)
-     .setSize(PApplet.parseInt(2*os), PApplet.parseInt(os))
-    ;
+public void initToggles(){
 
-  // cp5.addToggle("Invert")
-  //    .setPosition(os, row1 + os)
-  //    .setSize(int(os), int(os/4))
-  //    .setValue(true)
-  //    // .setMode(ControlP5.SWITCH)
-  //    ;
+  addToggle(cp5,"Shell", col8,row10,PApplet.parseInt(os), PApplet.parseInt(os/4));
+  addToggle(cp5,"SpinX", col3+os,row5-2*os,PApplet.parseInt(os), PApplet.parseInt(os/4));
+  addToggle(cp5,"SpinY", col3+2*os,row5-2*os,PApplet.parseInt(os), PApplet.parseInt(os/4));
+  addToggle(cp5,"SpinZ", col3+4*os,row5-2*os,PApplet.parseInt(os), PApplet.parseInt(os/4));
+  addToggle(cp5,"ToggleCell", width/2 + os, yA + os/2,PApplet.parseInt(os), PApplet.parseInt(os/4));
 
-  cp5.addToggle("Shell")
-     .setPosition(col8, row10)
-     .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
-
-
-  cp5.addToggle("SpinX")
-     .setPosition(width/4+os, row5-2*os)
-     .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
-
-  cp5.addToggle("SpinY")
-     .setPosition(width/4 + 3*os, row5-2*os)
-     .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
-
-  cp5.addToggle("SpinZ")
-     .setPosition(width/4 + 5*os, row5-2*os)
-     .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
-
-
-       cp5.addToggle("toggleCell")
-     .setPosition(width/2 + os, yA+os/2)
-     .setSize(PApplet.parseInt(os), PApplet.parseInt(os/4))
-     .setValue(true)
-     .setMode(ControlP5.SWITCH)
-     ;
-  // cp5.addButton("TOP")
-  //   .setValue(0)
-
-
-
-  // int y4 = int(height/16+width/64+ width/4 - width/32);
-
-  // cp5.addButton("R1")
-  //   .setValue(0)
-  //   .setPosition(width/4-os, y4)
-  //   .setSize(int(os), int(tWidth))
-  //   ;
-
-  // cp5.addButton("R2")
-  //   .setValue(0)
-  //   .setPosition(width/4-os, y4 + tWidth + os)
-  //   .setSize(int(os), int(tWidth))
-  //   ;
-
-  // y4 = width/2;
-
-  cp5.addButton("LEFT")
-    .setValue(0)
-    .setPosition(col3, row5-os)
-    .setSize(PApplet.parseInt(os), PApplet.parseInt(os))
-    ;
-
-
-  cp5.addButton("RIGHT")
-    .setValue(0)
-    .setPosition(col3 + os,row5-os)
-    .setSize(PApplet.parseInt(os), PApplet.parseInt(os))
-    ;
-
-
-  cp5.addButton("AXO")
-    .setValue(0)
-    .setPosition(col3 + 2*os, row5-os)
-    .setSize(PApplet.parseInt(os), PApplet.parseInt(os))
-    ;
 }
 
 public void LEFT(){
@@ -412,7 +314,7 @@ public void setInterface(){
 
   initButtons();
   initSlider();
-
+  initToggles();
 }
 
 public void LayersX(int value){
@@ -439,18 +341,19 @@ public void initSlider() {
 
   int len = width/9;
 
+
   cp5.addSlider("DimXY")
     .setPosition(xE, row5+ 25)
     .setWidth(len)
-    .setValue(10)
-    .setRange(1, 50) // mm?
+    .setValue(20)
+    .setRange(1, 200) // mm?
     ;
 
   cp5.addSlider("DimZ")
     .setPosition(xE, row5+ 75)
     .setWidth(len)
-    .setValue(10)
-    .setRange(1, 50) // mm
+    .setValue(3)
+    .setRange(1, 25) // mm
     ;
 
 
@@ -507,57 +410,99 @@ public void Current(float value) {
 
 
 public void Thickness(float value) {
-
-  c.m.vox.thickness = value;
-  c.v.thickness = value;
-  c.m.vox.update();
-}
-
-
-public void dropdown(int n) {
-
-  CColor c = new CColor();
-  c.setBackground(color(255, 0, 0));
-  cp5.get(ScrollableList.class, "dropdown").getItem(n).put("color", c);
+  if (!isSetup){  //
+    c.m.vox.thickness = value;
+    c.v.thickness = value;
+    c.m.vox.update();
+  }
 }
 
 
 
+public PVector reprameterize(PImage depth, PImage alpha){
+
+  PVector range = new PVector(255,0);
+
+    for (int x = 0; x     <   depth.width; x += 5) {
+      for (int y = 0; y   <   depth.height; y+= 5) {
+      float value1 = brightness((alpha.get(x,y)));
+      float value2 =  brightness((depth.get(x,y)));
+        if (value1 > 0){
+          if (value2 > range.y){range.y = value2;}
+          else if (value2 < range.x){range.x = value2;}
+        }
+      }
+    }
+
+    return range;
+}
+
+
+
+
+
+
+  public int translate(int c){
+
+    // color col = color(100,100,100);
+
+    float r0 = red(c)/255;
+    float g0 = green(c)/255;
+    float b0 = blue(c)/255;
+
+    float k = 1 - max(r0,g0,b0); // return maximum?
+    float cy = (1 - r0 -k)/(1-k);
+    float mg = (1 - g0 -k)/(1-k);
+    float ye = (1 - b0 -k)/(1-k);
+
+    float sum = k + cy + mg+ ye;
+    float rnd = random(0,sum);
+
+    if ((rnd > 0) && (rnd < k)){
+      if (k > 0.5f){
+        return Black;
+      } else {
+        return White;
+      }
+    } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
+    } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
+    } else if (( rnd > k + cy + ye)){ return Magenta;}
+
+    return White;
+  }
 
 public void RESETUNITCELL() {
 
+
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
   // REFACTOR THIS CODE...
+  // note to self, scaling only important  for the voxel exportd
 
-  println("reset unitcell");
-  int voxX = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
-  int voxY = PApplet.parseInt(DimXY/0.040f); //  num voxels in Y
-  int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
-
-  float inter = Intersection;
-
-  PImage depthChannel = c.m.depth.texture.get();
-  PImage alphaChannel = c.m.alpha.texture.get();
-  PImage materChannel = c.m.mater.texture.get();
+  float time01 = PApplet.parseFloat(millis());
 
   ArrayList<PVector> vertexCols = new ArrayList<PVector>();
-  depthChannel.resize(voxX,voxY);
-  alphaChannel.resize(voxX,voxY);
-  materChannel.resize(voxX,voxY);
 
-   depthChannel.loadPixels();
-   alphaChannel.loadPixels();
-   materChannel.loadPixels();
+  int voxX = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
+  int voxY = PApplet.parseInt(DimXY/0.040f); //  num voxels in Y
+  int voxZ = PApplet.parseInt(DimZ/0.027f); //  num voxels in Z each voxel layer is 0.027mm
 
-    PShape boxCloud = createShape();
-    boxCloud.beginShape(POINTS);
-    boxCloud.stroke(255,150);
-    boxCloud.strokeWeight(1);
+  float maxVoxels = 200000;
+  float test = LayersZ*(PApplet.parseFloat(voxX)*PApplet.parseFloat(voxY))/maxVoxels;
 
-    ArrayList<PVector> temp = new ArrayList<PVector>();
+  int res =  PApplet.parseInt(test);
 
-    int res = 1;
-    float rangeLo = 255*inter;
+  if (test<1){res=1;}
+  // int res = 1;
+
+  // int res = 1;
+  float sumVoxels = PApplet.parseFloat(voxX)*PApplet.parseFloat(voxY)*2*(1/PApplet.parseFloat(res));
+
+   // depth channel and reset it
+  PImage depthChannel = c.m.depth.getMap(voxX); //
+  PImage alphaChannel = c.m.alpha.getMap(voxX); //
+  PImage materChannel = c.m.mater.getMap(voxX); //
+
+    float rangeLo = 255*Intersection;
     float rangeHi = 255 - rangeLo;
 
     int levels = LayersZ;
@@ -565,28 +510,20 @@ public void RESETUNITCELL() {
     float layerVoxels = voxZ/levels;
     boolean invert = false;
 
-    float max = 0;
-    float min = 255;
-
-    // get Pixel range
-    for (int x = 0; x < depthChannel.width; x += 5) {
-      for (int y = 0; y < depthChannel.height; y+= 5) {
-
-      float value1 = brightness((alphaChannel.get(x,y)));
-      float value2 =  brightness((depthChannel.get(x,y)));
-
-        if (value1 > 0){
-          if (value2 > max){max = value2;}
-          else if (value2 < min){min = value2;}
-
-        }
-      }
-    }
+    PVector range = reprameterize(depthChannel,alphaChannel);  //
+    float max = range.y;
+    float min = range.x;
 
 
+    PShape boxCloud = createShape();
+    boxCloud.beginShape(POINTS);
+    boxCloud.stroke(255,150);
+    boxCloud.strokeWeight(1);
 
-  for (int z = 0; z < levels; z++){
-    for (int x = 0; x < depthChannel.width; x += res) {
+    vertexColors = new ArrayList<PVector>();
+
+    for (int z = 0; z < levels; z++){
+      for (int x = 0; x < depthChannel.width; x += res) {
       for (int y = 0; y < depthChannel.height; y+= res) {
         float alph = brightness((alphaChannel.get(x,y)));
 
@@ -595,14 +532,21 @@ public void RESETUNITCELL() {
            val =  (val-min)*(255/max);
            int c = materChannel.get(x,y);
 
+           // if (random(0,1) > 0.99){ translate(c); }
+
            if (val > rangeHi )  { val = rangeHi;    }
            if (val < rangeLo) { val = rangeLo;  }
            if (invert){val = 255-val;}
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
+           c = translate(c);
+
            PVector col  = new PVector(red(c),green(c), blue(c));
-           vertexCols.add(col);
+
+           vertexColors.add(col);
+
+           // vertexCols.add(col);
 
            boxCloud.stroke(col.x, col.y, col.z, 150);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
@@ -615,17 +559,15 @@ public void RESETUNITCELL() {
     }
 
     boxCloud.endShape();
+    c.updateShape(boxCloud);
 
 
-    c.v.vp3D.setCellUnit(boxCloud);
-  // c.v.vp3Darray.setCellArray(boxCloud);
-    c.setCurrentUC(boxCloud);
-    c.m.vox.pointCloud = boxCloud;
-    c.m.vox.update();
-    PShape d = copyPS(boxCloud,vertexCols);
+  float time02 = PApplet.parseFloat(millis());
+  float elapsedTime = time02 - time01;
+  println("reset unitcell completed after " + elapsedTime/1000 + " s."); //MIN: 0.004s  MAX: 0.219s
 
-    // win.setPointCloud(d);
 }
+
 
 
  public PShape copyPS(PShape s, ArrayList<PVector> vertexCols){
@@ -852,6 +794,12 @@ class Controller {
     Thumb mater = new Thumb(app,"/textures/array/mater/manta.png", new PVector(os+dimThumb.x,y4),   dimThumb, "unit/mater", "COLOR");
     Thumb alpha = new Thumb(app,"/textures/array/alpha/solid.png",    new PVector(os+2*dimThumb.x,y4),  dimThumb, "unit/alpha", "MONO");
 
+    int voxX = PApplet.parseInt(DimXY/0.040f);
+
+    // depth.getMap(voxX);
+    // mater.getMap(voxX);
+    // alpha.getMap(voxX);
+
     thumbs.add(depth);
     thumbs.add(mater);
     thumbs.add(alpha);
@@ -878,6 +826,13 @@ class Controller {
 
   }
 
+  public void updateShape(PShape ps){
+    v.vp3D.setCellUnit(ps);
+    // v.vp3D.setArrayUnit(ps);
+    setCurrentUC(ps);
+    m.vox.pointCloud = ps;
+    m.vox.update();
+  }
 
   public void initViewport(PVector _loc, PVector _size, Thumb _th){
     vp = new Viewport2D(_loc, _size, _th);
@@ -886,8 +841,9 @@ class Controller {
 
   public void update() {
 
-    PVector mouse = new PVector(mouseX, mouseY);
     v.display();
+
+    // PVector mouse = new PVector(mouseX, mouseY);
     // for  (Zone z: zones){ z.display(mouse);} // not necessary
 
   }
@@ -975,8 +931,10 @@ public boolean unitSelect(PVector ms){
 
     if (zoneA.isSelected(ms)){
         regen = checkR1(m.thumbs, ms);
+        m.vox.updateChannel();
     } else if (zoneB.isSelected(ms)){
         if (m.currentR1 != null){checkR2(m.currentR1, ms);}
+        m.vox.updateChannel();
     } else if (zoneC.isSelected(ms)) {
        checkR3(ms);
        regen = false;
@@ -992,6 +950,136 @@ public boolean unitSelect(PVector ms){
       }
     }
   }
+}
+
+
+class VoxelLayer implements Runnable {
+
+
+  Thread thread;
+  boolean drawNew = false;
+  boolean isReady = false;
+
+  PImage imgExport, imgVisual;
+  PImage displayLayer;
+  PImage dC, aC, mC;
+  int pauseTime, dimXY;
+  boolean invert;
+  float ratio;
+
+  VoxelLayer (PApplet parent, float _ratio, boolean _invert, PImage depthChannel, PImage alphaChannel, PImage materChannel, int dim) {
+
+    ratio = _ratio;
+    invert = _invert;
+    dC = depthChannel;
+    aC = alphaChannel;
+    mC = materChannel;
+    dimXY = dim;
+
+  }
+
+
+
+
+  public void start() {
+    thread = new Thread(this);
+    thread.start();
+  }
+
+  public void stop()
+  {
+    thread = null;
+  }
+
+  // this will magically be called by the parent once the user hits stop
+  // this functionality hasn't been tested heavily so if it doesn't work, file a bug
+  public void dispose() {
+    stop();
+  }
+  public void run() {
+    while (!isReady) { //
+
+      imgExport = getLayer(ratio,invert,dC,aC,mC);
+      imgVisual = imgExport.get();
+      imgVisual.resize(dimXY,dimXY);
+
+      try {
+        Thread.sleep(200);
+        isReady = true;
+      }
+      catch(InterruptedException e) {
+      }
+    }
+  }
+
+
+public PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+
+    int voxXY = PApplet.parseInt(DimXY/0.040f);
+
+    PGraphics temp = createGraphics(voxXY,voxXY);
+    temp.beginDraw();
+    temp.background(0);
+
+    for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+
+        if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+
+           float val = brightness(depthChannel.get(x, y));
+            int c = materChannel.get(x,y);
+            c = translatePo(c);
+            float pp = val/255;
+
+            if (invert){
+              if (pp >= ratio) { temp.set(PApplet.parseInt(x), PApplet.parseInt(y), c);} // below halfway
+            } else {
+              pp = 1 - pp;
+              if (pp < ratio) { temp.set(PApplet.parseInt(x), PApplet.parseInt(y), c);} // below halfway
+            }
+          }
+        }
+      }
+
+    temp.endDraw();
+    return temp;
+    }
+
+
+  public int translatePo(int c){
+
+    int Cyan    = color(0,89,158);
+    int Magenta = color(161,35,99);
+    int Yellow  = color (213, 178, 0);
+    int Black   = color(30,30,30);
+    int White   = color(220,222,216);
+
+    float r0 = red(c)/255;
+    float g0 = green(c)/255;
+    float b0 = blue(c)/255;
+
+    float k = 1 - max(r0,g0,b0); // return maximum?
+    float cy = (1 - r0 -k)/(1-k);
+    float mg = (1 - g0 -k)/(1-k);
+    float ye = (1 - b0 -k)/(1-k);
+
+    float sum = k + cy + mg+ ye;
+    float rnd = random(0,sum);
+
+    if ((rnd > 0) && (rnd < k)){
+      if (k > 0.5f){
+        return Black;
+      } else {
+        return White;
+      }
+    } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
+    } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
+    } else if (( rnd > k + cy + ye)){ return Magenta;}
+
+    return White;
+
+  }
+
+
 }
 
 
@@ -1266,7 +1354,7 @@ class Model {
   }
 
   public void initVoxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
-      vox = new Voxelator(_loc, _size,  _thumbs, _arrays, _globes);
+      vox = new Voxelator(app, _loc, _size,  _thumbs, _arrays, _globes);
 
   }
 
@@ -1697,6 +1785,26 @@ public void displayFS(){
 
 
 }
+// PUBLIC controls
+
+
+public void addButton(ControlP5 c, String name, float x, float y, int w, int h){
+
+  c.addButton(name)
+     .setPosition(x,y)
+     .setSize(w,h)
+     ;
+
+}
+
+public void addToggle(ControlP5 c, String name, float x, float y, int w, int h){
+  c.addToggle(name)
+     .setPosition(x,y)
+     .setSize(w,h)
+     .setValue(true)
+     .setMode(ControlP5.SWITCH)
+     ;
+}
 class Shape {
 
   ImageThread it;
@@ -1808,9 +1916,11 @@ class Shape {
   // }
 }
 class Thumb {
+
+
   boolean loaded = false;
   PGraphics map;
-  PImage texture, parent, textureA, parentA, textureB, parentB;
+  PImage texture, parent, textureA, parentA, textureB, parentB, texMap;
   String path, name, mode;
   PVector loc, size;
   boolean isSelected = false;
@@ -1822,9 +1932,6 @@ class Thumb {
   int scroll = 0;
   boolean fsaddfdasgsad;
   boolean isInverted = false;
-
-
-
 
 
   Thumb(PApplet _app, String _path, PVector _loc, PVector _size, String _name, String _mode) {
@@ -1867,6 +1974,19 @@ class Thumb {
   }
 
 
+
+  public PImage getMap(int dim){
+    PGraphics temp;
+    if (texMap != null){
+      if (texMap.width != dim){texMap.resize(dim,dim);}
+    } else {
+      texMap = parent.get();
+      texMap.resize(dim,dim);
+    }
+    return texMap;
+  }
+
+
   public void reset(String _path, PVector _loc){
  // /("reset: " + _path + "," + size);
  if (mode != "DEFAULT"){
@@ -1895,18 +2015,14 @@ class Thumb {
   public void resetChild(Thumb _child){
 
     parent = _child.parent.get();
-
     parentA = _child.parentA.get();
     parentB = _child.parentB.get();
-
     texture = parent.get();
     texture.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
-
     textureA = parentA.get();
     textureA.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
-
     textureB = texture;
-
+    texMap = null;
 
     map = _child.map;
     mode = _child.mode;
@@ -2083,11 +2199,6 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
   }
   public void display() {
 
-
-
-        // println("isnt ready:" + isMater + " " + name);
-        // println("fsaddfdasgsad = " + name + " " + fsaddfdasgsad);
-
     if (loaded == false){
       if (it.isReady){
         // println("it is ready");
@@ -2096,15 +2207,15 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           // println("multi-material");
           parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
-          // parentA = it.parentA;
-          // textureA = it.parentA;
-          // parentB = parent;
-          // textureB = texture;
+          parentA = it.parentA;
+          textureA = it.parentA;
+          parentB = parent;
+          textureB = texture;
 
-          parentA    = null;
-          textureA  = null;
-          parentB   = null;
-          textureB  = null;
+          // parentA    = null;
+          // textureA  = null;
+          // parentB   = null;
+          // textureB  = null;
 
           map = null;
 
@@ -2114,19 +2225,17 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
           texture = parent.get();
           texture.resize(PApplet.parseInt(size.x), PApplet.parseInt(size.y));
           // texture = normalize(it.texture);//
-/*
+
           parentA = it.parentA;
           textureA = parentA.get();
-          textureA.resize(int(size.x),int(size.y));
+          textureA.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
           parentB = parent;
           textureB = texture;
 
-*/
-
-          parentA    = null;
-          textureA  = null;
-          parentB   = null;
-          textureB  = null;
+          // parentA    = null;
+          // textureA  = null;
+          // parentB   = null;
+          // textureB  = null;
 
           // textureA = normalize(it.texture)
           map = null;
@@ -2159,8 +2268,6 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
       stroke(255, 100);
       rect(loc.x, loc.y, size.x, size.y); // Left
     }
-
-
   }
 }
 class TweenPoint{
@@ -2315,15 +2422,6 @@ class View {
     vp3D      = new Viewport3D(xC, yA, width/2 - os/2, y10+tWidth);
     vp3Darray = new Viewport3D(width/2 + os/2 , yA, width-os, y10+tWidth);
 
-    // vp3Darray = new Viewport3D(width/2+os/2,xA,width/6 +os,yF);
-
- // vp3Darray = new Viewport3D(width/4,height/4,width/2,height/2);
-
-  }
-
-  public void setCurrent() {
-    println("set current");
-    vox.getCurrentPC();
   }
 
   public void display() {
@@ -2335,7 +2433,9 @@ class View {
 
     } else {
 
+      // background(255);
       display3D();
+      // saveFrame("output2/line-######.jpg");
 
     }
 
@@ -2753,6 +2853,8 @@ class Viewport3D{
 class Voxelator {
 
   // PImage layer;
+
+  PApplet pApp;
   PVector loc, size;
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
   ArrayList<Thumb> arrays = new ArrayList<Thumb>();
@@ -2762,24 +2864,27 @@ class Voxelator {
   PImage currentLayer;
 
   float layer, thickness;
-
+  float dimX, dimY;
 
   PShape pointCloud;
-
-
-  float dimX, dimY;
 
   Thumb depth, alpha, mater;
   Thumb depthArray, alphaArray, materArray;
   Thumb depthGlobe, alphaGlobe, materGlobe;
+
+      PImage depthChannel, alphaChannel, materChannel;
 
   boolean loaded = false;
 
   String mode = "UNIT";
   String fillMode = "SHELL";
 
-  Voxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
+VoxelLayer vL;
 
+
+  Voxelator(PApplet _pApp, PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
+
+    pApp  = _pApp;
     loc    =  _loc;
     size   =  _size;
     thumbs =  _thumbs;
@@ -2793,15 +2898,8 @@ class Voxelator {
     dimX = size.x;
     dimY = size.z;
 
-    // setArrays(arrays);
-
-    // depthGlobe = globes.get(0);
-    // materGlobe = globes.get(1);
-    // alphaGlobe = globes.get(2);
-
     layer = Current;
     thickness = Thickness;
-    // update();
 
   }
 
@@ -2852,9 +2950,9 @@ class Voxelator {
     //
   }
 
-  public void exportStack(){
-    export();
-  }
+  // void exportStack(){
+  //   export();
+  // }
 
    public void export(){
 
@@ -2897,68 +2995,138 @@ class Voxelator {
   }
 
 
+  public int translatePo(int c){
+
+    int Cyan    = color(0,89,158);
+    int Magenta = color(161,35,99);
+    int Yellow  = color (213, 178, 0);
+    int Black   = color(30,30,30);
+    int White   = color(220,222,216);
+
+    float r0 = red(c)/255;
+    float g0 = green(c)/255;
+    float b0 = blue(c)/255;
+
+    float k = 1 - max(r0,g0,b0); // return maximum?
+    float cy = (1 - r0 -k)/(1-k);
+    float mg = (1 - g0 -k)/(1-k);
+    float ye = (1 - b0 -k)/(1-k);
+
+    float sum = k + cy + mg+ ye;
+    float rnd = random(0,sum);
+
+    if ((rnd > 0) && (rnd < k)){
+      if (k > 0.5f){
+        return Black;
+      } else {
+        return White;
+      }
+    } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
+    } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
+    } else if (( rnd > k + cy + ye)){ return Magenta;}
+
+    return White;
+
+  }
+
 
   public void updateUnit(){
 
 
+    updateSolid();
+
     // println("updateUnit");
-    if (fillMode == "SHELL"){
-      // println("fill shell");
-      updateShell();
-    } else {
-      // println("fill solid");
-      updateSolid();
-    }
+    // if (fillMode == "SHELL"){
+    //   // println("fill shell");
+    //   updateShell();
+    // } else {
+    //   // println("fill solid");
+    //   updateSolid();
+    // }
   }
 
 
-  public void updateSolid(){
+public void getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel, int dim){
+
+  loaded = false;
+  vL = new VoxelLayer(pApp, ratio,invert,depthChannel,alphaChannel,materChannel, dim);
+  vL.start();
+
+}
+
+
+public void exportStack(){
+
 
 
     if (pointCloud != null){
-
       int voxXY = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
       int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
-      int z = PApplet.parseInt(voxZ*layer);
-
-
-      // println("Voxelator Width = " + voxXY + "," + voxXY);
-      // println("Voxelator Size = " + size.x + "," + size.y);
-
-      PGraphics temp = createGraphics(voxXY,voxXY);
 
       int white = color(255,255);
 
-      temp.beginDraw();
-      temp.background(0);
+    // updateChannels();
+
+    println("total layers: " + voxZ);
+    for (int z = 0; z < voxZ;  z++){
 
       boolean invertLayer = true;
 
-      if (layer > 0.5f){ invertLayer = false;} // we gotta make this one smarter
+      float l = PApplet.parseFloat(z)/PApplet.parseFloat(voxZ);
 
-      // println(pointCloud)
+      println("layers = " + z + " , " + l);
 
-      for (int i = 0; i < pointCloud.getVertexCount(); i++) {
-        PVector v = pointCloud.getVertex(i);
+        if (l > 0.5f){ invertLayer = false;}
 
-        if (invertLayer){ if (v.z + voxZ/2 < z){temp.set(PApplet.parseInt(v.x+voxXY/2),PApplet.parseInt(v.y+voxXY/2), white);}
-        } else { if (v.z + voxZ/2 > z){temp.set(PApplet.parseInt(v.x+voxXY/2),PApplet.parseInt(v.y+voxXY/2), white);}
-        }
+       // PGraphics temp = getLayer(z, invertLayer, depthChannel,alphaChannel,materChannel);
+       // temp.save("exports/layer_" + z + ".png");
+
 
       }
-      temp.endDraw();
-      currentLayer = temp.get();
-      currentLayer.resize(PApplet.parseInt(size.x),PApplet.parseInt(size.y));
+
     }
 
+  }
+
+  public void updateSolid(){
+
+    if (pointCloud != null){
+      println("update voxelator: layer = " + layer);
+
+      int voxXY = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
+      int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
+      int zz = PApplet.parseInt(voxZ*layer); //
+
+      // is there a way not to do this each time?
+
+      float layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
+      int z = PApplet.parseInt(zz % layerVoxels);
+      boolean invert = false;
+      if (layer > 0.5f){ invert = true;}
+
+      float ratio = PApplet.parseFloat(z)/ layerVoxels;
+      getLayer(ratio, invert, depthChannel, alphaChannel, materChannel, PApplet.parseInt(size.x));
+    }
   }
 
   public void updateShell(){
 
     updateSolid();
 
+  }
+
+  public void updateChannel(){
+
+
+
+    int voxXY = PApplet.parseInt(DimXY/0.040f); //
+
+    depthChannel = depth.getMap(voxXY);
+    alphaChannel = alpha.getMap(voxXY);
+    materChannel = mater.getMap(voxXY);
 
   }
+
 
   public void updateArray(){
 
@@ -2998,20 +3166,22 @@ class Voxelator {
 
   public void display(){
 
-    //  display voxel layer
-    if (loaded){
-      if (currentLayer != null){ image(currentLayer, PApplet.parseInt(loc.x) , PApplet.parseInt(loc.y) );}
-    } else if (depth.texture != null){
-      updateUnit();
-      loaded = true;
+    if (vL != null){
+    if (loaded == false){
+      if (vL.isReady){
+        currentLayer = vL.imgVisual;
+        vL.stop();
+        loaded = true;
+      }
+    } else {
+      image(currentLayer, PApplet.parseInt(loc.x) , PApplet.parseInt(loc.y) );
     }
-  }
-
+}
 
 
 }
 
-
+}
 
 class Zone {
 
@@ -3211,112 +3381,154 @@ public int convolution(int x, int y, float[][] matrix, int matrixsize, PImage im
   //return the resulting color
   return sum;
 }
-//
-//public float getImgSD(PImage img) { 
-//  // returns the standard deviation of an image 
-//  float brightness = 0;  
-//  float sum = 0;  
-//  float average = 1;  
-//  float variation = 0;
-//  float avgVar;
-//  float SD; 
-//  img.loadPixels();
-//  for (int i = 0; i < img.pixels.length; i++) {
-//    float val = brightness(img.pixels[i]); 
-//    brightness +=  val;
-//  }
-//  average = brightness/img.pixels.length; 
-//  for (int i = 0; i < img.pixels.length; i++) {
-//    float val = brightness(img.pixels[i]);  
-//    variation += (val - average)*(val - average);
-//  }  
-//  avgVar = variation/img.pixels.length; 
-//  SD = sqrt(avgVar);
-//  return SD;
-//}
-//
-//PImage getPImage() { 
-//  String tempPath = "tempFrame.jpg";  
-//  saveFrame("tempFrame.jpg");     
-//  PImage temp = loadImage(tempPath);
-//return temp;
-//} 
-//
-//
-//
-//float CalcAvg(PImage p) {
-// p.loadPixels(); 
-//  float sum =0;
-//  for (int i = 0; i < p.pixels.length; i++) {
-//    float val = brightness(p.pixels[i]); 
-//    sum += val;
-//  }
-//  float average = sum/p.pixels.length; 
-//  return average;
-//} 
-//
-//float CalcAvgPixel(FloatList pixelList) { 
-//  float sum =0;
-//  for (float p : pixelList) { 
-//    float val = brightness(int(p)); 
-//    sum += val;
-//  }
-//  float average = sum/(pixelList.size()); 
-//  return average;
-//} 
-//
-//float CalcStdevPixel(float average, FloatList pixelList) { 
-//  
-//  float variation = 0; 
-//  
-//  for (float p : pixelList) { 
-//    float val = brightness(int(p)); 
-//    variation += (val - average)*(val - average);
-//  
-//  }  
-//  
-//  float avgVariation = variation/pixelList.size(); 
-//  float stdDev = sqrt(avgVariation);  
-//  
-//  // println("standard deviation = " + stdDev); 
-//  
-//  return stdDev;
-//
-//} 
-//
-//
-//
-//float CalcStdev(float average) { 
-//
-//  float variation = 0; 
-//  
-//  for (int i = 0; i < pixels.length; i++) {
-//    float val = brightness(pixels[i]); 
-//    variation += (val - average)*(val - average);
-//  
-//  }  
-//  
-//  float avgVariation = variation/pixels.length; 
-//  float stdDev = sqrt(avgVariation);  
-//  
-//  return stdDev;
-//
-//} 
-//
-//public int getBin(float val, ArrayList<Bin> bins) {
-//
-//  int bin =0;
-//  float step = 255.0/bins.size(); 
-//
-//  for (int k = 0; k < bins.size (); k ++) {
-//    int r = bins.size()-k;
-//    float threshold = float(r)*step;
-//    if (val > threshold) return r;
-//  }
-//
-//  return bin;
-//
-//}
+// public PImage removeArtifacts(PImage img){
+
+
+
+//   for (int x = 0 ; x < img.width; x++){
+//     for (int y = 0; y < img.height; y++){
+
+//       if (brightness(img.get(x,y) > 100)){
+
+//         if (x1 > 0) {
+
+//         }
+
+//         if (x2< img.width){
+
+//         }
+
+
+//         if (y1 > 0) {
+
+
+//         }
+
+//         if (y2< img.width){
+
+
+//         }
+//        int x1 = x - 1;
+//        int x2 = x + 1;
+//        int y1 = y - 1;
+//        int y2 = y + 1;
+
+//       }
+//     }
+//   }
+
+
+
+
+// }
+
+
+
+// //public float getImgSD(PImage img) {
+// //  // returns the standard deviation of an image
+// //  float brightness = 0;
+// //  float sum = 0;
+// //  float average = 1;
+// //  float variation = 0;
+// //  float avgVar;
+// //  float SD;
+// //  img.loadPixels();
+// //  for (int i = 0; i < img.pixels.length; i++) {
+// //    float val = brightness(img.pixels[i]);
+// //    brightness +=  val;
+// //  }
+// //  average = brightness/img.pixels.length;
+// //  for (int i = 0; i < img.pixels.length; i++) {
+// //    float val = brightness(img.pixels[i]);
+// //    variation += (val - average)*(val - average);
+// //  }
+// //  avgVar = variation/img.pixels.length;
+// //  SD = sqrt(avgVar);
+// //  return SD;
+// //}
+// //
+// //PImage getPImage() {
+// //  String tempPath = "tempFrame.jpg";
+// //  saveFrame("tempFrame.jpg");
+// //  PImage temp = loadImage(tempPath);
+// //return temp;
+// //}
+// //
+// //
+// //
+// //float CalcAvg(PImage p) {
+// // p.loadPixels();
+// //  float sum =0;
+// //  for (int i = 0; i < p.pixels.length; i++) {
+// //    float val = brightness(p.pixels[i]);
+// //    sum += val;
+// //  }
+// //  float average = sum/p.pixels.length;
+// //  return average;
+// //}
+// //
+// //float CalcAvgPixel(FloatList pixelList) {
+// //  float sum =0;
+// //  for (float p : pixelList) {
+// //    float val = brightness(int(p));
+// //    sum += val;
+// //  }
+// //  float average = sum/(pixelList.size());
+// //  return average;
+// //}
+// //
+// //float CalcStdevPixel(float average, FloatList pixelList) {
+// //
+// //  float variation = 0;
+// //
+// //  for (float p : pixelList) {
+// //    float val = brightness(int(p));
+// //    variation += (val - average)*(val - average);
+// //
+// //  }
+// //
+// //  float avgVariation = variation/pixelList.size();
+// //  float stdDev = sqrt(avgVariation);
+// //
+// //  // println("standard deviation = " + stdDev);
+// //
+// //  return stdDev;
+// //
+// //}
+// //
+// //
+// //
+// //float CalcStdev(float average) {
+// //
+// //  float variation = 0;
+// //
+// //  for (int i = 0; i < pixels.length; i++) {
+// //    float val = brightness(pixels[i]);
+// //    variation += (val - average)*(val - average);
+// //
+// //  }
+// //
+// //  float avgVariation = variation/pixels.length;
+// //  float stdDev = sqrt(avgVariation);
+// //
+// //  return stdDev;
+// //
+// //}
+// //
+// //public int getBin(float val, ArrayList<Bin> bins) {
+// //
+// //  int bin =0;
+// //  float step = 255.0/bins.size();
+// //
+// //  for (int k = 0; k < bins.size (); k ++) {
+// //    int r = bins.size()-k;
+// //    float threshold = float(r)*step;
+// //    if (val > threshold) return r;
+// //  }
+// //
+// //  return bin;
+// //
+// //}
 // initialize all of the dimensions
 
 float os;

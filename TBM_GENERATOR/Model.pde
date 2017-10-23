@@ -156,7 +156,7 @@ class Model {
   }
 
   void initVoxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
-      vox = new Voxelator(_loc, _size,  _thumbs, _arrays, _globes);
+      vox = new Voxelator(app, _loc, _size,  _thumbs, _arrays, _globes);
 
   }
 

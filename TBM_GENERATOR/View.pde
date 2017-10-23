@@ -24,15 +24,6 @@ class View {
     vp3D      = new Viewport3D(xC, yA, width/2 - os/2, y10+tWidth);
     vp3Darray = new Viewport3D(width/2 + os/2 , yA, width-os, y10+tWidth);
 
-    // vp3Darray = new Viewport3D(width/2+os/2,xA,width/6 +os,yF);
-
- // vp3Darray = new Viewport3D(width/4,height/4,width/2,height/2);
-
-  }
-
-  void setCurrent() {
-    println("set current");
-    vox.getCurrentPC();
   }
 
   void display() {
@@ -44,7 +35,9 @@ class View {
 
     } else {
 
+      // background(255);
       display3D();
+      // saveFrame("output2/line-######.jpg");
 
     }
 

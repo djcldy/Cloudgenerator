@@ -4,6 +4,8 @@
 // 3DJ Texture Generator for the Stratasys J-1750 Voxel Print Technology
 // Create multi-material, procedural micro-structures & textures for 3D printing
 // import libraries
+// Max file size 2.5 Gb
+
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,6 +18,8 @@ ControlP5 cp5;
 ControlP5 cp5View;
 
 
+// surboard dimension = 170 mm x 170 mm x 9 mm
+
 public Controller c;
 
 
@@ -24,9 +28,11 @@ public float layerHeight = .030; // cm
 public float voxW = 0.040; // cm
 public float voxH = 0.040; // cm
 
-public float DimXY = 10;
+public float DimXY = 20;
 // public float DimY = 10;
 public float DimZ = 3;
+public ArrayList<PVector> vertexColors;
+// public ArrayList<color> vertexColors = new ArrayList<color>();
 
 boolean SpinX = true;
 boolean SpinY = true;
@@ -38,26 +44,28 @@ CheckBox checkbox;
 
 ///////////
 float Intersection = 0;
-
-
 /////////////////// these may be obsolete
 float Amplitude = 10; // cm
 float Thickness = 10;
 float Current = 0.5;
-
-
+////////////////////////////////////////
 int LayersY =1;
 int LayersX =1;
 int LayersZ =1;
-
-
-//
+///////////////////////////////////////////////
 PImage exportDepth;
 boolean isSetup = true;
 PWindow win;
-
-
+/////////////////////////////////////////////////
 int step = 0;
+/////////////////////////////////////////////////
+    color Cyan    = color(0,89,158);
+    color Magenta = color(161,35,99);
+    color Yellow  = color (213, 178, 0);
+    color Black   = color(30,30,30);
+    color White   = color(220,222,216);
+//
+
 
 void setup() {
 
@@ -66,8 +74,7 @@ void setup() {
   init();
   float time02 = float(millis());
   float elapsedTime = time02 - time01;
-  println("setup completed after " + elapsedTime/1000 + " s.");
-
+  println("setup completed after " + elapsedTime/1000 + " s."); //MIN: 0.548s  MAX: 0.637s
 
 }
 
@@ -97,7 +104,6 @@ void init(){
   setConst();
   initControl();
   setInterface(); // these are all of the buttons ect.
-  initViewport();
   isSetup = false;
   initGeo();
   // win = new PWindow();
@@ -111,10 +117,6 @@ void initControl(){
   c.m.vox.layer = Current;
   c.m.vox.update();
 }
-
-void initViewport(){
-}
-
 
 void initGeo(){
   // thread("RESETUNITCELL"); //
@@ -153,13 +155,8 @@ void Intersection(float value){
   }
 }
 
-void R2() {
- if (c.v.vp3D.mode == "UNIT"){ c.m.currentThumb.setChildren(1);}
-}
-
-void L2(){
-if (c.v.vp3D.mode == "UNIT"){c.m.currentThumb.setChildren(-1);}
-}
+void R2() { if (c.v.vp3D.mode == "UNIT"){ c.m.currentThumb.setChildren(1);}}
+void L2(){if (c.v.vp3D.mode == "UNIT"){c.m.currentThumb.setChildren(-1);}}
 
 
 void togglecell() {
@@ -169,18 +166,11 @@ void togglecell() {
   }
 }
 
-
-void checkBox(float[] a) {
-  println(a); // these are the toggles
-  c.m.points = c.m.resetPC(3, a); // we will have to multi thread this bitch
-}
-
-
 void Export() {
 
   if (!isSetup){
-    exportDepth = c.m.vox.depth.texture.get();
-    export();
+    // exportDepth = c.m.vox.depth.texture.get();
+    c.m.vox.exportStack();
   }
 }
 
@@ -232,12 +222,7 @@ void SPIN(){
   c.v.vp3D.toggleSpin();
 }
 
-void Invert(){
-
-
- thread("INVERTTEXTURE");
- // thread("RESETUNITCELL");
-}
+void Invert(){ if (!isSetup){ thread("INVERTTEXTURE");}}
 
 
 void Shell(){
@@ -248,7 +233,7 @@ void Shell(){
 }
 
 void VIEWMODE(){
-  c.v.toggleMode();
+  if (!isSetup){c.v.toggleMode();}
 }
 
 
@@ -259,107 +244,24 @@ void INVERTTEXTURE(){ // inverts the color of the texture
 
 void initButtons(){
 
-  int bW = int((width/4 - width/32)/4);
-  int bH = int(height/16 - os);
-
-  cp5View.addButton("VIEWMODE")
-     .setPosition(int(os), 0)
-     .setSize(int(2*os), int(os))
-     // .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
+  addButton(cp5View, "VIEWMODE", os, 0, int(2*os), int(os));
+  addButton(cp5,"Invert", os,row1+os, int(2*os), int(os));
+  addButton(cp5,"LEFT", col3,row5-os, int(os), int(os));
+  addButton(cp5,"RIGHT", col3+os,row5-os, int(os), int(os));
+  addButton(cp5,"AXO", col3+2*os,row5-os, int(os), int(os));
+  addButton(cp5,"Export", col8,row8, int(width/6), int(os));
 
 
+}
 
-  cp5.addButton("Invert")
-    .setValue(0)
-     .setPosition(os, row1 + os)
-     .setSize(int(2*os), int(os))
-    ;
+void initToggles(){
 
-  // cp5.addToggle("Invert")
-  //    .setPosition(os, row1 + os)
-  //    .setSize(int(os), int(os/4))
-  //    .setValue(true)
-  //    // .setMode(ControlP5.SWITCH)
-  //    ;
+  addToggle(cp5,"Shell", col8,row10,int(os), int(os/4));
+  addToggle(cp5,"SpinX", col3+os,row5-2*os,int(os), int(os/4));
+  addToggle(cp5,"SpinY", col3+2*os,row5-2*os,int(os), int(os/4));
+  addToggle(cp5,"SpinZ", col3+4*os,row5-2*os,int(os), int(os/4));
+  addToggle(cp5,"ToggleCell", width/2 + os, yA + os/2,int(os), int(os/4));
 
-  cp5.addToggle("Shell")
-     .setPosition(col8, row10)
-     .setSize(int(os), int(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
-
-
-  cp5.addToggle("SpinX")
-     .setPosition(width/4+os, row5-2*os)
-     .setSize(int(os), int(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
-
-  cp5.addToggle("SpinY")
-     .setPosition(width/4 + 3*os, row5-2*os)
-     .setSize(int(os), int(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
-
-  cp5.addToggle("SpinZ")
-     .setPosition(width/4 + 5*os, row5-2*os)
-     .setSize(int(os), int(os/4))
-     .setValue(true)
-     // .setMode(ControlP5.SWITCH)
-     ;
-
-
-       cp5.addToggle("toggleCell")
-     .setPosition(width/2 + os, yA+os/2)
-     .setSize(int(os), int(os/4))
-     .setValue(true)
-     .setMode(ControlP5.SWITCH)
-     ;
-  // cp5.addButton("TOP")
-  //   .setValue(0)
-
-
-
-  // int y4 = int(height/16+width/64+ width/4 - width/32);
-
-  // cp5.addButton("R1")
-  //   .setValue(0)
-  //   .setPosition(width/4-os, y4)
-  //   .setSize(int(os), int(tWidth))
-  //   ;
-
-  // cp5.addButton("R2")
-  //   .setValue(0)
-  //   .setPosition(width/4-os, y4 + tWidth + os)
-  //   .setSize(int(os), int(tWidth))
-  //   ;
-
-  // y4 = width/2;
-
-  cp5.addButton("LEFT")
-    .setValue(0)
-    .setPosition(col3, row5-os)
-    .setSize(int(os), int(os))
-    ;
-
-
-  cp5.addButton("RIGHT")
-    .setValue(0)
-    .setPosition(col3 + os,row5-os)
-    .setSize(int(os), int(os))
-    ;
-
-
-  cp5.addButton("AXO")
-    .setValue(0)
-    .setPosition(col3 + 2*os, row5-os)
-    .setSize(int(os), int(os))
-    ;
 }
 
 void LEFT(){
@@ -389,7 +291,7 @@ void setInterface(){
 
   initButtons();
   initSlider();
-
+  initToggles();
 }
 
 void LayersX(int value){
@@ -416,18 +318,19 @@ void initSlider() {
 
   int len = width/9;
 
+
   cp5.addSlider("DimXY")
     .setPosition(xE, row5+ 25)
     .setWidth(len)
-    .setValue(10)
-    .setRange(1, 50) // mm?
+    .setValue(20)
+    .setRange(1, 200) // mm?
     ;
 
   cp5.addSlider("DimZ")
     .setPosition(xE, row5+ 75)
     .setWidth(len)
-    .setValue(10)
-    .setRange(1, 50) // mm
+    .setValue(3)
+    .setRange(1, 25) // mm
     ;
 
 
@@ -484,57 +387,99 @@ void Current(float value) {
 
 
 void Thickness(float value) {
-
-  c.m.vox.thickness = value;
-  c.v.thickness = value;
-  c.m.vox.update();
-}
-
-
-void dropdown(int n) {
-
-  CColor c = new CColor();
-  c.setBackground(color(255, 0, 0));
-  cp5.get(ScrollableList.class, "dropdown").getItem(n).put("color", c);
+  if (!isSetup){  //
+    c.m.vox.thickness = value;
+    c.v.thickness = value;
+    c.m.vox.update();
+  }
 }
 
 
 
+PVector reprameterize(PImage depth, PImage alpha){
+
+  PVector range = new PVector(255,0);
+
+    for (int x = 0; x     <   depth.width; x += 5) {
+      for (int y = 0; y   <   depth.height; y+= 5) {
+      float value1 = brightness((alpha.get(x,y)));
+      float value2 =  brightness((depth.get(x,y)));
+        if (value1 > 0){
+          if (value2 > range.y){range.y = value2;}
+          else if (value2 < range.x){range.x = value2;}
+        }
+      }
+    }
+
+    return range;
+}
+
+
+
+
+
+
+  color translate(color c){
+
+    // color col = color(100,100,100);
+
+    float r0 = red(c)/255;
+    float g0 = green(c)/255;
+    float b0 = blue(c)/255;
+
+    float k = 1 - max(r0,g0,b0); // return maximum?
+    float cy = (1 - r0 -k)/(1-k);
+    float mg = (1 - g0 -k)/(1-k);
+    float ye = (1 - b0 -k)/(1-k);
+
+    float sum = k + cy + mg+ ye;
+    float rnd = random(0,sum);
+
+    if ((rnd > 0) && (rnd < k)){
+      if (k > 0.5){
+        return Black;
+      } else {
+        return White;
+      }
+    } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
+    } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
+    } else if (( rnd > k + cy + ye)){ return Magenta;}
+
+    return White;
+  }
 
 void RESETUNITCELL() {
 
+
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
   // REFACTOR THIS CODE...
+  // note to self, scaling only important  for the voxel exportd
 
-  println("reset unitcell");
-  int voxX = int(DimXY/0.040); //  num voxels in X
-  int voxY = int(DimXY/0.040); //  num voxels in Y
-  int voxZ = int(DimZ/0.030); //  num voxels in Z
-
-  float inter = Intersection;
-
-  PImage depthChannel = c.m.depth.texture.get();
-  PImage alphaChannel = c.m.alpha.texture.get();
-  PImage materChannel = c.m.mater.texture.get();
+  float time01 = float(millis());
 
   ArrayList<PVector> vertexCols = new ArrayList<PVector>();
-  depthChannel.resize(voxX,voxY);
-  alphaChannel.resize(voxX,voxY);
-  materChannel.resize(voxX,voxY);
 
-   depthChannel.loadPixels();
-   alphaChannel.loadPixels();
-   materChannel.loadPixels();
+  int voxX = int(DimXY/0.040); //  num voxels in X
+  int voxY = int(DimXY/0.040); //  num voxels in Y
+  int voxZ = int(DimZ/0.027); //  num voxels in Z each voxel layer is 0.027mm
 
-    PShape boxCloud = createShape();
-    boxCloud.beginShape(POINTS);
-    boxCloud.stroke(255,150);
-    boxCloud.strokeWeight(1);
+  float maxVoxels = 200000;
+  float test = LayersZ*(float(voxX)*float(voxY))/maxVoxels;
 
-    ArrayList<PVector> temp = new ArrayList<PVector>();
+  int res =  int(test);
 
-    int res = 1;
-    float rangeLo = 255*inter;
+  if (test<1){res=1;}
+  // int res = 1;
+
+  // int res = 1;
+  float sumVoxels = float(voxX)*float(voxY)*2*(1/float(res));
+
+   // depth channel and reset it
+  PImage depthChannel = c.m.depth.getMap(voxX); //
+  PImage alphaChannel = c.m.alpha.getMap(voxX); //
+  PImage materChannel = c.m.mater.getMap(voxX); //
+
+    float rangeLo = 255*Intersection;
     float rangeHi = 255 - rangeLo;
 
     int levels = LayersZ;
@@ -542,28 +487,20 @@ void RESETUNITCELL() {
     float layerVoxels = voxZ/levels;
     boolean invert = false;
 
-    float max = 0;
-    float min = 255;
-
-    // get Pixel range
-    for (int x = 0; x < depthChannel.width; x += 5) {
-      for (int y = 0; y < depthChannel.height; y+= 5) {
-
-      float value1 = brightness((alphaChannel.get(x,y)));
-      float value2 =  brightness((depthChannel.get(x,y)));
-
-        if (value1 > 0){
-          if (value2 > max){max = value2;}
-          else if (value2 < min){min = value2;}
-
-        }
-      }
-    }
+    PVector range = reprameterize(depthChannel,alphaChannel);  //
+    float max = range.y;
+    float min = range.x;
 
 
+    PShape boxCloud = createShape();
+    boxCloud.beginShape(POINTS);
+    boxCloud.stroke(255,150);
+    boxCloud.strokeWeight(1);
 
-  for (int z = 0; z < levels; z++){
-    for (int x = 0; x < depthChannel.width; x += res) {
+    vertexColors = new ArrayList<PVector>();
+
+    for (int z = 0; z < levels; z++){
+      for (int x = 0; x < depthChannel.width; x += res) {
       for (int y = 0; y < depthChannel.height; y+= res) {
         float alph = brightness((alphaChannel.get(x,y)));
 
@@ -572,14 +509,21 @@ void RESETUNITCELL() {
            val =  (val-min)*(255/max);
            color c = materChannel.get(x,y);
 
+           // if (random(0,1) > 0.99){ translate(c); }
+
            if (val > rangeHi )  { val = rangeHi;    }
            if (val < rangeLo) { val = rangeLo;  }
            if (invert){val = 255-val;}
 
            float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
 
+           c = translate(c);
+
            PVector col  = new PVector(red(c),green(c), blue(c));
-           vertexCols.add(col);
+
+           vertexColors.add(col);
+
+           // vertexCols.add(col);
 
            boxCloud.stroke(col.x, col.y, col.z, 150);
            boxCloud.vertex(x-voxX/2, y-voxY/2, voxLevel + z*layerVoxels - voxZ/2);
@@ -592,17 +536,15 @@ void RESETUNITCELL() {
     }
 
     boxCloud.endShape();
+    c.updateShape(boxCloud);
 
 
-    c.v.vp3D.setCellUnit(boxCloud);
-  // c.v.vp3Darray.setCellArray(boxCloud);
-    c.setCurrentUC(boxCloud);
-    c.m.vox.pointCloud = boxCloud;
-    c.m.vox.update();
-    PShape d = copyPS(boxCloud,vertexCols);
+  float time02 = float(millis());
+  float elapsedTime = time02 - time01;
+  println("reset unitcell completed after " + elapsedTime/1000 + " s."); //MIN: 0.004s  MAX: 0.219s
 
-    // win.setPointCloud(d);
 }
+
 
 
  PShape copyPS(PShape s, ArrayList<PVector> vertexCols){

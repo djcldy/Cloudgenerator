@@ -72,6 +72,12 @@ class Controller {
     Thumb mater = new Thumb(app,"/textures/array/mater/manta.png", new PVector(os+dimThumb.x,y4),   dimThumb, "unit/mater", "COLOR");
     Thumb alpha = new Thumb(app,"/textures/array/alpha/solid.png",    new PVector(os+2*dimThumb.x,y4),  dimThumb, "unit/alpha", "MONO");
 
+    int voxX = int(DimXY/0.040);
+
+    // depth.getMap(voxX);
+    // mater.getMap(voxX);
+    // alpha.getMap(voxX);
+
     thumbs.add(depth);
     thumbs.add(mater);
     thumbs.add(alpha);
@@ -98,6 +104,13 @@ class Controller {
 
   }
 
+  void updateShape(PShape ps){
+    v.vp3D.setCellUnit(ps);
+    // v.vp3D.setArrayUnit(ps);
+    setCurrentUC(ps);
+    m.vox.pointCloud = ps;
+    m.vox.update();
+  }
 
   void initViewport(PVector _loc, PVector _size, Thumb _th){
     vp = new Viewport2D(_loc, _size, _th);
@@ -106,8 +119,9 @@ class Controller {
 
   void update() {
 
-    PVector mouse = new PVector(mouseX, mouseY);
     v.display();
+
+    // PVector mouse = new PVector(mouseX, mouseY);
     // for  (Zone z: zones){ z.display(mouse);} // not necessary
 
   }
@@ -195,8 +209,10 @@ boolean unitSelect(PVector ms){
 
     if (zoneA.isSelected(ms)){
         regen = checkR1(m.thumbs, ms);
+        m.vox.updateChannel();
     } else if (zoneB.isSelected(ms)){
         if (m.currentR1 != null){checkR2(m.currentR1, ms);}
+        m.vox.updateChannel();
     } else if (zoneC.isSelected(ms)) {
        checkR3(ms);
        regen = false;

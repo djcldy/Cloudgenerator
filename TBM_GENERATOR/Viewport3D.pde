@@ -21,6 +21,9 @@ class Viewport3D{
 
   String mode = "UNIT"; // set as "UNIT" or "GLOBAL"
 
+  Exporter exportVoxels;
+
+
   Viewport3D(float x1, float y1, float x2, float y2){
     cellUnit = new PointCloud(x1,y1,x2,y2, false);
     cellArray = new PointCloud(x1,y1,x2,y2, true);

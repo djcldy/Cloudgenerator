@@ -1,6 +1,8 @@
 class Voxelator {
 
   // PImage layer;
+
+  PApplet pApp;
   PVector loc, size;
   ArrayList<Thumb> thumbs = new ArrayList<Thumb>();
   ArrayList<Thumb> arrays = new ArrayList<Thumb>();
@@ -10,24 +12,30 @@ class Voxelator {
   PImage currentLayer;
 
   float layer, thickness;
-
+  float dimX, dimY;
 
   PShape pointCloud;
-
-
-  float dimX, dimY;
 
   Thumb depth, alpha, mater;
   Thumb depthArray, alphaArray, materArray;
   Thumb depthGlobe, alphaGlobe, materGlobe;
+
+  PImage depthChannel, alphaChannel, materChannel;
 
   boolean loaded = false;
 
   String mode = "UNIT";
   String fillMode = "SHELL";
 
-  Voxelator(PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
+  VoxelLayer vL;
 
+
+  Exporter exportVoxels;
+
+
+  Voxelator(PApplet _pApp, PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
+
+    pApp  = _pApp;
     loc    =  _loc;
     size   =  _size;
     thumbs =  _thumbs;
@@ -41,15 +49,8 @@ class Voxelator {
     dimX = size.x;
     dimY = size.z;
 
-    // setArrays(arrays);
-
-    // depthGlobe = globes.get(0);
-    // materGlobe = globes.get(1);
-    // alphaGlobe = globes.get(2);
-
     layer = Current;
     thickness = Thickness;
-    // update();
 
   }
 
@@ -100,9 +101,9 @@ class Voxelator {
     //
   }
 
-  void exportStack(){
-    export();
-  }
+  // void exportStack(){
+  //   export();
+  // }
 
    void export(){
 
@@ -145,68 +146,139 @@ class Voxelator {
   }
 
 
+  color translatePo(color c){
+
+    color Cyan    = color(0,89,158);
+    color Magenta = color(161,35,99);
+    color Yellow  = color (213, 178, 0);
+    color Black   = color(30,30,30);
+    color White   = color(220,222,216);
+
+    float r0 = red(c)/255;
+    float g0 = green(c)/255;
+    float b0 = blue(c)/255;
+
+    float k = 1 - max(r0,g0,b0); // return maximum?
+    float cy = (1 - r0 -k)/(1-k);
+    float mg = (1 - g0 -k)/(1-k);
+    float ye = (1 - b0 -k)/(1-k);
+
+    float sum = k + cy + mg+ ye;
+    float rnd = random(0,sum);
+
+    if ((rnd > 0) && (rnd < k)){
+      if (k > 0.5){
+        return Black;
+      } else {
+        return White;
+      }
+    } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
+    } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
+    } else if (( rnd > k + cy + ye)){ return Magenta;}
+
+    return White;
+
+  }
+
 
   void updateUnit(){
 
 
+    updateSolid();
+
     // println("updateUnit");
-    if (fillMode == "SHELL"){
-      // println("fill shell");
-      updateShell();
-    } else {
-      // println("fill solid");
-      updateSolid();
-    }
+    // if (fillMode == "SHELL"){
+    //   // println("fill shell");
+    //   updateShell();
+    // } else {
+    //   // println("fill solid");
+    //   updateSolid();
+    // }
   }
 
 
-  void updateSolid(){
+void getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel, int dim){
 
+  loaded = false;
+  vL = new VoxelLayer(pApp, ratio,invert,depthChannel,alphaChannel,materChannel, dim);
+  vL.start();
+
+}
+
+
+void exportStack(){
+
+    exportVoxels = new Exporter(pApp, ratio,invert,depthChannel,alphaChannel,materChannel, dim);
+    exportVoxels.start();
 
     if (pointCloud != null){
-
       int voxXY = int(DimXY/0.040); //  num voxels in X
       int voxZ = int(DimZ/0.030); //  num voxels in Z
-      int z = int(voxZ*layer);
-
-
-      // println("Voxelator Width = " + voxXY + "," + voxXY);
-      // println("Voxelator Size = " + size.x + "," + size.y);
-
-      PGraphics temp = createGraphics(voxXY,voxXY);
 
       color white = color(255,255);
 
-      temp.beginDraw();
-      temp.background(0);
+    // updateChannels();
+
+    println("total layers: " + voxZ);
+    for (int z = 0; z < voxZ;  z++){
 
       boolean invertLayer = true;
 
-      if (layer > 0.5){ invertLayer = false;} // we gotta make this one smarter
+      float l = float(z)/float(voxZ);
 
-      // println(pointCloud)
+      println("layers = " + z + " , " + l);
 
-      for (int i = 0; i < pointCloud.getVertexCount(); i++) {
-        PVector v = pointCloud.getVertex(i);
+        if (l > 0.5){ invertLayer = false;}
 
-        if (invertLayer){ if (v.z + voxZ/2 < z){temp.set(int(v.x+voxXY/2),int(v.y+voxXY/2), white);}
-        } else { if (v.z + voxZ/2 > z){temp.set(int(v.x+voxXY/2),int(v.y+voxXY/2), white);}
-        }
+       // PGraphics temp = getLayer(z, invertLayer, depthChannel,alphaChannel,materChannel);
+       // temp.save("exports/layer_" + z + ".png");
+
 
       }
-      temp.endDraw();
-      currentLayer = temp.get();
-      currentLayer.resize(int(size.x),int(size.y));
+
     }
 
+  }
+
+  void updateSolid(){
+
+    if (pointCloud != null){
+      println("update voxelator: layer = " + layer);
+
+      int voxXY = int(DimXY/0.040); //  num voxels in X
+      int voxZ = int(DimZ/0.030); //  num voxels in Z
+      int zz = int(voxZ*layer); //
+
+      // is there a way not to do this each time?
+
+      float layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
+      int z = int(zz % layerVoxels);
+      boolean invert = false;
+      if (layer > 0.5){ invert = true;}
+
+      float ratio = float(z)/ layerVoxels;
+      getLayer(ratio, invert, depthChannel, alphaChannel, materChannel, int(size.x));
+    }
   }
 
   void updateShell(){
 
     updateSolid();
 
+  }
+
+  void updateChannel(){
+
+
+
+    int voxXY = int(DimXY/0.040); //
+
+    depthChannel = depth.getMap(voxXY);
+    alphaChannel = alpha.getMap(voxXY);
+    materChannel = mater.getMap(voxXY);
 
   }
+
 
   void updateArray(){
 
@@ -246,18 +318,20 @@ class Voxelator {
 
   void display(){
 
-    //  display voxel layer
-    if (loaded){
-      if (currentLayer != null){ image(currentLayer, int(loc.x) , int(loc.y) );}
-    } else if (depth.texture != null){
-      updateUnit();
-      loaded = true;
+    if (vL != null){
+    if (loaded == false){
+      if (vL.isReady){
+        currentLayer = vL.imgVisual;
+        vL.stop();
+        loaded = true;
+      }
+    } else {
+      image(currentLayer, int(loc.x) , int(loc.y) );
     }
-  }
-
+}
 
 
 }
 
-
+}
 
