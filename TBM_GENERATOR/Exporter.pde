@@ -10,23 +10,28 @@ class Exporter implements Runnable {
   PImage imgExport, imgVisual;
   PImage displayLayer;
   PImage dC, aC, mC;
-  int pauseTime, dimXY;
+  int pauseTime, dimXY, dimZ;
   boolean invert;
-  float ratio;
+  float ratioX;
   float layerVoxels;
 
 
-  VoxelLayer (PApplet parent, boolean _invert, PImage depthChannel, PImage alphaChannel, PImage materChannel, int dim) {
+  Exporter (PApplet parent, float _ratio, boolean _invert, PImage depthChannel, PImage alphaChannel, PImage materChannel, int _dimXY, int _dimZ) {
 
-    invert = _invert;
-    dC = depthChannel;
-    aC = alphaChannel;
-    mC = materChannel;
-    dimXY = dim;
+    println("initialize exporter");
+    invert  =   _invert;
+    dC      =   depthChannel;
+    aC      =   alphaChannel;
+    mC      =   materChannel;
+    dimXY   =   _dimXY;
+    dimZ    =   _dimZ;
+    // ratioX   =   _ratio;
 
-    layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
-    int z = int(zz % layerVoxels);
-    float ratio = float(z)/ layerVoxels;
+    // int voxZ = 100;
+
+    // // layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
+    // // int z = int(zz % layerVoxels);
+    // // float ratio = float(z)/ layerVoxels;
 
   }
 
@@ -37,6 +42,7 @@ class Exporter implements Runnable {
 
   public void stop()
   {
+    println("exporter stopping...");
     thread = null;
   }
 
@@ -50,19 +56,23 @@ class Exporter implements Runnable {
   void run() {
     while (!isReady) { //
 
-
-     for (int z = 0; z < voxZ;  z++){
+      println("voxel dimensions = " +  int(DimXY/0.040) + "," + int(DimXY/0.040) +"," + dimZ);
+     for (int z = 0; z < dimZ;  z++){
 
       boolean invertLayer = true;
-      float l = float(z)/float(voxZ);
+      float l = float(z)/float(dimZ);
 
       if (l > 0.5){ invertLayer = false;}
-        imgExport = getLayer(ratio,invert,dC,aC,mC);
-        imgExport.save("exports/layer" + nf(l, 3) + ".png");
+
+        imgExport = getVoxLayer(getRatio(l),invertLayer,dC,aC,mC);
+
+        PImage temp = imgExport.get();
+        temp.resize(int(2*DimXY/0.040),int(DimXY/0.040));
+        temp.save("exports/layer_" + z + ".png");
       }
 
       try {
-        Thread.sleep(200);
+        Thread.sleep(300);
         isReady = true;
       }
       catch(InterruptedException e) {
@@ -72,10 +82,21 @@ class Exporter implements Runnable {
 
 
 
+  float getRatio(float layer){
 
-PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+      int voxZ = int(DimZ/0.030); //  num voxels in Z
+      int zz = int(voxZ*layer); //
+      float layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
+      int z = int(zz % layerVoxels);
+      float ratio = float(z)/ layerVoxels;
+      return ratio;
 
-    int voxXY = int(DimXY/0.040);
+  }
+
+
+PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+
+    int voxXY = depthChannel.width;
 
     PGraphics temp = createGraphics(voxXY,voxXY);
     temp.beginDraw();
@@ -87,15 +108,24 @@ PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alph
 
            float val = brightness(depthChannel.get(x, y));
             color c = materChannel.get(x,y);
-            c = translatePo(c);
+         // c = translatePo(c);
             float pp = val/255;
 
-            if (invert){
-              if (pp >= ratio) { temp.set(int(x), int(y), c);} // below halfway
+
+
+            if (i){
+              if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
             } else {
               pp = 1 - pp;
-              if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+              if (pp > ratio) { temp.set(int(x), int(y), c);} // below halfway
             }
+
+            // if (invert){
+            //   if (pp >= ratio) { temp.set(int(x), int(y), c);} // below halfway
+            // } else {
+            //   pp = 1 - pp;
+            //   if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+            // }
           }
         }
       }
@@ -103,6 +133,39 @@ PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alph
     temp.endDraw();
     return temp;
     }
+
+
+// PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+
+//     int voxXY = int(DimXY/0.040);
+
+//     PGraphics temp = createGraphics(voxXY,voxXY);
+//     temp.beginDraw();
+//     temp.background(0);
+
+//     for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+
+//         if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+
+//            float val = brightness(depthChannel.get(x, y));
+//             color c = materChannel.get(x,y);
+//             // c = translatePo(c);
+//             float pp = val/255;
+
+//             if (invert){
+//               if (pp >= ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             } else {
+//               pp = 1 - pp;
+//               if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             }
+
+//           }
+//         }
+//       }
+
+//     temp.endDraw();
+//     return temp;
+//     }
 
 
   color translatePo(color c){

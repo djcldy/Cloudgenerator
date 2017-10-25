@@ -1,6 +1,14 @@
 class Voxelator {
 
+
   // PImage layer;
+
+    color Cyan    = color(0,89,158);
+    color Magenta = color(161,35,99);
+    color Yellow  = color (213, 178, 0);
+    color Black   = color(30,30,30);
+    color White   = color(220,222,216);
+
 
   PApplet pApp;
   PVector loc, size;
@@ -146,35 +154,30 @@ class Voxelator {
   }
 
 
-  color translatePo(color c){
+  color translatePoArchive(color c){
 
-    color Cyan    = color(0,89,158);
-    color Magenta = color(161,35,99);
-    color Yellow  = color (213, 178, 0);
-    color Black   = color(30,30,30);
-    color White   = color(220,222,216);
 
-    float r0 = red(c)/255;
-    float g0 = green(c)/255;
-    float b0 = blue(c)/255;
+    // float r0 = red(c)/255;
+    // float g0 = green(c)/255;
+    // float b0 = blue(c)/255;
 
-    float k = 1 - max(r0,g0,b0); // return maximum?
-    float cy = (1 - r0 -k)/(1-k);
-    float mg = (1 - g0 -k)/(1-k);
-    float ye = (1 - b0 -k)/(1-k);
+    // float k = 1 - max(r0,g0,b0); // return maximum?
+    // float cy = (1 - r0 -k)/(1-k);
+    // float mg = (1 - g0 -k)/(1-k);
+    // float ye = (1 - b0 -k)/(1-k);
 
-    float sum = k + cy + mg+ ye;
-    float rnd = random(0,sum);
+    // float sum = k + cy + mg+ ye;
+    // float rnd = random(0,sum);
 
-    if ((rnd > 0) && (rnd < k)){
-      if (k > 0.5){
-        return Black;
-      } else {
-        return White;
-      }
-    } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
-    } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
-    } else if (( rnd > k + cy + ye)){ return Magenta;}
+    // if ((rnd > 0) && (rnd < k)){
+    //   if (k > 0.5){
+    //     return Black;
+    //   } else {
+    //     return White;
+    //   }
+    // } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
+    // } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
+    // } else if (( rnd > k + cy + ye)){ return Magenta;}
 
     return White;
 
@@ -183,68 +186,88 @@ class Voxelator {
 
   void updateUnit(){
 
+    if (pointCloud != null){
+      println("update voxelator: layer = " + layer);
 
-    updateSolid();
+      int voxXY = int(DimXY/0.040); //  num voxels in X
+      int voxZ = int(DimZ/0.030); //  num voxels in Z
+      int zz = int(voxZ*layer); //
 
-    // println("updateUnit");
-    // if (fillMode == "SHELL"){
-    //   // println("fill shell");
-    //   updateShell();
-    // } else {
-    //   // println("fill solid");
-    //   updateSolid();
-    // }
+      // is there a way not to do this each time?
+
+      float layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
+      int z = int(zz % layerVoxels);
+      boolean i = false;
+      if (layer > 0.5){ i = true;}
+
+      float ratio = float(z)/ layerVoxels;
+      getLayer(ratio, i, depthChannel, alphaChannel, materChannel, int(size.x));
+    }
+
   }
 
 
-void getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel, int dim){
+void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int dim){
 
-  loaded = false;
-  vL = new VoxelLayer(pApp, ratio,invert,depthChannel,alphaChannel,materChannel, dim);
-  vL.start();
+
+      PImage imgExport = getVoxLayer(ratio,invert,dC,aC,mC);
+      PImage imgVisual = imgExport.get();
+      imgVisual.resize(dim,dim);
+      currentLayer = imgVisual;
+
+
+  // loaded = false;
+  // vL = new VoxelLayer(pApp, ratio,invert,depthChannel,alphaChannel,materChannel, dim);
+  // vL.start();
 
 }
 
 
-void exportStack(){
 
-    exportVoxels = new Exporter(pApp, ratio,invert,depthChannel,alphaChannel,materChannel, dim);
-    exportVoxels.start();
+
+
+
+
+
+
+
+
+
+// void up
+
+
+  void exportStack(){
+
 
     if (pointCloud != null){
+      println("exporting stack...");
       int voxXY = int(DimXY/0.040); //  num voxels in X
       int voxZ = int(DimZ/0.030); //  num voxels in Z
-
-      color white = color(255,255);
-
-    // updateChannels();
-
-    println("total layers: " + voxZ);
-    for (int z = 0; z < voxZ;  z++){
-
-      boolean invertLayer = true;
-
-      float l = float(z)/float(voxZ);
-
-      println("layers = " + z + " , " + l);
-
-        if (l > 0.5){ invertLayer = false;}
-
-       // PGraphics temp = getLayer(z, invertLayer, depthChannel,alphaChannel,materChannel);
-       // temp.save("exports/layer_" + z + ".png");
-
-
-      }
-
+      updateChannel();
+      boolean invert = true;
+      exportVoxels = new Exporter(pApp, getRatio(),invert,depthChannel,alphaChannel,materChannel, voxXY, voxZ);
+      exportVoxels.start();
     }
+
+  }
+
+  float getRatio(){
+
+      int voxZ = int(DimZ/0.030); //  num voxels in Z
+      int zz = int(voxZ*layer); //
+      float layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
+      int z = int(zz % layerVoxels);
+      float ratio = float(z)/ layerVoxels;
+      println("ratio = " + ratio);
+      return ratio;
 
   }
 
   void updateSolid(){
 
     if (pointCloud != null){
-      println("update voxelator: layer = " + layer);
 
+      println("update voxelator: layer = " + layer);
       int voxXY = int(DimXY/0.040); //  num voxels in X
       int voxZ = int(DimZ/0.030); //  num voxels in Z
       int zz = int(voxZ*layer); //
@@ -318,20 +341,102 @@ void exportStack(){
 
   void display(){
 
-    if (vL != null){
-    if (loaded == false){
-      if (vL.isReady){
-        currentLayer = vL.imgVisual;
-        vL.stop();
-        loaded = true;
-      }
+    // if (vL != null){
+    if (currentLayer == null ){
+      // if (vL.isReady){
+      //   currentLayer = vL.imgVisual;
+      //   vL.stop();
+      //   loaded = true;
+      // }
     } else {
       image(currentLayer, int(loc.x) , int(loc.y) );
     }
+  // }
+
+  if (exportVoxels != null){
+    if (exportVoxels.isReady){
+      exportVoxels.stop();
+      exportVoxels = null;
+    }
+
+  }
+
 }
 
+PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-}
+    /*
+    println(".............");
+    println("get voxel layer");
+    println(".............");
+    */
+
+
+    int voxXY = depthChannel.width;
+
+    PGraphics temp = createGraphics(voxXY,voxXY);
+    temp.beginDraw();
+    temp.background(0);
+
+    for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+
+        if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+
+           float val = brightness(depthChannel.get(x, y));
+            color c = materChannel.get(x,y);
+         // c = translatePo(c);
+            float pp = val/255;
+
+            if (i){
+              if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+            } else {
+              pp = 1 - pp;
+              if (pp > ratio) { temp.set(int(x), int(y), c);} // below halfway
+            }
+          }
+        }
+      }
+
+    temp.endDraw();
+    return temp;
+    }
+
+
+  color translatePo(color c){
+
+    color Cyan    = color(0,89,158);
+    color Magenta = color(161,35,99);
+    color Yellow  = color (213, 178, 0);
+    color Black   = color(30,30,30);
+    color White   = color(220,222,216);
+
+    float r0 = red(c)/255;
+    float g0 = green(c)/255;
+    float b0 = blue(c)/255;
+
+    float k = 1 - max(r0,g0,b0); // return maximum?
+    float cy = (1 - r0 -k)/(1-k);
+    float mg = (1 - g0 -k)/(1-k);
+    float ye = (1 - b0 -k)/(1-k);
+
+    float sum = k + cy + mg+ ye;
+    float rnd = random(0,sum);
+
+    if ((rnd > 0) && (rnd < k)){
+      if (k > 0.5){
+        return Black;
+      } else {
+        return White;
+      }
+    } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
+    } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
+    } else if (( rnd > k + cy + ye)){ return Magenta;}
+
+    return White;
+
+  }
+
+
 
 }
 

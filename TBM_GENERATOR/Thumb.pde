@@ -60,12 +60,12 @@ class Thumb {
 
   PImage getMap(int dim){
     PGraphics temp;
-    if (texMap != null){
-      if (texMap.width != dim){texMap.resize(dim,dim);}
-    } else {
+    // if (texMap != null){
+    //   if (texMap.width != dim){texMap.resize(dim,dim);}
+    // } else {
       texMap = parent.get();
       texMap.resize(dim,dim);
-    }
+    // }
     return texMap;
   }
 
@@ -92,6 +92,42 @@ class Thumb {
     map = null;
     loaded = true;
    }
+  }
+
+
+
+  color translatePo(color c){
+
+    color Cyan    = color(0,89,158);
+    color Magenta = color(161,35,99);
+    color Yellow  = color (213, 178, 0);
+    color Black   = color(30,30,30);
+    color White   = color(220,222,216);
+
+    float r0 = red(c)/255;
+    float g0 = green(c)/255;
+    float b0 = blue(c)/255;
+
+    float k = 1 - max(r0,g0,b0); // return maximum?
+    float cy = (1 - r0 -k)/(1-k);
+    float mg = (1 - g0 -k)/(1-k);
+    float ye = (1 - b0 -k)/(1-k);
+
+    float sum = k + cy + mg+ ye;
+    float rnd = random(0,sum);
+
+    if ((rnd > 0) && (rnd < k)){
+      if (k > 0.5){
+        return Black;
+      } else {
+        return White;
+      }
+    } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
+    } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
+    } else if (( rnd > k + cy + ye)){ return Magenta;}
+
+    return White;
+
   }
 
 
@@ -226,6 +262,24 @@ class Thumb {
   }
 
 
+
+  PImage colorize(PImage temp){
+
+    println("colorize");
+
+  temp.loadPixels();
+
+   for (int i = 0; i < temp.pixels.length; i++) {
+      color c = temp.pixels[i];
+      temp.pixels[i] =  translatePo(c);
+    }
+
+    temp.updatePixels();
+
+    return temp;
+
+  }
+
   Thumb checkSelectedChildren() {
 
    Thumb chi = null;
@@ -288,7 +342,7 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
 
         if (mode == "COLOR"){
           // println("multi-material");
-          parent = it.parent;    //
+          parent = colorize(it.parent);    //
           texture = it.texture;  // We will make another function for multi material
           parentA = it.parentA;
           textureA = it.parentA;

@@ -46,9 +46,13 @@ class VoxelLayer implements Runnable {
   void run() {
     while (!isReady) { //
 
-      imgExport = getLayer(ratio,invert,dC,aC,mC);
+      imgExport = getVoxLayer(ratio,invert,dC,aC,mC);
       imgVisual = imgExport.get();
       imgVisual.resize(dimXY,dimXY);
+
+      // imgVisual = dC.get();
+      // imgVisual.resize(dimXY, dimXY);
+
 
       try {
         Thread.sleep(200);
@@ -60,9 +64,9 @@ class VoxelLayer implements Runnable {
   }
 
 
-PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+PGraphics getVoxLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-    int voxXY = int(DimXY/0.040);
+    int voxXY = depthChannel.width;
 
     PGraphics temp = createGraphics(voxXY,voxXY);
     temp.beginDraw();
@@ -74,7 +78,7 @@ PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alph
 
            float val = brightness(depthChannel.get(x, y));
             color c = materChannel.get(x,y);
-            c = translatePo(c);
+         // c = translatePo(c);
             float pp = val/255;
 
             if (invert){

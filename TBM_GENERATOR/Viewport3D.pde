@@ -21,7 +21,6 @@ class Viewport3D{
 
   String mode = "UNIT"; // set as "UNIT" or "GLOBAL"
 
-  Exporter exportVoxels;
 
 
   Viewport3D(float x1, float y1, float x2, float y2){
