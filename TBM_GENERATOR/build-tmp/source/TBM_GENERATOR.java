@@ -168,6 +168,7 @@ public void DimXY(float value){
 public void DimZ(float value){
   if (!isSetup){
   DimZ = value;
+  println("dimZ = " + DimZ);
   thread("RESETUNITCELL");
   }
 }
@@ -476,7 +477,11 @@ public PVector reprameterize(PImage depth, PImage alpha){
     return White;
   }
 
-public void RESETUNITCELL() {
+
+
+
+
+public void RESETUNITCELL2() {
 
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
@@ -580,6 +585,109 @@ public void RESETUNITCELL() {
 
 
 
+
+public void RESETUNITCELL() {
+
+
+  // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
+  // REFACTOR THIS CODE...
+  // note to self, scaling only important  for the voxel exportd
+
+  float time01 = PApplet.parseFloat(millis());
+
+  ArrayList<PVector> vertexCols = new ArrayList<PVector>();
+
+
+  int voxXY = PApplet.parseInt(DimXY/0.040f);   //  num voxels in X
+  int voxX  = PApplet.parseInt(DimXY/0.040f);   //  num voxels in X
+  int voxY  = PApplet.parseInt(DimXY/0.040f);   //  num voxels in Y
+  int voxZ  = PApplet.parseInt(DimZ/0.027f);    //  num voxels in Z each voxel layer is 0.027mm
+
+  // float proportion = float(voxXY)*float(voxXY)/float(voxZ);
+  float proportion = sq(DimXY)/DimZ;
+  float volume = 5000000; // total number of voxels...
+
+
+  float xy =  sqrt(sqrt(volume*proportion));
+  float zz = volume/sq(xy);
+  println("zz = " + zz + ", xy = " + xy);
+  // float zz = 100;
+
+
+
+
+  int res = 1;
+
+  PImage depthChannel = c.m.depth.getMap(PApplet.parseInt(xy)); //
+  PImage alphaChannel = c.m.alpha.getMap(PApplet.parseInt(xy)); //
+  PImage materChannel = c.m.mater.getMap(PApplet.parseInt(xy)); //
+
+    float rangeLo = 255*Intersection;
+    float rangeHi = 255 - rangeLo;
+
+    int levels = LayersZ;
+
+    float layerVoxels = PApplet.parseInt(zz)/levels;
+    boolean invert = false;
+
+    PVector range = reprameterize(depthChannel,alphaChannel);  //
+    float max = range.y;
+    float min = range.x;
+
+
+    PShape boxCloud = createShape();
+    boxCloud.beginShape(POINTS);
+    boxCloud.stroke(255,150);
+    boxCloud.strokeWeight(2);
+
+    vertexColors = new ArrayList<PVector>();
+
+    for (int z = 0; z < levels; z++){
+      for (int x = 0; x < depthChannel.width; x += res) {
+      for (int y = 0; y < depthChannel.height; y+= res) {
+        float alph = brightness((alphaChannel.get(x,y)));
+
+        if (alph > 0){
+           float val = brightness(depthChannel.get(x, y));
+           val =  (val-min)*(255/max);
+           int c = materChannel.get(x,y);
+
+           // if (random(0,1) > 0.99){ translate(c); }
+
+           if (val > rangeHi )  { val = rangeHi;    }
+           if (val < rangeLo) { val = rangeLo;  }
+           if (invert){val = 255-val;}
+
+           float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
+
+           // c = translate(c);
+
+           PVector col  = new PVector(red(c),green(c), blue(c));
+
+           vertexColors.add(col);
+
+           // vertexCols.add(col);
+
+           boxCloud.stroke(col.x, col.y, col.z, 150);
+           boxCloud.vertex(x-xy/2, y-xy/2, voxLevel + z*layerVoxels - zz/2);
+
+          }
+        }
+      }
+
+      invert = !invert; // need to do something hear to invert
+    }
+
+    boxCloud.endShape();
+    c.updateShape(boxCloud);
+
+
+  float time02 = PApplet.parseFloat(millis());
+  float elapsedTime = time02 - time01;
+  println("reset unitcell completed after " + elapsedTime/1000 + " s."); //MIN: 0.004s  MAX: 0.219s
+
+}
+
  public PShape copyPS(PShape s, ArrayList<PVector> vertexCols){
 
     PShape cloud = s;
@@ -600,8 +708,9 @@ public void RESETUNITCELL() {
 
 
 
-public void RESETUNITCELLARCHIVE() {
 
+
+public void RESETUNITCELLARCHIVE() {
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
   // REFACTOR THIS CODE...
@@ -2575,7 +2684,8 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
 
         if (mode == "COLOR"){
           // println("multi-material");
-          parent = colorize(it.parent);    //
+          // parent = colorize(it.parent);    //
+          parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
           parentA = it.parentA;
           textureA = it.parentA;
@@ -3466,6 +3576,9 @@ public void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage m
     if (pointCloud != null){
       println("exporting stack...");
       int voxXY = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
+
+      println("dimZ = " + DimZ);
+
       int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
       updateChannel();
       boolean invert = true;

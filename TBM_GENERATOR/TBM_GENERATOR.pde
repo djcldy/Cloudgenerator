@@ -145,6 +145,7 @@ void DimXY(float value){
 void DimZ(float value){
   if (!isSetup){
   DimZ = value;
+  println("dimZ = " + DimZ);
   thread("RESETUNITCELL");
   }
 }
@@ -453,7 +454,11 @@ PVector reprameterize(PImage depth, PImage alpha){
     return White;
   }
 
-void RESETUNITCELL() {
+
+
+
+
+void RESETUNITCELL2() {
 
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
@@ -557,6 +562,109 @@ void RESETUNITCELL() {
 
 
 
+
+void RESETUNITCELL() {
+
+
+  // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
+  // REFACTOR THIS CODE...
+  // note to self, scaling only important  for the voxel exportd
+
+  float time01 = float(millis());
+
+  ArrayList<PVector> vertexCols = new ArrayList<PVector>();
+
+
+  int voxXY = int(DimXY/0.040);   //  num voxels in X
+  int voxX  = int(DimXY/0.040);   //  num voxels in X
+  int voxY  = int(DimXY/0.040);   //  num voxels in Y
+  int voxZ  = int(DimZ/0.027);    //  num voxels in Z each voxel layer is 0.027mm
+
+  // float proportion = float(voxXY)*float(voxXY)/float(voxZ);
+  float proportion = sq(DimXY)/DimZ;
+  float volume = 5000000; // total number of voxels...
+
+
+  float xy =  sqrt(sqrt(volume*proportion));
+  float zz = volume/sq(xy);
+  println("zz = " + zz + ", xy = " + xy);
+  // float zz = 100;
+
+
+
+
+  int res = 1;
+
+  PImage depthChannel = c.m.depth.getMap(int(xy)); //
+  PImage alphaChannel = c.m.alpha.getMap(int(xy)); //
+  PImage materChannel = c.m.mater.getMap(int(xy)); //
+
+    float rangeLo = 255*Intersection;
+    float rangeHi = 255 - rangeLo;
+
+    int levels = LayersZ;
+
+    float layerVoxels = int(zz)/levels;
+    boolean invert = false;
+
+    PVector range = reprameterize(depthChannel,alphaChannel);  //
+    float max = range.y;
+    float min = range.x;
+
+
+    PShape boxCloud = createShape();
+    boxCloud.beginShape(POINTS);
+    boxCloud.stroke(255,150);
+    boxCloud.strokeWeight(2);
+
+    vertexColors = new ArrayList<PVector>();
+
+    for (int z = 0; z < levels; z++){
+      for (int x = 0; x < depthChannel.width; x += res) {
+      for (int y = 0; y < depthChannel.height; y+= res) {
+        float alph = brightness((alphaChannel.get(x,y)));
+
+        if (alph > 0){
+           float val = brightness(depthChannel.get(x, y));
+           val =  (val-min)*(255/max);
+           color c = materChannel.get(x,y);
+
+           // if (random(0,1) > 0.99){ translate(c); }
+
+           if (val > rangeHi )  { val = rangeHi;    }
+           if (val < rangeLo) { val = rangeLo;  }
+           if (invert){val = 255-val;}
+
+           float voxLevel = (val-rangeLo)/(rangeHi-rangeLo)*layerVoxels; // height of voxel within this level
+
+           // c = translate(c);
+
+           PVector col  = new PVector(red(c),green(c), blue(c));
+
+           vertexColors.add(col);
+
+           // vertexCols.add(col);
+
+           boxCloud.stroke(col.x, col.y, col.z, 150);
+           boxCloud.vertex(x-xy/2, y-xy/2, voxLevel + z*layerVoxels - zz/2);
+
+          }
+        }
+      }
+
+      invert = !invert; // need to do something hear to invert
+    }
+
+    boxCloud.endShape();
+    c.updateShape(boxCloud);
+
+
+  float time02 = float(millis());
+  float elapsedTime = time02 - time01;
+  println("reset unitcell completed after " + elapsedTime/1000 + " s."); //MIN: 0.004s  MAX: 0.219s
+
+}
+
  PShape copyPS(PShape s, ArrayList<PVector> vertexCols){
 
     PShape cloud = s;
@@ -577,8 +685,9 @@ void RESETUNITCELL() {
 
 
 
-void RESETUNITCELLARCHIVE() {
 
+
+void RESETUNITCELLARCHIVE() {
 
   // BY DEFAULT THE UNIT CELL IS 1CM X 1CM X 1CM
   // REFACTOR THIS CODE...

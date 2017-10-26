@@ -342,7 +342,8 @@ if ((mouseX > loc.x) && (mouseX < (loc.x + size.x)) && (mouseY > loc.y) && (mous
 
         if (mode == "COLOR"){
           // println("multi-material");
-          parent = colorize(it.parent);    //
+          // parent = colorize(it.parent);    //
+          parent = it.parent;    //
           texture = it.texture;  // We will make another function for multi material
           parentA = it.parentA;
           textureA = it.parentA;

@@ -242,6 +242,9 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
     if (pointCloud != null){
       println("exporting stack...");
       int voxXY = int(DimXY/0.040); //  num voxels in X
+
+      println("dimZ = " + DimZ);
+
       int voxZ = int(DimZ/0.030); //  num voxels in Z
       updateChannel();
       boolean invert = true;
