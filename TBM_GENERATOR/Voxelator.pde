@@ -36,10 +36,9 @@ class Voxelator {
   String fillMode = "SHELL";
 
   VoxelLayer vL;
-
-
   Exporter exportVoxels;
-
+  TextureField texField;
+  MicroTexture microTexture;
 
   Voxelator(PApplet _pApp, PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
 
@@ -60,15 +59,29 @@ class Voxelator {
     layer = Current;
     thickness = Thickness;
 
+    // initTextureField();
+    initMicroTexture();
+  }
+
+  void initTextureField(){
+
+
+    // String path_a = "/textures/blend/texture_a.png";
+    // String path_b = "/textures/blend/texture_b.png";
+
+    // textureField = new TextureField(path_a, path_b);
+
   }
 
 
-  void toggleMode(){
+  void initMicroTexture(){
 
-    // do nothing //
+    String path  =  "/textures/micro/texture_a.png";
+    microTexture = new MicroTexture(path, 50);
+
+
 
   }
-
 
   void toggleFillMode(){
 
@@ -143,44 +156,9 @@ class Voxelator {
 
   }
 
-  void toggle(){
-
-
-
-  }
 
   void update(){
     updateUnit();
-  }
-
-
-  color translatePoArchive(color c){
-
-
-    // float r0 = red(c)/255;
-    // float g0 = green(c)/255;
-    // float b0 = blue(c)/255;
-
-    // float k = 1 - max(r0,g0,b0); // return maximum?
-    // float cy = (1 - r0 -k)/(1-k);
-    // float mg = (1 - g0 -k)/(1-k);
-    // float ye = (1 - b0 -k)/(1-k);
-
-    // float sum = k + cy + mg+ ye;
-    // float rnd = random(0,sum);
-
-    // if ((rnd > 0) && (rnd < k)){
-    //   if (k > 0.5){
-    //     return Black;
-    //   } else {
-    //     return White;
-    //   }
-    // } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
-    // } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
-    // } else if (( rnd > k + cy + ye)){ return Magenta;}
-
-    return White;
-
   }
 
 
@@ -189,7 +167,7 @@ class Voxelator {
     if (pointCloud != null){
       println("update voxelator: layer = " + layer);
 
-      int voxXY = int(DimXY/0.040); //  num voxels in X
+      int voxXY = int(DimXY/0.080); //  num voxels in X
       int voxZ = int(DimZ/0.030); //  num voxels in Z
       int zz = int(voxZ*layer); //
 
@@ -209,10 +187,14 @@ class Voxelator {
 
 void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int dim){
 
+      microTexture.update();
 
       PImage imgExport = getVoxLayer(ratio,invert,dC,aC,mC);
+
       PImage imgVisual = imgExport.get();
+
       imgVisual.resize(dim,dim);
+
       currentLayer = imgVisual;
 
 
@@ -241,11 +223,11 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
 
     if (pointCloud != null){
       println("exporting stack...");
-      int voxXY = int(DimXY/0.040); //  num voxels in X
+      int voxXY = int(DimXY/0.080); //  num voxels in X
 
       println("dimZ = " + DimZ);
 
-      int voxZ = int(DimZ/0.030); //  num voxels in Z
+      int voxZ = int(DimZ/0.027); //  num voxels in Z
       updateChannel();
       boolean invert = true;
       exportVoxels = new Exporter(pApp, getRatio(),invert,depthChannel,alphaChannel,materChannel, voxXY, voxZ);
@@ -256,7 +238,7 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
 
   float getRatio(){
 
-      int voxZ = int(DimZ/0.030); //  num voxels in Z
+      int voxZ = int(DimZ/0.027); //  num voxels in Z
       int zz = int(voxZ*layer); //
       float layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
       int z = int(zz % layerVoxels);
@@ -271,8 +253,8 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
     if (pointCloud != null){
 
       println("update voxelator: layer = " + layer);
-      int voxXY = int(DimXY/0.040); //  num voxels in X
-      int voxZ = int(DimZ/0.030); //  num voxels in Z
+      int voxXY = int(DimXY/0.080); //  num voxels in X
+      int voxZ = int(DimZ/0.027); //  num voxels in Z
       int zz = int(voxZ*layer); //
 
       // is there a way not to do this each time?
@@ -297,7 +279,7 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
 
 
 
-    int voxXY = int(DimXY/0.040); //
+    int voxXY = int(DimXY/0.080); //
 
     depthChannel = depth.getMap(voxXY);
     alphaChannel = alpha.getMap(voxXY);
@@ -366,35 +348,50 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
 
 }
 
-PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-    /*
-    println(".............");
-    println("get voxel layer");
-    println(".............");
-    */
+PGraphics getVoxLayer(float ratio, boolean isInverted, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-
+    println("getVox layer");
     int voxXY = depthChannel.width;
 
     PGraphics temp = createGraphics(voxXY,voxXY);
+    float t = 0.2; // percentage for microtexture
+
     temp.beginDraw();
     temp.background(0);
 
-    for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+    for (int x = 0; x < temp.width; x ++){
+      for (int y = 0; y < temp.height; y++){
 
         if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
 
            float val = brightness(depthChannel.get(x, y));
             color c = materChannel.get(x,y);
-         // c = translatePo(c);
-            float pp = val/255;
+            float os = microTexture.get(x,y); // offset for microtexture
 
-            if (i){
-              if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+            float pp = (val-os*t)/255; //
+
+            if (pp < 0){ pp = 0;} // if the offset is less than zeo set to 0
+
+            // ratio is the current layer
+            // pp is the height of the given pixel
+
+            if (isInverted){ //
+
+              if (pp < ratio) {
+
+                temp.set(int(x), int(y), c);
+
+              } // below halfway
+
+
+
             } else {
+
               pp = 1 - pp;
+
               if (pp > ratio) { temp.set(int(x), int(y), c);} // below halfway
+
             }
           }
         }
@@ -402,7 +399,41 @@ PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaC
 
     temp.endDraw();
     return temp;
-    }
+ }
+
+
+
+// PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+
+
+
+//     int voxXY = depthChannel.width;
+
+//     PGraphics temp = createGraphics(voxXY,voxXY);
+//     temp.beginDraw();
+//     temp.background(0);
+
+//     for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+
+//         if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+
+//            float val = brightness(depthChannel.get(x, y));
+//             color c = materChannel.get(x,y);
+//             float pp = val/255;
+
+//             if (i){
+//               if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             } else {
+//               pp = 1 - pp;
+//               if (pp > ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             }
+//           }
+//         }
+//       }
+
+//     temp.endDraw();
+//     return temp;
+//     }
 
 
   color translatePo(color c){

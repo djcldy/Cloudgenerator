@@ -142,7 +142,7 @@ class Controller {
 
 
    v.vp3D.toggleMode();
-   m.vox.toggleMode();
+   // m.vox.toggleMode();
    vp.toggleMode();
    m.resetRows(v.vp3D.mode);
   thread("adjustGrid");

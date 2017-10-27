@@ -470,8 +470,8 @@ void RESETUNITCELL2() {
   ArrayList<PVector> vertexCols = new ArrayList<PVector>();
 
 
-  int voxXY = int(DimXY/0.040);   //  num voxels in X
-  int voxX  = int(DimXY/0.040);   //  num voxels in X
+  int voxXY = int(DimXY/0.080);   //  num voxels in X
+  // int voxX  = int(DimXY/0.040);   //  num voxels in X
   int voxY  = int(DimXY/0.040);   //  num voxels in Y
   int voxZ  = int(DimZ/0.027);    //  num voxels in Z each voxel layer is 0.027mm
 
@@ -575,8 +575,8 @@ void RESETUNITCELL() {
   ArrayList<PVector> vertexCols = new ArrayList<PVector>();
 
 
-  int voxXY = int(DimXY/0.040);   //  num voxels in X
-  int voxX  = int(DimXY/0.040);   //  num voxels in X
+  int voxXY = int(DimXY/0.080);   //  num voxels in X
+  // int voxX  = int(DimXY/0.040);   //  num voxels in X
   int voxY  = int(DimXY/0.040);   //  num voxels in Y
   int voxZ  = int(DimZ/0.027);    //  num voxels in Z each voxel layer is 0.027mm
 

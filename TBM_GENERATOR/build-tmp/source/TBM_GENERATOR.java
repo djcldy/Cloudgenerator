@@ -493,8 +493,8 @@ public void RESETUNITCELL2() {
   ArrayList<PVector> vertexCols = new ArrayList<PVector>();
 
 
-  int voxXY = PApplet.parseInt(DimXY/0.040f);   //  num voxels in X
-  int voxX  = PApplet.parseInt(DimXY/0.040f);   //  num voxels in X
+  int voxXY = PApplet.parseInt(DimXY/0.080f);   //  num voxels in X
+  // int voxX  = int(DimXY/0.040);   //  num voxels in X
   int voxY  = PApplet.parseInt(DimXY/0.040f);   //  num voxels in Y
   int voxZ  = PApplet.parseInt(DimZ/0.027f);    //  num voxels in Z each voxel layer is 0.027mm
 
@@ -598,8 +598,8 @@ public void RESETUNITCELL() {
   ArrayList<PVector> vertexCols = new ArrayList<PVector>();
 
 
-  int voxXY = PApplet.parseInt(DimXY/0.040f);   //  num voxels in X
-  int voxX  = PApplet.parseInt(DimXY/0.040f);   //  num voxels in X
+  int voxXY = PApplet.parseInt(DimXY/0.080f);   //  num voxels in X
+  // int voxX  = int(DimXY/0.040);   //  num voxels in X
   int voxY  = PApplet.parseInt(DimXY/0.040f);   //  num voxels in Y
   int voxZ  = PApplet.parseInt(DimZ/0.027f);    //  num voxels in Z each voxel layer is 0.027mm
 
@@ -1079,7 +1079,7 @@ class Controller {
 
 
    v.vp3D.toggleMode();
-   m.vox.toggleMode();
+   // m.vox.toggleMode();
    vp.toggleMode();
    m.resetRows(v.vp3D.mode);
   thread("adjustGrid");
@@ -1619,6 +1619,53 @@ class ImageThread implements Runnable {
     img = temp.get();
     return img;
   }
+
+}
+class MicroTexture{
+
+
+  PImage map;
+  int voxXY, dim;
+
+
+  MicroTexture(String path, int _dim){
+    map = loadImage(path);
+    dim = _dim;
+  }
+
+  public void update(){
+
+    voxXY = PApplet.parseInt(DimXY/0.080f);
+
+
+  }
+
+  public float get(int x, int y){
+
+  int tempX = x % dim; // gets the remainder
+    int tempY = y % dim; // gets the remainder
+
+    float val = brightness(map.get(tempX,tempY));
+    return val;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
 class Model {
@@ -2339,6 +2386,92 @@ class Shape {
   //     println(row.getString(0)+ ","+ row.getString(1)+","+row.getString(2));
   //   }
   // }
+}
+class TextureField {
+
+  String path_a, path_b;
+
+  int voxXY = 1;
+  int voxZ = 1;
+
+  PImage a,b, tempA, tempB;
+
+  TextureField(String _path_a, String _path_b){
+
+    // path_a = _path_a;
+    // path_b = _path_b;
+
+    // tempA = loadImage(path_a);
+    // tempB = loadImage(path_b);
+
+    init();
+    update();
+
+  }
+
+
+  public void init(){
+
+    // a = tempA.get();
+    // b = tempB.get();
+
+
+
+  }
+
+  public void update(){
+
+    voxXY = PApplet.parseInt(DimXY/0.080f);
+    voxZ = PApplet.parseInt(DimZ/0.027f);
+
+    // int xy = int(DimXY/0.080);
+    // int z = int(DimZ/0.030);
+
+    // if (voxXY != xy){
+    //   voxXY = xy; //  resizeXY
+    //   a = tempA.get();
+    //   b = tempB.get();
+    //   a.resize(dimXY, dimXY);
+    //   b.resize(dimXY,dimXY);
+    // }
+
+    // voxZ = z //  resizeZ
+
+  }
+
+
+  public int get(int x, int y, int z){
+
+    int c1 = a.get(x,y);
+    int c2 = b.get(x,y);
+    float t = PApplet.parseFloat(z)/DimZ;
+
+    float r1 = red(c1);
+    float r2 = red(c2);
+    float g1 = green(c1);
+    float g2 = green(c2);
+    float b1 = blue(c1);
+    float b2 = blue(c2);
+
+    float r = r1*t + r2*(1-t);
+    float g = g1*t + g2*(1-t);
+    float bl = b1*t + b2*(1-t);
+
+    return color(r,g,bl);
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
 }
 class Thumb {
 
@@ -3370,10 +3503,9 @@ class Voxelator {
   String fillMode = "SHELL";
 
   VoxelLayer vL;
-
-
   Exporter exportVoxels;
-
+  TextureField texField;
+  MicroTexture microTexture;
 
   Voxelator(PApplet _pApp, PVector _loc, PVector _size, ArrayList<Thumb> _thumbs, ArrayList<Thumb> _arrays, ArrayList<Thumb> _globes){
 
@@ -3394,15 +3526,29 @@ class Voxelator {
     layer = Current;
     thickness = Thickness;
 
+    // initTextureField();
+    initMicroTexture();
+  }
+
+  public void initTextureField(){
+
+
+    // String path_a = "/textures/blend/texture_a.png";
+    // String path_b = "/textures/blend/texture_b.png";
+
+    // textureField = new TextureField(path_a, path_b);
+
   }
 
 
-  public void toggleMode(){
+  public void initMicroTexture(){
 
-    // do nothing //
+    String path  =  "/textures/micro/texture_a.png";
+    microTexture = new MicroTexture(path, 50);
+
+
 
   }
-
 
   public void toggleFillMode(){
 
@@ -3477,44 +3623,9 @@ class Voxelator {
 
   }
 
-  public void toggle(){
-
-
-
-  }
 
   public void update(){
     updateUnit();
-  }
-
-
-  public int translatePoArchive(int c){
-
-
-    // float r0 = red(c)/255;
-    // float g0 = green(c)/255;
-    // float b0 = blue(c)/255;
-
-    // float k = 1 - max(r0,g0,b0); // return maximum?
-    // float cy = (1 - r0 -k)/(1-k);
-    // float mg = (1 - g0 -k)/(1-k);
-    // float ye = (1 - b0 -k)/(1-k);
-
-    // float sum = k + cy + mg+ ye;
-    // float rnd = random(0,sum);
-
-    // if ((rnd > 0) && (rnd < k)){
-    //   if (k > 0.5){
-    //     return Black;
-    //   } else {
-    //     return White;
-    //   }
-    // } else if (( rnd > k ) && (rnd < k + cy)){ return Cyan;
-    // } else if (( rnd > k + cy ) && (rnd < k + cy + ye)){ return Yellow;
-    // } else if (( rnd > k + cy + ye)){ return Magenta;}
-
-    return White;
-
   }
 
 
@@ -3523,7 +3634,7 @@ class Voxelator {
     if (pointCloud != null){
       println("update voxelator: layer = " + layer);
 
-      int voxXY = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
+      int voxXY = PApplet.parseInt(DimXY/0.080f); //  num voxels in X
       int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
       int zz = PApplet.parseInt(voxZ*layer); //
 
@@ -3543,10 +3654,14 @@ class Voxelator {
 
 public void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int dim){
 
+      microTexture.update();
 
       PImage imgExport = getVoxLayer(ratio,invert,dC,aC,mC);
+
       PImage imgVisual = imgExport.get();
+
       imgVisual.resize(dim,dim);
+
       currentLayer = imgVisual;
 
 
@@ -3575,11 +3690,11 @@ public void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage m
 
     if (pointCloud != null){
       println("exporting stack...");
-      int voxXY = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
+      int voxXY = PApplet.parseInt(DimXY/0.080f); //  num voxels in X
 
       println("dimZ = " + DimZ);
 
-      int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
+      int voxZ = PApplet.parseInt(DimZ/0.027f); //  num voxels in Z
       updateChannel();
       boolean invert = true;
       exportVoxels = new Exporter(pApp, getRatio(),invert,depthChannel,alphaChannel,materChannel, voxXY, voxZ);
@@ -3590,7 +3705,7 @@ public void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage m
 
   public float getRatio(){
 
-      int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
+      int voxZ = PApplet.parseInt(DimZ/0.027f); //  num voxels in Z
       int zz = PApplet.parseInt(voxZ*layer); //
       float layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
       int z = PApplet.parseInt(zz % layerVoxels);
@@ -3605,8 +3720,8 @@ public void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage m
     if (pointCloud != null){
 
       println("update voxelator: layer = " + layer);
-      int voxXY = PApplet.parseInt(DimXY/0.040f); //  num voxels in X
-      int voxZ = PApplet.parseInt(DimZ/0.030f); //  num voxels in Z
+      int voxXY = PApplet.parseInt(DimXY/0.080f); //  num voxels in X
+      int voxZ = PApplet.parseInt(DimZ/0.027f); //  num voxels in Z
       int zz = PApplet.parseInt(voxZ*layer); //
 
       // is there a way not to do this each time?
@@ -3631,7 +3746,7 @@ public void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage m
 
 
 
-    int voxXY = PApplet.parseInt(DimXY/0.040f); //
+    int voxXY = PApplet.parseInt(DimXY/0.080f); //
 
     depthChannel = depth.getMap(voxXY);
     alphaChannel = alpha.getMap(voxXY);
@@ -3700,35 +3815,50 @@ public void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage m
 
 }
 
-public PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-    /*
-    println(".............");
-    println("get voxel layer");
-    println(".............");
-    */
+public PGraphics getVoxLayer(float ratio, boolean isInverted, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-
+    println("getVox layer");
     int voxXY = depthChannel.width;
 
     PGraphics temp = createGraphics(voxXY,voxXY);
+    float t = 0.2f; // percentage for microtexture
+
     temp.beginDraw();
     temp.background(0);
 
-    for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+    for (int x = 0; x < temp.width; x ++){
+      for (int y = 0; y < temp.height; y++){
 
         if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
 
            float val = brightness(depthChannel.get(x, y));
             int c = materChannel.get(x,y);
-         // c = translatePo(c);
-            float pp = val/255;
+            float os = microTexture.get(x,y); // offset for microtexture
 
-            if (i){
-              if (pp < ratio) { temp.set(PApplet.parseInt(x), PApplet.parseInt(y), c);} // below halfway
+            float pp = (val-os*t)/255; //
+
+            if (pp < 0){ pp = 0;} // if the offset is less than zeo set to 0
+
+            // ratio is the current layer
+            // pp is the height of the given pixel
+
+            if (isInverted){ //
+
+              if (pp < ratio) {
+
+                temp.set(PApplet.parseInt(x), PApplet.parseInt(y), c);
+
+              } // below halfway
+
+
+
             } else {
+
               pp = 1 - pp;
+
               if (pp > ratio) { temp.set(PApplet.parseInt(x), PApplet.parseInt(y), c);} // below halfway
+
             }
           }
         }
@@ -3736,7 +3866,41 @@ public PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage
 
     temp.endDraw();
     return temp;
-    }
+ }
+
+
+
+// PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+
+
+
+//     int voxXY = depthChannel.width;
+
+//     PGraphics temp = createGraphics(voxXY,voxXY);
+//     temp.beginDraw();
+//     temp.background(0);
+
+//     for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+
+//         if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+
+//            float val = brightness(depthChannel.get(x, y));
+//             color c = materChannel.get(x,y);
+//             float pp = val/255;
+
+//             if (i){
+//               if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             } else {
+//               pp = 1 - pp;
+//               if (pp > ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             }
+//           }
+//         }
+//       }
+
+//     temp.endDraw();
+//     return temp;
+//     }
 
 
   public int translatePo(int c){
