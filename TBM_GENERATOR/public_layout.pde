@@ -64,7 +64,7 @@ os = width/64;
   col4 = (width - os)/2;
   col5 = col4+os;
   col6 = col4;
-  col7 = col4;
+  col7 = col8 - width/6 -os;
   col8 = width*5/6 + os/2;
   col10 = width-os;
 

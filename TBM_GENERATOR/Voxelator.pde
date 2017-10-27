@@ -77,7 +77,7 @@ class Voxelator {
   void initMicroTexture(){
 
     String path  =  "/textures/micro/texture_a.png";
-    microTexture = new MicroTexture(path, 50);
+    microTexture = new MicroTexture(path, 200);
 
 
 
@@ -165,16 +165,22 @@ class Voxelator {
   void updateUnit(){
 
     if (pointCloud != null){
-      println("update voxelator: layer = " + layer);
+      // println("update voxelator: layer = " + layer);
 
       int voxXY = int(DimXY/0.080); //  num voxels in X
-      int voxZ = int(DimZ/0.030); //  num voxels in Z
+      int voxZ = int(DimZ/0.027); //  num voxels in Z
       int zz = int(voxZ*layer); //
 
       // is there a way not to do this each time?
 
       float layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
+
+
       int z = int(zz % layerVoxels);
+
+
+
+
       boolean i = false;
       if (layer > 0.5){ i = true;}
 
@@ -189,7 +195,7 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
 
       microTexture.update();
 
-      PImage imgExport = getVoxLayer(ratio,invert,dC,aC,mC);
+      PImage imgExport = getVoxLayer(null, ratio,invert,dC,aC,mC);
 
       PImage imgVisual = imgExport.get();
 
@@ -222,15 +228,15 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
 
 
     if (pointCloud != null){
-      println("exporting stack...");
+      // println("exporting stack...");
       int voxXY = int(DimXY/0.080); //  num voxels in X
 
-      println("dimZ = " + DimZ);
+      // println("dimZ = " + DimZ);
 
       int voxZ = int(DimZ/0.027); //  num voxels in Z
       updateChannel();
       boolean invert = true;
-      exportVoxels = new Exporter(pApp, getRatio(),invert,depthChannel,alphaChannel,materChannel, voxXY, voxZ);
+      exportVoxels = new Exporter(pApp,microTexture, getRatio(),invert,depthChannel,alphaChannel,materChannel, voxXY, voxZ);
       exportVoxels.start();
     }
 
@@ -335,6 +341,8 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
       // }
     } else {
       image(currentLayer, int(loc.x) , int(loc.y) );
+
+      microTexture.display();
     }
   // }
 
@@ -349,57 +357,59 @@ void getLayer(float ratio, boolean invert, PImage dC, PImage aC, PImage mC, int 
 }
 
 
-PGraphics getVoxLayer(float ratio, boolean isInverted, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+// PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-    println("getVox layer");
-    int voxXY = depthChannel.width;
+//     int voxXY = depthChannel.width;
 
-    PGraphics temp = createGraphics(voxXY,voxXY);
-    float t = 0.2; // percentage for microtexture
+//     // println("getVox layer:" + voxXY);
 
-    temp.beginDraw();
-    temp.background(0);
+//     PGraphics temp = createGraphics(voxXY,voxXY);
+//     float t = 0.5; // percentage for microtexture
 
-    for (int x = 0; x < temp.width; x ++){
-      for (int y = 0; y < temp.height; y++){
+//     temp.beginDraw();
+//     temp.background(0);
 
-        if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+//     for (int x = 0; x < temp.width; x ++){
+//       for (int y = 0; y < temp.height; y++){
 
-           float val = brightness(depthChannel.get(x, y));
-            color c = materChannel.get(x,y);
-            float os = microTexture.get(x,y); // offset for microtexture
+//         if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
 
-            float pp = (val-os*t)/255; //
+//            float val = brightness(depthChannel.get(x, y));
+//             color c = materChannel.get(x,y);
+//             // float offset = microTexture.get(x,y); // offset for microtexture
+//             float offset = 0;
+//             // if (random(0,1)>0.999){println("offset:" + os*t);}
+//             float pp = (val-offset*t)/255; //
 
-            if (pp < 0){ pp = 0;} // if the offset is less than zeo set to 0
+//             if (pp < 0){ pp = 0;} // if the offset is less than zeo set to 0
 
-            // ratio is the current layer
-            // pp is the height of the given pixel
+//             // ratio is the current layer
+//             // pp is the height of the given pixel
 
-            if (isInverted){ //
+//             if (i){ //
 
-              if (pp < ratio) {
+//               if (pp > ratio) {
 
-                temp.set(int(x), int(y), c);
+//                 temp.set(int(x), int(y), c);
 
-              } // below halfway
+//               } // below halfway
 
 
 
-            } else {
+//             } else {
 
-              pp = 1 - pp;
+//               pp = 1 - pp;
 
-              if (pp > ratio) { temp.set(int(x), int(y), c);} // below halfway
+//               if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
 
-            }
-          }
-        }
-      }
+//             }
+//           }
+//         }
+//       }
 
-    temp.endDraw();
-    return temp;
- }
+//     temp.endDraw();
+//     return temp;
+//  }
 
 
 

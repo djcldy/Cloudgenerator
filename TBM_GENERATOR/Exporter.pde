@@ -14,24 +14,26 @@ class Exporter implements Runnable {
   boolean invert;
   float ratioX;
   float layerVoxels;
+  MicroTexture microTexture;
 
 
-  Exporter (PApplet parent, float _ratio, boolean _invert, PImage depthChannel, PImage alphaChannel, PImage materChannel, int _dimXY, int _dimZ) {
+  Exporter (PApplet parent, MicroTexture _microTexture, float _ratio, boolean _invert, PImage depthChannel, PImage alphaChannel, PImage materChannel, int _dimXY, int _dimZ) {
 
     println("initialize exporter");
+
     invert  =   _invert;
     dC      =   depthChannel;
     aC      =   alphaChannel;
     mC      =   materChannel;
     dimXY   =   _dimXY;
     dimZ    =   _dimZ;
-    // ratioX   =   _ratio;
+    microTexture = _microTexture;
 
-    // int voxZ = 100;
-
-    // // layerVoxels = voxZ/LayersZ; // number of vertical voxels per layer
-    // // int z = int(zz % layerVoxels);
-    // // float ratio = float(z)/ layerVoxels;
+    // ratioX       =   _ratio;
+    // int voxZ     =   100;
+    // layerVoxels  =   voxZ/LayersZ; // number of vertical voxels per layer
+    // int z        =   int(zz % layerVoxels);
+    // float ratio  =   float(z)/ layerVoxels;
 
   }
 
@@ -40,17 +42,14 @@ class Exporter implements Runnable {
     thread.start();
   }
 
-  public void stop()
-  {
+  public void stop(){
     println("exporter stopping...");
     thread = null;
   }
 
-
   public void dispose() {
     stop();
   }
-
 
 
   void run() {
@@ -59,15 +58,18 @@ class Exporter implements Runnable {
       println("voxel dimensions = " +  int(DimXY/0.040) + "," + int(DimXY/0.040) +"," + dimZ);
      for (int z = 0; z < dimZ;  z++){
 
-      boolean invertLayer = true;
+      boolean invertLayer = false;
+
       float l = float(z)/float(dimZ);
 
-      if (l > 0.5){ invertLayer = false;}
+      if (l > 0.5){ invertLayer = true;}
 
-        imgExport = getVoxLayer(getRatio(l),invertLayer,dC,aC,mC);
+      println("invert layer");
+
+        imgExport = getVoxLayer(microTexture, getRatio(l),invertLayer,dC,aC,mC);
 
         PImage temp = imgExport.get();
-        temp.resize(int(2*DimXY/0.040),int(DimXY/0.040));
+        temp.resize(int(DimXY/0.040),int(DimXY/0.080));
         temp.save("exports/layer_" + z + ".png");
       }
 
@@ -94,50 +96,64 @@ class Exporter implements Runnable {
   }
 
 
-PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-    int voxXY = depthChannel.width;
+// PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-    PGraphics temp = createGraphics(voxXY,voxXY);
-    temp.beginDraw();
-    temp.background(0);
+//     int voxXY = depthChannel.width;
 
-    for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+//     // println("getVox layer:" + voxXY);
 
-        if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+//     PGraphics temp = createGraphics(voxXY,voxXY);
+//     float t = 0.05; // percentage for microtexture
 
-           float val = brightness(depthChannel.get(x, y));
-            color c = materChannel.get(x,y);
-         // c = translatePo(c);
-            float pp = val/255;
+//     temp.beginDraw();
+//     temp.background(0);
 
+//     for (int x = 0; x < temp.width; x ++){
+//       for (int y = 0; y < temp.height; y++){
 
+//         if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
 
-            if (i){
-              if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
-            } else {
-              pp = 1 - pp;
-              if (pp > ratio) { temp.set(int(x), int(y), c);} // below halfway
-            }
+//            float val = brightness(depthChannel.get(x, y));
+//             color c = materChannel.get(x,y);
+//             // float offset = microTexture.get(x,y); // offset for microtexture
+//             float offset = 0;
+//             // if (random(0,1)>0.999){println("offset:" + os*t);}
+//             float pp = (val-offset*t)/255; //
 
-            // if (invert){
-            //   if (pp >= ratio) { temp.set(int(x), int(y), c);} // below halfway
-            // } else {
-            //   pp = 1 - pp;
-            //   if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
-            // }
-          }
-        }
-      }
+//             if (pp < 0){ pp = 0;} // if the offset is less than zeo set to 0
 
-    temp.endDraw();
-    return temp;
-    }
+//             // ratio is the current layer
+//             // pp is the height of the given pixel
+
+//             if (i){ //
+
+//               if (pp > ratio) {
+
+//                 temp.set(int(x), int(y), c);
+
+//               } // below halfway
 
 
-// PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel){
 
-//     int voxXY = int(DimXY/0.040);
+//             } else {
+
+//               pp = 1 - pp;
+
+//               if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+
+//             }
+//           }
+//         }
+//       }
+
+//     temp.endDraw();
+//     return temp;
+//  }
+
+// PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+
+//     int voxXY = depthChannel.width;
 
 //     PGraphics temp = createGraphics(voxXY,voxXY);
 //     temp.beginDraw();
@@ -149,9 +165,45 @@ PGraphics getVoxLayer(float ratio, boolean i, PImage depthChannel, PImage alphaC
 
 //            float val = brightness(depthChannel.get(x, y));
 //             color c = materChannel.get(x,y);
-//             // c = translatePo(c);
+//          // c = translatePo(c);
 //             float pp = val/255;
 
+
+
+//             if (i){
+//               if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             } else {
+//               pp = 1 - pp;
+//               if (pp > ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             }
+
+//             // if (invert){
+//             //   if (pp >= ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             // } else {
+//             //   pp = 1 - pp;
+//             //   if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+//             // }
+
+//           }
+//         }
+//       }
+
+//     temp.endDraw();
+//     return temp;
+//     }
+
+
+// PGraphics getLayer(float ratio, boolean invert, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+//     int voxXY = int(DimXY/0.040);
+//     PGraphics temp = createGraphics(voxXY,voxXY);
+//     temp.beginDraw();
+//     temp.background(0);
+//     for (int x = 0; x < temp.width; x ++) { for (int y = 0; y < temp.height; y++) {
+//         if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+//            float val = brightness(depthChannel.get(x, y));
+//             color c = materChannel.get(x,y);
+//             // c = translatePo(c);
+//             float pp = val/255;
 //             if (invert){
 //               if (pp >= ratio) { temp.set(int(x), int(y), c);} // below halfway
 //             } else {

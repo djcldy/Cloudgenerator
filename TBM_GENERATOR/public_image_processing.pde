@@ -1,3 +1,62 @@
+
+PGraphics getVoxLayer(MicroTexture texture, float ratio, boolean i, PImage depthChannel, PImage alphaChannel, PImage materChannel){
+
+    println("getVoxLayer...ratio: " + ratio);
+
+    int voxXY = depthChannel.width;
+
+    PGraphics temp = createGraphics(voxXY,voxXY);
+    float t = 0.05; // percentage for microtexture
+
+    temp.beginDraw();
+    temp.background(0);
+
+    for (int x = 0; x < temp.width; x ++){
+      for (int y = 0; y < temp.height; y++){
+
+        if (brightness((alphaChannel.get(x,y))) > 0){ // is it black or white
+
+           float val = brightness(depthChannel.get(x, y));
+            color c = materChannel.get(x,y);
+
+            float offset =0;
+            if (texture != null){
+                offset = texture.get(x,y); // offset for microtextur
+            }
+            // float offset = 0;
+            // if (random(0,1)>0.999){println("offset:" + os*t);}
+            float pp = (val-offset*t)/255; //
+
+            if (pp < 0){ pp = 0;} // if the offset is less than zeo set to 0
+
+            // ratio is the current layer
+            // pp is the height of the given pixel
+
+            if (i){ //
+
+              if (pp > ratio) {
+                temp.set(int(x), int(y), c);
+              } // below halfway
+
+
+
+            } else {
+
+              pp = 1 - pp;
+
+              if (pp < ratio) { temp.set(int(x), int(y), c);} // below halfway
+
+            }
+          }
+        }
+      }
+
+    temp.endDraw();
+    return temp;
+ }
+
+
+
 // public PImage removeArtifacts(PImage img){
 
 
